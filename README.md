@@ -3,7 +3,7 @@ Create beatiful girls, guys and futas using a sophisticated genetic algorithm.
 
 Hi everyone, this is an upgrade from my VAM Character Fusion project, with a lot of amazing features.
 
-What does this do?
+# What does this do?
 This app allows you to:
 1.	Scan all your appearances
 2.	Create a "blue print" of your favorite appearance type based on your appearances. 
@@ -13,7 +13,7 @@ This app allows you to:
 6.	Keep repeating this until you have an appearance which is beautiful.
 It's basically a "hot or not" app, based on your preferences!
 
-So how do I use this? (Quick Start)
+# So how do I use this? (Quick Start)
 The fastest way to get results, is to:
 1.	Open the VAM Evolutionary Character Creation app (Windows Executable)
 2.	Go to Step 1 (in the app) and select your VAM Folder (the folder which contains VAM.exe)
@@ -50,13 +50,13 @@ So how do I use this? (Detailed Explanation)
 How did you make this app?
 I made the app in python. The source code is available on github: https://github.com/pinosante/VAM-Evolutionary-Character-Creation. If you see anything which can be improved, please let me know! I'm not a programmer by trade (as you can probably tell by looking at the source code :) ).
 
-How does the rating work?
+# How does the rating work?
 After all characters are rated a roulette wheel selection takes place. This means that each character's rating gets a slice on a roulettewheel based on their rating. The higher the rating, the bigger the slice. To be precise: a child with a rating of 3, will have 3 times more chance to be chosen as a future parent, than a child with a rating of 1. After assigning all the slices on the roulettewheel, the app will spin this roulettewheel every time a parent needs to be chosen. This happens 40 times, since for each new child, two parents have to be chosen. Using this roulettewheel will effectively make sure that the appearances you rated highest, will be more often chosen as parents, resulting in cihldren being generated which will look more like the ones you rated highest.
 
-How does your app deal with Futas?
+# How does your app deal with Futas?
 There are different ways of defining a "futa" file, but the one I use in this app is by looking if the "MVR_G2Female" morph is in the appearance file. This seems to be a popular futa format and is easy to work with. An example of a futa like this is: https://hub.virtamate.com/resources/violet-look-futa.8977/ (But there are many more to be found on the hub). If you choose a futa as a template, you can then either choose females or other futas, as parents! The reverse is also true: if you choose a female template and there are some futa files you really like, you can use those as parents for your female template as well. The "All Appearances" / "Favorited Appearances" / "Choose Files" buttons all support this, and will always show you the matching appearances (so futa + female parents for either a female or futa template).
 
-Some useful tips
+# Some useful tips
 •	If you have very similar looking children, only rate one of them, and keep the other at 1. This way you keep the gene pool more diverse.
 •	When doing the first few generations, make sure to keep the super weird/broken characters at 1 and everything which looks decently normal, at 2 (even if ugly). This way you will get rid of the weird/broken characters.
 •	If there is a character which has an ugly face, but some other good features (body/look) consider still rating with a 2 or 3 to keep those body genes in the pool.
@@ -66,4 +66,4 @@ Some useful tips
 Please make my day and share what you create!
 I'm really curious what you come up with, so feel free to share screenshots or var's of the looks you created with this app! Let me also know in the discussion, if the app was able to capture some of the "flavour" of your favorite appearances! This is what keeps me motivated.
 
-Enjoy!
+# Enjoy!
