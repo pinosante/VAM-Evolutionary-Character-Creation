@@ -32,6 +32,7 @@ The fastest way to get results, is to:
 1.	When you start the app, click on the "Appearance Dir" button and select your Virt-A-Mate directory, the folder where your VAM.exe is located.
 2.	Select a Child Template Appearance by clicking on either the Female, Male or Futa button. Then select the matching Appearance you want to use as a Child Template. The generated children will have the skin and look of this Appearance. You can use + - to change the amount of thumbnails per row. You can also use a file filter.
 3.	Choose the source of the Parents for the App.
+
     0.	All Appearances: all the appearances in the Appearance Dir matching the Child Template will be used as Parents.
     1.	All Favorited Appearances: only the favorited appearances in the Appearance Dir matching the Child Template will be used as Parents.
     2.	Choose Files: hand pick which appearances you want to use as parents, but pick at least two parents.
