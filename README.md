@@ -38,6 +38,7 @@ The fastest way to get results, is to:
     2.	Choose Files: hand pick which appearances you want to use as parents, but pick at least two parents.
 4.	Look at the information in Step 4, and make sure that you have at least two appearances available as parents. If not, go back to step 3.
 5.	Choose your initialization method.
+
     0.	Gaussian Sample: this is a fancy mathematical way of finding the "mean" of all the files in your selection from step 3, which also takes into account the correlations between all variables. In simple speak: it tries to capture the "mean flavour" of your appearances and then picks Children randomly from this flavour pool. Note: this initialization can take a while, but this is only for the first generation. If you want to use this properly, you need a lot of appearances (20+) to make a good estimate of the "mean".
     1.	Random Crossover: at random, two parents are chosen every time to create a child. This is a fast process but has more variance in the created children. If you have few appearances/parents, this should be the method to use.
 6.	Optional: set any of the three options, but I strongly advise to set option B).
