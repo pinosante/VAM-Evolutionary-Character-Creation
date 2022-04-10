@@ -32,13 +32,13 @@ The fastest way to get results, is to:
 1.	When you start the app, click on the "Appearance Dir" button and select your Virt-A-Mate directory, the folder where your VAM.exe is located.
 2.	Select a Child Template Appearance by clicking on either the Female, Male or Futa button. Then select the matching Appearance you want to use as a Child Template. The generated children will have the skin and look of this Appearance. You can use + - to change the amount of thumbnails per row. You can also use a file filter.
 3.	Choose the source of the Parents for the App.
-  0.	All Appearances: all the appearances in the Appearance Dir matching the Child Template will be used as Parents.
-  1.	All Favorited Appearances: only the favorited appearances in the Appearance Dir matching the Child Template will be used as Parents.
-  2.	Choose Files: hand pick which appearances you want to use as parents, but pick at least two parents.
+    0.	All Appearances: all the appearances in the Appearance Dir matching the Child Template will be used as Parents.
+    1.	All Favorited Appearances: only the favorited appearances in the Appearance Dir matching the Child Template will be used as Parents.
+    2.	Choose Files: hand pick which appearances you want to use as parents, but pick at least two parents.
 4.	Look at the information in Step 4, and make sure that you have at least two appearances available as parents. If not, go back to step 3.
 5.	Choose your initialization method.
-  0.	Gaussian Sample: this is a fancy mathematical way of finding the "mean" of all the files in your selection from step 3, which also takes into account the correlations between all variables. In simple speak: it tries to capture the "mean flavour" of your appearances and then picks Children randomly from this flavour pool. Note: this initialization can take a while, but this is only for the first generation. If you want to use this properly, you need a lot of appearances (20+) to make a good estimate of the "mean".
-  1.	Random Crossover: at random, two parents are chosen every time to create a child. This is a fast process but has more variance in the created children. If you have few appearances/parents, this should be the method to use.
+    0.	Gaussian Sample: this is a fancy mathematical way of finding the "mean" of all the files in your selection from step 3, which also takes into account the correlations between all variables. In simple speak: it tries to capture the "mean flavour" of your appearances and then picks Children randomly from this flavour pool. Note: this initialization can take a while, but this is only for the first generation. If you want to use this properly, you need a lot of appearances (20+) to make a good estimate of the "mean".
+    1.	Random Crossover: at random, two parents are chosen every time to create a child. This is a fast process but has more variance in the created children. If you have few appearances/parents, this should be the method to use.
 6.	Optional: set any of the three options, but I strongly advise to set option B).
   0.	A) Removing morphs below a certain treshold. This is to "ignore" morphs which have very low values. Some appearances have 500 morphs, with many of them very small values. By setting a treshold, only the meaningful ones with values larger than your treshold, are kept.
   1.	B) This app does not work well when you use appearances which have one morph which stores the complete character. To filter these out, I recommend settings a minimal morph count of about 150. This way, only appearances which have more than 150 morphs are selected. Since appearances with a single morph for the whole character rarely have more than 150 morphs in total, this will effectively ignore them.
