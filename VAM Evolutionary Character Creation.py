@@ -14,6 +14,7 @@ import tkinter as tk
 from fnmatch import fnmatch
 from tkinter import ttk
 from tkinter import messagebox
+import pathlib
 import shutil
 import numpy as np
 import glob
@@ -27,18 +28,22 @@ NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg" 
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
-NO_FILE_SELECTED_TEXT = "..."
+NO_FILE_SELECTED_TEXT = "…"
 SETTINGS_FILENAME = "settings.json"
 DATA_PATH = "data"
+SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
 CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
 POP_SIZE = 20
 DEFAULT_FONT = "Calibri"
+FILENAME_FONT = ("Courier", 9)
 BG_COLOR = "#F9F9F9"
 FG_COLOR = "black"
 BUTTON_BG_COLOR = "#ffbeed"
 BUTTON_FG_COLOR = "black"
 BUTTON_ACTIVE_COLOR = BUTTON_BG_COLOR
 HOVER_COLOR = "#f900ff"
+MAX_VAMDIR_STRING_LENGTH = 42
+MAX_APPEARANCEDIR_STRING_LENGTH = 45
 RATING_SUNKEN_BG_COLOR = BUTTON_BG_COLOR
 RATING_SUNKEN_FG_COLOR = BUTTON_FG_COLOR
 RATING_RAISED_BG_COLOR = BG_COLOR
@@ -72,6 +77,7 @@ class AppWindow(tk.Frame):
         super().__init__()
         self.initUI()   
 
+
     def initUI(self):
         self.master.title(APP_TITLE)
         
@@ -95,15 +101,27 @@ class AppWindow(tk.Frame):
         self.vamdirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
         self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED, command=lambda:self.select_vamdir())
         self.vamdirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.vamdirlabel = tk.Label(self.vamdirframe, text="...", anchor=tk.W, width=44, bg=BG_COLOR, fg=FG_COLOR)
+        self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH, bg=BG_COLOR, fg=FG_COLOR)
         self.vamdirlabel.grid(row=1, column=1, sticky=tk.W)
+
+        ###
+        ### APPEARANCE DIRECTORY
+        ###
+        self.appearancedirframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.appearancedirframe.grid(row=2, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+        self.appearancedirtitlelabel = tk.Label(self.appearancedirframe, text="Step 2: Select Appearance folder to use", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.appearancedirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
+        self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED, command=lambda:self.select_appearancedir())
+        self.appearancedirbutton.grid(row=1, column=0, sticky=tk.W)
+        self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH, bg=BG_COLOR, fg=FG_COLOR)
+        self.appearancedirlabel.grid(row=1, column=1, sticky=tk.W)
 
         ###
         ### CHILD TEMPLATE
         ###
         self.childtemplateframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.childtemplateframe.grid(row=2, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.childtemplatelabel = tk.Label(self.childtemplateframe, text="Step 2: Select Child Template Appearance", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.childtemplateframe.grid(row=3, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+        self.childtemplatelabel = tk.Label(self.childtemplateframe, text="Step 3: Select Child Template Appearance", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0,0))
         self.childtemplatebutton = {}
         self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.select_template_file(["Female"], "Please Select Parent Template"))
@@ -113,15 +131,15 @@ class AppWindow(tk.Frame):
         self.childtemplatebutton['Futa'] = tk.Button(self.childtemplateframe, text="Futa", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.select_template_file(["Futa"], "Please Select Parent Template"))
         self.childtemplatebutton['Futa'].grid(row=1, column=2, sticky=tk.W, padx=0)
         self.childtemplate = {}
-        self.childtemplate['label'] = tk.Label(self.childtemplateframe, text="...", bg=BG_COLOR, fg=FG_COLOR)
+        self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplate['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
         
         ###
         ### PARENT FILES
         ###
         self.sourcefilesframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.sourcefilesframe.grid(row=3, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.sourcefileslabel = tk.Label(self.sourcefilesframe, text="Step 3: Select Parent File Source", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.sourcefilesframe.grid(row=4, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+        self.sourcefileslabel = tk.Label(self.sourcefilesframe, text="Step 4: Select Parent File Source", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.sourcefileslabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0,0))
         self.allappearancesbutton = tk.Button(self.sourcefilesframe, text="All Appearances", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.choose_all_appearances())
         self.allappearancesbutton.grid(row=1, column=0, sticky=tk.W)
@@ -134,8 +152,8 @@ class AppWindow(tk.Frame):
         ### CHROMOSOMELIST
         ###
         self.parentselectionframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.parentselectionframe.grid(row=4, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.chromosomelabel = tk.Label(self.parentselectionframe, text="Step 4: Select Parent Files", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.parentselectionframe.grid(row=5, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+        self.chromosomelabel = tk.Label(self.parentselectionframe, text="Step 5: Select Parent Files", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.chromosomelabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0,0))        
         
         self.columninfo = {}
@@ -151,7 +169,7 @@ class AppWindow(tk.Frame):
             self.chromosome[str(i)] = {}
             self.chromosome[str(i)]['filebutton'] = tk.Button(self.parentselectionframe, text="Parent "+str(i), bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda i=i:self.select_file(i), width=10)
             self.chromosome[str(i)]['filebutton'].grid(row=i+1, column=0, sticky=tk.W)
-            self.chromosome[str(i)]['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT, width=28, anchor="w", bg=BG_COLOR, fg=FG_COLOR)
+            self.chromosome[str(i)]['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT, width=28, anchor="w", bg=BG_COLOR, fg=FG_COLOR)
             self.chromosome[str(i)]['filenamedisplay'].grid(row=i+1, column=1, sticky=tk.W)
             self.chromosome[str(i)]['nmorphdisplay'] = tk.Label(self.parentselectionframe, text="N/A", bg=BG_COLOR, fg=FG_COLOR)
             self.chromosome[str(i)]['nmorphdisplay'].grid(row=i+1, column=2, sticky=tk.W)
@@ -161,8 +179,8 @@ class AppWindow(tk.Frame):
         ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
         ###
         self.favoritesframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.favoritesframe.grid(row=4, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.favoriteslabel = tk.Label(self.favoritesframe, text="Step 4: Favorited Appearances Chosen", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.favoritesframe.grid(row=5, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+        self.favoriteslabel = tk.Label(self.favoritesframe, text="Step 5: Favorited Appearances Chosen", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.favoriteslabel.grid(row=0, column=0, sticky=tk.W, pady=(0,0))   
         self.favoritesinfo = tk.Label(self.favoritesframe, text="", bg=BG_COLOR, fg=FG_COLOR)
         self.favoritesinfo.grid(row=1, column=0, sticky=tk.W, pady=(0,0))
@@ -173,8 +191,8 @@ class AppWindow(tk.Frame):
         ### INITIALIZATION METHOD
         ###
         self.methodframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.methodframe.grid(row=5, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.methodlabel = tk.Label(self.methodframe, text="Step 5: Initialization Method", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.methodframe.grid(row=6, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+        self.methodlabel = tk.Label(self.methodframe, text="Step 6: Initialization Method", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.methodlabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0,0))
         self.gaussianbutton = tk.Button(self.methodframe, text="Gaussian Samples", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.choose_gaussian_samples())
         self.gaussianbutton.grid(row=1, column=0, sticky=tk.W)
@@ -185,9 +203,9 @@ class AppWindow(tk.Frame):
         ### OPTIONS
         ###
         self.optionsframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.optionsframe.grid(row=6, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)        
+        self.optionsframe.grid(row=7, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)        
         
-        options_label = tk.Label(self.optionsframe, text="Step 6: Options", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         options_label.grid(columnspan=9, row=1, sticky=tk.W, pady=(0,0))
 
         self.treshold_label = tk.Label(self.optionsframe, text="A) Remove morphs with absolute value below:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
@@ -219,18 +237,26 @@ class AppWindow(tk.Frame):
         self.minmorph_infolabel = tk.Label(self.optionsframe, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
         self.minmorph_infolabel.grid(row=3, column=12, sticky=tk.W)         
         
-        self.showchildreninfileselection_label = tk.Label(self.optionsframe, text="C) Show children in file selection dialogs", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.showchildreninfileselection_label.grid(columnspan=5, row=4, column=0, sticky=tk.W)
-        self.showchildreninfileselection_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.show_children(True))
-        self.showchildreninfileselection_yesbutton.grid(row=4, column=10, sticky=tk.W)
-        self.showchildreninfileselection_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.show_children(False))
-        self.showchildreninfileselection_nobutton.grid(row=4, column=11, sticky=tk.W)
+        self.recursivedirectorysearch_label = tk.Label(self.optionsframe, text="C) Also read subdirectories in file selection:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.recursivedirectorysearch_label.grid(columnspan=5, row=4, column=0, sticky=tk.W)
+        self.recursivedirectorysearch_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(True))
+        self.recursivedirectorysearch_yesbutton.grid(row=4, column=10, sticky=tk.W)
+        self.recursivedirectorysearch_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(False))
+        self.recursivedirectorysearch_nobutton.grid(row=4, column=11, sticky=tk.W)
+
+        self.smallratingwindow_label = tk.Label(self.optionsframe, text="D) Use smaller rating window:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.smallratingwindow_label.grid(columnspan=5, row=5, column=0, sticky=tk.W)
+        self.smallratingwindow_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(True))
+        self.smallratingwindow_yesbutton.grid(row=5, column=10, sticky=tk.W)
+        self.smallratingwindow_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(False))
+        self.smallratingwindow_nobutton.grid(row=5, column=11, sticky=tk.W)
+
         
         ###
         ### GENERATE CHILD BUTTON
         ###
         self.bottomframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.bottomframe.grid(row=7, column=1, padx=(10,0), pady=0, sticky=tk.W)               
+        self.bottomframe.grid(row=8, column=1, padx=(10,0), pady=0, sticky=tk.W)               
 
         self.generatechild = tk.Button(
             self.bottomframe, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.generate_next_population(self.settings['method']), 
@@ -238,8 +264,8 @@ class AppWindow(tk.Frame):
         )
         self.generatechild.grid(row=0, column=0, sticky=tk.W)
 
-        filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
-        filler_bottom.grid(row=0, column=1)
+        self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
+        self.filler_bottom.grid(row=0, column=1)
 
         # some data variables
         self.gencounter = 0
@@ -251,15 +277,31 @@ class AppWindow(tk.Frame):
         
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are not found """
+        if 'appearance dir' in self.settings:
+            if len(self.settings['appearance dir']) < 1:
+                appearancedir = NO_FILE_SELECTED_TEXT
+            else:
+                appearancedir = strip_dir_string_to_max_length(self.settings['appearance dir'], MAX_APPEARANCEDIR_STRING_LENGTH)
+                self.appearancedirbutton.configure(relief=tk.SUNKEN)
+        else:
+            appearancedir = NO_FILE_SELECTED_TEXT
+            self.settings['appearance dir'] = ""
+        self.appearancedirlabel.configure(text=appearancedir)
+
+        if 'recursive directory search' in self.settings:
+            self.use_recursive_directory_search(self.settings['recursive directory search'])
+        else:
+            self.use_recursive_directory_search(False)            
+        
         if 'VAM base dir' in self.settings:
             if len(self.settings['VAM base dir']) < 1:
-                vamdir = "..."
+                vamdir = NO_FILE_SELECTED_TEXT
             else:
-                vamdir = self.settings['VAM base dir']
+                vamdir = strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH)
                 self.vamdirbutton.configure(relief=tk.SUNKEN)
-                self.fill_data_with_all_appearances()
+                #self.fill_data_with_all_appearances()
         else:
-            vamdir = "..."
+            vamdir = NO_FILE_SELECTED_TEXT
         self.vamdirlabel.configure(text=vamdir)
         
         if 'child template' in self.settings:
@@ -299,28 +341,43 @@ class AppWindow(tk.Frame):
                 self.choose_random_crossover()
         else:
             self.choose_random_crossover()
-
-        if 'show children' in self.settings:
-            self.show_children(self.settings['show children'])
-        else:
-            self.show_children(False)
             
         if 'thumbnails per row' not in self.settings:
             self.settings['thumbnails per row'] = 5
             
+        if 'small rating window' in self.settings:
+            self.use_small_rating_window(self.settings['small rating window'])
+        else:
+            self.use_small_rating_window(False)               
+            
         self.update_initialize_population_button()
                     
-            
-    def show_children(self, choice):
-        """ Called by the show children button in the app. Depending on the choice, sinks the GUI button 
+
+    def use_recursive_directory_search(self, choice):
+        """ Called by the use recursive directory button in the app. Depending on the choice, sinks the GUI button 
             pressed and raises the other and keeps track of the choice in settings. """
-        self.settings['show children'] = choice
+        self.settings['recursive directory search'] = choice
         if choice:
-            self.showchildreninfileselection_yesbutton.configure(relief = tk.SUNKEN)    
-            self.showchildreninfileselection_nobutton.configure(relief = tk.RAISED)
+            self.recursivedirectorysearch_yesbutton.configure(relief = tk.SUNKEN)    
+            self.recursivedirectorysearch_nobutton.configure(relief = tk.RAISED)
         else:
-            self.showchildreninfileselection_yesbutton.configure(relief = tk.RAISED)
-            self.showchildreninfileselection_nobutton.configure(relief = tk.SUNKEN)    
+            self.recursivedirectorysearch_yesbutton.configure(relief = tk.RAISED)
+            self.recursivedirectorysearch_nobutton.configure(relief = tk.SUNKEN)    
+        self.clear_data_with_all_appearances()
+        self.fill_data_with_all_appearances()
+        self.update_found_labels()
+        
+        
+    def use_small_rating_window(self, choice):
+        """ Called by the use small rating window button in the app. Depending on the choice, sinks the GUI button 
+            pressed and raises the other and keeps track of the choice in settings. """
+        self.settings['small rating window'] = choice
+        if choice:
+            self.smallratingwindow_yesbutton.configure(relief = tk.SUNKEN)    
+            self.smallratingwindow_nobutton.configure(relief = tk.RAISED)
+        else:
+            self.smallratingwindow_yesbutton.configure(relief = tk.RAISED)
+            self.smallratingwindow_nobutton.configure(relief = tk.SUNKEN)    
 
 
     def press_childtemplate_button(self, gender):
@@ -336,12 +393,21 @@ class AppWindow(tk.Frame):
     def fill_data_with_all_appearances(self):
         """ Loads all available presets found in the default VAM directory into dictionaries 
             to save loading-times when using the app """
-        path = self.get_vam_default_appearance_path()
-        filenames = glob.glob(os.path.join(path, "Preset_*.vap"))
+        #path = self.get_vam_default_appearance_path()
+        path = self.settings['appearance dir']
+        if self.settings['recursive directory search']:
+            filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive = True)
+        else:
+            filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive = False)
         for f in filenames:
-            self.data['appearances'][f] = load_appearance(f)
-            self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
-            self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
+            appearance = load_appearance(f)
+            if get_morph_index_with_characterinfo_from_appearance(appearance) == None: # just calling this function since it looks for morphs
+                print("File {} does not contain any morphs, skipping.".format(f))
+            else:
+                self.data['appearances'][f] = appearance
+                print("Loading file {} into database.".format(f))
+                self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
+                self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
             
             
     def clear_data_with_all_appearances(self):
@@ -368,7 +434,8 @@ class AppWindow(tk.Frame):
         """ Returns a formatted label text for a given Appearance file with 
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
         template_gender = get_appearance_gender(load_appearance(filename))        
-        labeltxt = os.path.basename(filename)[7:-4] + " (" + template_gender + " Template)"
+        #labeltxt = os.path.basename(filename)[7:-4] + " (" + template_gender + " Template)"
+        labeltxt = os.path.basename(filename)[7:-4]
         self.childtemplate['gender'] = template_gender
         return labeltxt
             
@@ -441,7 +508,7 @@ class AppWindow(tk.Frame):
         txt = str(len(filenames)) + " appearances found"
         self.favoritesinfo.configure(text=txt)
         self.update_initialize_population_button()         
-        self.favoriteslabel.configure(text="Step 4: All Appearances Chosen")
+        self.favoriteslabel.configure(text="Step 5: All Appearances Chosen")
 
 
     def update_favorites_found_label(self):
@@ -451,7 +518,7 @@ class AppWindow(tk.Frame):
             txt = "0 favorite appearances found, please use 'Choose Files' as an option"
         txt = str(len(filenames)) + " favorite appearances found"
         self.favoritesinfo.configure(text=txt)
-        self.favoriteslabel.configure(text="Step 4: All Favorited Appearances Chosen")
+        self.favoriteslabel.configure(text="Step 5: All Favorited Appearances Chosen")
         self.update_initialize_population_button()            
 
 
@@ -548,22 +615,54 @@ class AppWindow(tk.Frame):
         
     def select_vamdir(self):
         """ Shows filedialog to find the location of the VAM.exe. Choice is validated, GUI updated and settings saved. """
-        folder_path = tk.filedialog.askdirectory(title = "Please select the folder which has the VAM.exe file")
+        # try to open the file dialog in the last known location
+        vamdir = ""
+        if 'VAM base dir' in self.settings:
+            if len(self.settings['VAM base dir']) > 0:
+                vamdir = self.settings['VAM base dir']   
+        
+        folder_path = tk.filedialog.askdirectory(initialdir = vamdir, title = "Please select the folder which has the VAM.exe file")
         if os.path.exists(os.path.join(folder_path, "vam.exe")):
             self.settings['VAM base dir'] = folder_path
-            self.vamdirlabel.configure(text=folder_path)
+            self.vamdirlabel.configure(text=strip_dir_string_to_max_length(folder_path, MAX_VAMDIR_STRING_LENGTH))
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("","","") # update  
+            self.clear_data_with_all_appearances()
             self.fill_data_with_all_appearances()
         else:
             self.settings['VAM base dir'] = ""
-            self.vamdirlabel.configure(text="...")
+            self.vamdirlabel.configure(text=NO_FILE_SELECTED_TEXT)
             self.vamdirbutton.configure(relief=tk.RAISED)
             self.clear_data_with_all_appearances()
         self.update_initialize_population_button()
         self.update_found_labels()
-
-
+        
+        
+    def select_appearancedir(self):
+        """ Shows filedialog to select the appearance directory, GUI updated and settings saved. """
+        # try to open the file dialog in the last known location
+        appearancedir = ""
+        if 'appearance dir' in self.settings:
+            if len(self.settings['appearance dir']) > 0:
+                appearancedir = self.settings['appearance dir']        
+       
+        folder_path = tk.filedialog.askdirectory(initialdir = appearancedir, title = "Please select the appearance folder you would like to use.")
+        if folder_path == "":
+            self.settings['appearance dir'] = ""
+            self.appearancedirlabel.configure(text=NO_FILE_SELECTED_TEXT)
+            self.appearancedirbutton.configure(relief=tk.RAISED)
+            self.clear_data_with_all_appearances()
+        else:
+            self.settings['appearance dir'] = folder_path
+            self.appearancedirlabel.configure(text=strip_dir_string_to_max_length(folder_path, MAX_APPEARANCEDIR_STRING_LENGTH))
+            self.appearancedirbutton.configure(relief=tk.SUNKEN)
+            self.track_minmorph_change("","","") # update  
+            self.clear_data_with_all_appearances()
+            self.fill_data_with_all_appearances()
+        self.update_initialize_population_button()
+        self.update_found_labels()
+        
+        
     def get_vam_default_appearance_path(self):
         """ Returns the path to the default Appearance directory based on the VAM base path, or returns '' if no base path 
             is found in settings. """
@@ -605,7 +704,6 @@ class AppWindow(tk.Frame):
             False and string 'missing' with all missing features, or True if all criteria are met. """
         missing = ""
     
-        # we need the VAM Base Folder
         if 'VAM base dir' in self.settings:
             if len(self.settings['VAM base dir']) > 0:
                 pass
@@ -613,6 +711,14 @@ class AppWindow(tk.Frame):
                 missing += "· Please select the VAM base folder\n"
         else:
             missing += "· Please select the VAM base folder\n"
+
+        if 'appearance dir' in self.settings:
+            if len(self.settings['appearance dir']) > 0:
+                pass
+            else:
+                missing += "· Please select an Appearance folder\n"
+        else:
+            missing += "· Please select an Appearance folder\n"
             
         if 'child template' not in self.settings:
             missing += "· Please select a child template appearance\n"
@@ -647,6 +753,8 @@ class AppWindow(tk.Frame):
         
     def update_GUI_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
+        if filename not in self.data['appearances']:
+            return
         self.chromosome[str(number)]['filename'] = filename
         self.chromosome[str(number)]['shortfilename'] = os.path.basename(filename)[7:-4] # remove Preset_ and .vap
         self.chromosome[str(number)]['filenamedisplay'].configure(text = self.chromosome[str(number)]['shortfilename'])
@@ -661,7 +769,7 @@ class AppWindow(tk.Frame):
         filename = self.file_selection_with_thumbnails(genderlist, title, filteronmorphcount=False)
         
         if filename == "": # user did not select files
-            self.childtemplate['label'].configure(text = "...")
+            self.childtemplate['label'].configure(text = NO_FILE_SELECTED_TEXT)
             self.press_childtemplate_button(None)
             if 'gender' in self.childtemplate:
                 del self.childtemplate['gender']
@@ -689,17 +797,12 @@ class AppWindow(tk.Frame):
         self._file_selection = "" 
         
         self.thumbnails_per_row = self.settings['thumbnails per row']
-            
-        path = self.get_vam_default_appearance_path()
 
         filenames = list(self.data['appearances'].keys())
         if filteronmorphcount:
             filenames = self.filter_filenamelist_on_morph_treshold_and_min_morphs(filenames)
         filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
         
-        if not self.settings['show children']:
-            filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]        
-                
         # create popup window
         self.file_selection_popup = tk.Toplevel()
         if 'file selection geometry' in self.settings:
@@ -850,7 +953,6 @@ class AppWindow(tk.Frame):
     def apply_file_filter(self, filenames):
         """ Applies file filter to file selection window. """
         self.my_canvas.yview_moveto('0.0') # scroll to top
-        path = self.get_vam_default_appearance_path()
         filtertxt = self.filefilter.get()
         globfilter = "*preset_*" + filtertxt + "*.vap"
         filtered = [file for file in filenames if fnmatch(file.lower(), globfilter)]
@@ -868,7 +970,7 @@ class AppWindow(tk.Frame):
         self.appearancebutton[str(fileindex)].bind("<Enter>", lambda e, index=fileindex:self.on_enter_appearancebutton(index, event=e))
         self.appearancebutton[str(fileindex)].bind("<Leave>", lambda e, index=fileindex:self.on_leave_appearancebutton(index, event=e))
         self.appearancebutton[str(fileindex)].image = thumbnail
-        self.appearancelabel[str(fileindex)] = tk.Label(window, text=name, width=26, anchor=tk.W, bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
+        self.appearancelabel[str(fileindex)] = tk.Label(window, text=name, font=FILENAME_FONT, width=26, anchor=tk.W, bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
         self.appearancelabel[str(fileindex)].grid(row=row*2+1, column=column, sticky=tk.W)
         return self.appearancebutton[str(fileindex)], self.appearancelabel[str(fileindex)]
             
@@ -965,6 +1067,7 @@ class AppWindow(tk.Frame):
         """ Switches the layout from the GUI from the Initialization Choices layout to the rate children layout. Called by
             generate_next_population when called for the first time. """
         self.vamdirframe.grid_remove()
+        self.appearancedirframe.grid_remove()
         self.childtemplateframe.grid_remove()
         self.sourcefilesframe.grid_remove()
         self.methodframe.grid_remove()
@@ -1026,9 +1129,10 @@ class AppWindow(tk.Frame):
     def get_favorited_appearance_files(self):
         """ Returns a list of all favorited appearance files in the default VAM Appearance directory, after gender and morph 
             filters are applied. """    
-        path = self.get_vam_default_appearance_path()
+        path = self.settings['appearance dir']
         filenames = glob.glob(os.path.join(path, "Preset_*.fav"))
         filenames = [f[:-4] for f in filenames]
+        filenames = [f for f in filenames if os.path.exists(f)]
         
         if 'gender' in self.childtemplate:
             filenames = self.filter_filenamelist_on_genders(filenames, self.matching_genders(self.childtemplate['gender']))
@@ -1067,6 +1171,7 @@ class AppWindow(tk.Frame):
         self.update_population(new_population)
         return
         
+    
     def gaussian_initialize_population(self, source_files):
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization. Updates
             population info and the GUI. """    
@@ -1134,6 +1239,7 @@ class AppWindow(tk.Frame):
             for morph in morphlist:
                 means[morph['name']] += float(morph['value']) * 1/len(morphlists)
         return means
+
         
     def get_cov_from_morphlists(self, morphlists):
         """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
@@ -1146,14 +1252,15 @@ class AppWindow(tk.Frame):
             listofvalues.append(value)
         covariances = np.array(listofvalues)
         return np.cov(covariances)
-            
 
         
     def save_population(self, population):
         ''' save a population list of child appearances to files '''
         path = self.get_vam_default_appearance_path()
+        save_path = os.path.join(path, SAVED_CHILDREN_PATH)
+        pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
-            savefilename = os.path.join(path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i+1) + ".vap")
+            savefilename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i+1) + ".vap")
             save_appearance(child_appearance, savefilename)
         return True
 
@@ -1161,9 +1268,11 @@ class AppWindow(tk.Frame):
     def update_population(self, population):
         ''' update all chromosome appearances with the list of child appearance in population '''
         path = self.get_vam_default_appearance_path()
+        save_path = os.path.join(path, SAVED_CHILDREN_PATH)
+        pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)        
         for i, child in enumerate(population):
             self.chromosome[str(i+1)]['appearance'] = child
-            filename = os.path.join(path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i+1) + ".vap")
+            filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i+1) + ".vap")
             self.chromosome[str(i+1)]['filename'] = filename
     
 
@@ -1173,6 +1282,14 @@ class AppWindow(tk.Frame):
         self.columninfo['1'].destroy()
         self.columninfo['2'].destroy()
         self.columninfo['3'].destroy()
+        
+        if self.settings['small rating window']:
+            rating_font_size = 10
+            self.generatechild.configure(width=25, height=2)
+            self.filler_bottom.configure(height=5)
+        else:
+            rating_font_size = 13
+            self.generatechild.configure(width=27, height=6)
         
         for i in range(1, POP_SIZE + 1):
             self.chromosome[str(i)]['filebutton'].destroy()
@@ -1187,7 +1304,7 @@ class AppWindow(tk.Frame):
             self.chromosome[str(i)]['childlabel'].grid(row=i+1, column=0, sticky=tk.W)
             self.chromosome[str(i)]['rating'] = 1
             for j in range(1, 6):
-                self.chromosome[str(i)]['rating button '+str(j)] = tk.Button(self.parentselectionframe, width=2, font=(DEFAULT_FONT, 13, "bold"), bg=RATING_RAISED_BG_COLOR, fg=RATING_RAISED_FG_COLOR, activebackground=RATING_ACTIVE_BG_COLOR, activeforeground=RATING_ACTIVE_FG_COLOR, text=str(j), command=lambda i=i, j=j:self.press_rating_button(i, j))
+                self.chromosome[str(i)]['rating button '+str(j)] = tk.Button(self.parentselectionframe, width=2, font=(DEFAULT_FONT, rating_font_size, "bold"), bg=RATING_RAISED_BG_COLOR, fg=RATING_RAISED_FG_COLOR, activebackground=RATING_ACTIVE_BG_COLOR, activeforeground=RATING_ACTIVE_FG_COLOR, text=str(j), command=lambda i=i, j=j:self.press_rating_button(i, j))
                 self.chromosome[str(i)]['rating button '+str(j)].grid(row=i+1, column=j)
                 self.chromosome[str(i)]['rating button '+str(j)].bind("<Enter>", lambda e, i=i, j=j:self.on_enter_rating_button(i,j, event=e))
                 self.chromosome[str(i)]['rating button '+str(j)].bind("<Leave>", lambda e, i=i, j=j:self.on_leave_rating_button(i,j, event=e))
@@ -1272,6 +1389,33 @@ def save_appearance(appearance, filename):
             print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
             time.sleep(2)
     raise Exception("Can't save appearance {}".format(filename))
+
+
+def strip_dir_string_to_max_length(dirstring, length):
+    """ Takes a string directory, and cuts it at the '/' in the string such that the 
+        length of the stripped string is as large as possible but stays smaller than 
+        the total 'length'. A '(…)/' is added if the string had to be cut.
+
+        Example:
+        strip_dir_string_to_max_length("C:/456/890/234.txt", 99)
+        >C:/456/890/234.txt
+        strip_dir_string_to_max_length("C:/456/890/234.txt", 15)
+        >(…)/890/234.txt
+        strip_dir_string_to_max_length("C:/456/890/234.txt", 14)
+        >(…)/234.txt
+        """
+    if len(dirstring) <= length:
+        return dirstring
+    parts = dirstring.split("/")
+    stripped_string = ""
+    index = len(parts) - 1
+    while (len(parts[index]) + 1) <= ( (length - 4) - (len(stripped_string) - 1)):
+        if index == -1:
+            break
+        stripped_string =  parts[index] + "/" + stripped_string
+        index -= 1
+    stripped_string = stripped_string[:-1] # remove trailing "/"
+    return "(…)/" + stripped_string
     
 
 def get_morphnames(morphlist):
@@ -1360,29 +1504,39 @@ def get_morphlist_from_appearance(appearance):
         targetmorphs = "morphsOtherGender"
     else:
         targetmorphs = "morphs"
-    return appearance['storables'][0][targetmorphs]
+    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
+    return appearance['storables'][charindex][targetmorphs]
+    
+    
+def get_morph_index_with_characterinfo_from_appearance(appearance):
+    """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
+    for index, value in enumerate(appearance['storables']):
+        if "morphs" in value:
+            return index
+    return None
 
 
 def get_appearance_gender(appearance):
     """ Return the gender of the appearance, or False if it could not be determined """
     # determine futa
-    morphlist = appearance['storables'][0]["morphs"]
+    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
+    morphlist = appearance['storables'][charindex]["morphs"]
     morphnames = []
     for morph in morphlist:
         morphnames.append(morph['name'])
         
-    if "MVR_G2Female" in morphnames and appearance['storables'][0]['useFemaleMorphsOnMale'] == "true":
+    if "MVR_G2Female" in morphnames and appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "true":
         return 'Futa'
     
     # determine female
     if get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomyAlt', 'enabled') == "true" or \
        get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomy', 'enabled') == "true" or \
-       'Female' in appearance['storables'][0]['character']:
+       'Female' in appearance['storables'][charindex]['character']:
         return 'Female'
     
     # determine male
-    if appearance['storables'][0]['useFemaleMorphsOnMale'] == "false" and \
-       ('Male' in appearance['storables'][0]['character'] or \
+    if appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "false" and \
+       ('Male' in appearance['storables'][charindex]['character'] or \
        get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomy', 'enabled') == "true" or \
        get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomyAlt', 'enabled') == "true"):
        return 'Male'
@@ -1408,7 +1562,9 @@ def save_morph_to_appearance(morphlist, appearance):
         targetmorphs = "morphsOtherGender"
     else:
         targetmorphs = "morphs"    
-    appearance['storables'][0][targetmorphs] = morphlist
+
+    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)        
+    appearance['storables'][charindex][targetmorphs] = morphlist
     return appearance
     
     
@@ -1446,10 +1602,11 @@ def filter_morphs_below_treshold(morphlist, treshold):
     ''' goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above treshold '''
     new_morphlist = []
     for morph in morphlist:
-        if abs(float(morph['value'])) < treshold:
-            continue
-        else:
-            new_morphlist.append(morph)
+        if "value" in morph:
+            if abs(float(morph['value'])) < treshold:
+                continue
+            else:
+                new_morphlist.append(morph)
     return new_morphlist
 
 
@@ -1500,7 +1657,7 @@ def fuse_characters(filename1, filename2, settings):
 def main():
     root = tk.Tk()
     root.configure(bg=BG_COLOR)
-    root.option_add("*font", "Calibri 10")
+    root.option_add("*font", "Calibri 9")
     root.iconbitmap(os.path.join(DATA_PATH, ICON_FILENAME))
     app = AppWindow()
 
