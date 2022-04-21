@@ -52,6 +52,7 @@ RATING_HOVER_BG_COLOR = BUTTON_BG_COLOR
 RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
 RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
+MAX_RATING = 5
 
 ###
 ### Below are the settings for a dark theme
@@ -1047,10 +1048,10 @@ class AppWindow(tk.Frame):
             return
 
         new_population = []
-        elite = self.get_elite_from_population()
-        new_population.append(elite)
+        elites = self.get_elites_from_population()
+        new_population = [*new_population, *elites]
         
-        for i in range(1, POP_SIZE): # we need one less child, since we already kept the elite
+        for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
             child_appearance = fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'], self.settings)
             new_population.append(child_appearance)
@@ -1096,14 +1097,9 @@ class AppWindow(tk.Frame):
         return choices
             
 
-    def get_elite_from_population(self):
-        ''' returns the fittest child appearance from the population '''
-        max_rating = float()
-        for i in range(1,POP_SIZE + 1):
-            if self.chromosome[str(i)]['rating'] > max_rating:
-                max_rating = self.chromosome[str(i)]['rating']
-                max_number = i
-        return self.chromosome[str(max_number)]['appearance']
+    def get_elites_from_population(self):
+        """ returns the children appearances with max rating """
+        return [chromosomeValue['appearance'] for chromosomeValue in self.chromosome.values() if chromosomeValue['rating'] == MAX_RATING]
 
         
     def reset_ratings(self):
@@ -1385,7 +1381,8 @@ def save_appearance(appearance, filename):
             thumbnailpath = os.path.splitext(filename)[0]+'.jpg'
             shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
             return True                    
-        except:
+        except Exception as exception:
+            print(f'{exception=}')
             print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
             time.sleep(2)
     raise Exception("Can't save appearance {}".format(filename))

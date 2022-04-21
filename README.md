@@ -1,13 +1,13 @@
 # VAM-Evolutionary-Character-Creation
-Create beatiful girls, guys and futas using a sophisticated genetic algorithm.
+Create beautiful girls, guys and futas using a sophisticated genetic algorithm.
 
 Hi everyone, this is an upgrade from my VAM Character Fusion project, with a lot of amazing features.
 
 # What does this do?
 This app allows you to:
 1.	Scan all your appearances
-2.	Create a "blue print" of your favorite appearance type based on your appearances. 
-3.	Sample 20 apperances based on your personal blueprint.
+2.	Create a "blueprint" of your favorite appearance type based on your appearances. 
+3.	Sample 20 appearances based on your personal blueprint.
 4.	Vote on these appearances.
 5.	Generate another 20 appearances based on your voting.
 6.	Keep repeating this until you have an appearance which is beautiful.
@@ -44,22 +44,22 @@ The fastest way to get results, is to:
     1.	Gaussian Sample: this is a fancy mathematical way of finding the "mean" of all the files in your selection from step 3, which also takes into account the correlations between all variables. In simple speak: it tries to capture the "mean flavour" of your appearances and then picks Children randomly from this flavour pool. Note: this initialization can take a while, but this is only for the first generation. If you want to use this properly, you need a lot of appearances (20+) to make a good estimate of the "mean".
     2.	Random Crossover: at random, two parents are chosen every time to create a child. This is a fast process but has more variance in the created children. If you have few appearances/parents, this should be the method to use.
 7.	Optional: set any of the three options, but I strongly advise to set option B).
-    1.	A) Removing morphs below a certain treshold. This is to "ignore" morphs which have very low values. Some appearances have 500 morphs, with many of them very small values. By setting a treshold, only the meaningful ones with values larger than your treshold, are kept.
+    1.	A) Removing morphs below a certain threshold. This is to "ignore" morphs which have very low values. Some appearances have 500 morphs, with many of them very small values. By setting a threshold, only the meaningful ones with values larger than your threshold, are kept.
     2.	B) This app does not work well when you use appearances which have one morph which stores the complete character. To filter these out, I recommend settings a minimal morph count of about 150. This way, only appearances which have more than 150 morphs are selected. Since appearances with a single morph for the whole character rarely have more than 150 morphs in total, this will effectively ignore them.
     3.	C) If you want to be able to automatically scan subdirectories of your appearance folder for appearances as well, set this to Yes.
     4.	D) If you need more space, you can choose Yes to get a smaller rating window. This smaller window size should fit a 720p resolution monitor.
 
 8.	Press "Initialize Population". If you use Gaussian Samples, this will take a while (~1 minute).
-9.	Rate Children. You now see Generation 1 of your 20 children. Each child is a new generated appearance based on your previous choices. I made a "VAM Evolutionary Character Creation Companion" save which you can open in VAM. This save helps with the rating process. When you open this save in VAM, you can click on one of the 20 numbers to the left, to see each of the generated appearances by the python app. And then rate them in the python app. I have both VAM and the python app open with the windows next to eachother. The higher you rate each child, the bigger the chance that it will be used to create children for the next generation. The highest rated appearance (or in the case of a tie, the first child with that rating), will always be kept and stored as Child 1 for the new generation.
-10.	Generate Next Population. If you're done with rating, you can press the Generate Next Population. 
+9.	Rate Children. You now see Generation 1 of your 20 children. Each child is a newly generated appearance based on your previous choices. I made a "VAM Evolutionary Character Creation Companion" save which you can open in VAM. This save helps with the rating process. When you open this save in VAM, you can click on one of the 20 numbers to the left, to see each of the generated appearances by the python app. And then rate them in the python app. I have both VAM and the python app open with the windows next to eachother. The higher you rate each child, the bigger the chance that it will be used to create children for the next generation. The appearances you rated '5' will always be kept as the first appearance(s) of the next generation.
+10.	Generate Next Population. If you're done with rating, you can press the button 'Generate Next Population'. 
 11.	Return to Step 9. You can keep doing this until you are happy with the results.
-12.	When you are happy with one of the generated children, make sure to save that appearance to a custom name. If you rerun the app, all cihldren appearances will be overwritten, so better save it to a new one.
+12.	When you are happy with one of the generated children, make sure to save that appearance to a custom name. If you rerun the app, all children appearances will be overwritten, so better save it to a new one.
 
 # How did you make this app?
 I made the app in python. The source code is available on github: https://github.com/pinosante/VAM-Evolutionary-Character-Creation. If you see anything which can be improved, please let me know! I'm not a programmer by trade (as you can probably tell by looking at the source code :) ).
 
 # How does the rating work?
-After all characters are rated a roulette wheel selection takes place. This means that each character's rating gets a slice on a roulettewheel based on their rating. The higher the rating, the bigger the slice. To be precise: a child with a rating of 3, will have 3 times more chance to be chosen as a future parent, than a child with a rating of 1. After assigning all the slices on the roulettewheel, the app will spin this roulettewheel every time a parent needs to be chosen. This happens 40 times, since for each new child, two parents have to be chosen. Using this roulettewheel will effectively make sure that the appearances you rated highest, will be more often chosen as parents, resulting in cihldren being generated which will look more like the ones you rated highest.
+After all characters are rated a roulette wheel selection takes place. This means that each character's rating gets a slice on a roulette wheel based on their rating. The higher the rating, the bigger the slice. To be precise: a child with a rating of 3, will have 3 times more chance to be chosen as a future parent, than a child with a rating of 1. After assigning all the slices on the roulettewheel, the app will spin this roulettewheel every time a parent needs to be chosen. This happens 40 times, since for each new child, two parents have to be chosen. Using this roulettewheel will effectively make sure that the appearances you rated highest, will be more often chosen as parents, resulting in children being generated which will look more like the ones you rated highest.
 
 # How does your app deal with Futas?
 There are different ways of defining a "futa" file, but the one I use in this app is by looking if the "MVR_G2Female" morph is in the appearance file. This seems to be a popular futa format and is easy to work with. An example of a futa like this is: https://hub.virtamate.com/resources/violet-look-futa.8977/ (But there are many more to be found on the hub). If you choose a futa as a template, you can then either choose females or other futas, as parents! The reverse is also true: if you choose a female template and there are some futa files you really like, you can use those as parents for your female template as well. The "All Appearances" / "Favorited Appearances" / "Choose Files" buttons all support this, and will always show you the matching appearances (so futa + female parents for either a female or futa template).
