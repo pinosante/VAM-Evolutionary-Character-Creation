@@ -34,6 +34,8 @@ DATA_PATH = "data"
 SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
 CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
 POP_SIZE = 20
+MINIMAL_RATING_FOR_KEEP_ELITES = 2
+DEFAULT_MAX_KEPT_ELITES = 1
 DEFAULT_FONT = "Calibri"
 FILENAME_FONT = ("Courier", 9)
 BG_COLOR = "#F9F9F9"
@@ -202,14 +204,17 @@ class AppWindow(tk.Frame):
         ###
         ### OPTIONS
         ###
-        self.optionsframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.optionsframe.grid(row=7, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)        
-        
-        options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        options_label.grid(columnspan=9, row=1, sticky=tk.W, pady=(0,0))
 
+        self.optionsframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.optionsframe.grid(row=7, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
+
+        option_row_number = 1
+        options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        options_label.grid(columnspan=9, row=option_row_number, sticky=tk.W, pady=(0,0))
+
+        option_row_number += 1  # go to next row of the options menu
         self.threshold_label = tk.Label(self.optionsframe, text="A) Remove morphs with absolute value below:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.threshold_label.grid(columnspan=5, row=2, column=0, sticky=tk.W, padx=(0,0))
+        self.threshold_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
         
         # track if the threshold values are changed by the user and if so, update the morph info based on the setting
         self.threshold_var = tk.DoubleVar()
@@ -217,14 +222,15 @@ class AppWindow(tk.Frame):
         self.threshold_var.trace_add("write", self.track_threshold_change)
         
         self.threshold_entry = tk.Entry(self.optionsframe, textvariable=self.threshold_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
-        self.threshold_entry.grid(columnspan=2, row=2, column=10, sticky=tk.W)
+        self.threshold_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
 
         self.threshold_label = tk.Label(self.optionsframe, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.threshold_label.grid(row=2, column=12, sticky=tk.W)       
+        self.threshold_label.grid(row=option_row_number, column=12, sticky=tk.W)
 
         # minimum morphs needed in appearance to be available in file selection
+        option_row_number += 1  # go to next row of the options menu
         self.minmorph_label = tk.Label(self.optionsframe, text="B) Only show appearances with morph count above:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.minmorph_label.grid(columnspan=5, row=3, column=0, sticky=tk.W, padx=(0,0))
+        self.minmorph_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
         
         # track if the threshold values are changed by the user and if so, update the morph info based on the setting
         self.minmorph_var = tk.IntVar()
@@ -232,24 +238,38 @@ class AppWindow(tk.Frame):
         self.minmorph_var.trace_add("write", self.track_minmorph_change)
         
         self.minmorph_entry = tk.Entry(self.optionsframe, textvariable=self.minmorph_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
-        self.minmorph_entry.grid(columnspan=2, row=3, column=10, sticky=tk.W)
+        self.minmorph_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
         
         self.minmorph_infolabel = tk.Label(self.optionsframe, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.minmorph_infolabel.grid(row=3, column=12, sticky=tk.W)         
-        
-        self.recursivedirectorysearch_label = tk.Label(self.optionsframe, text="C) Also read subdirectories in file selection:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.recursivedirectorysearch_label.grid(columnspan=5, row=4, column=0, sticky=tk.W)
-        self.recursivedirectorysearch_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(True))
-        self.recursivedirectorysearch_yesbutton.grid(row=4, column=10, sticky=tk.W)
-        self.recursivedirectorysearch_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(False))
-        self.recursivedirectorysearch_nobutton.grid(row=4, column=11, sticky=tk.W)
+        self.minmorph_infolabel.grid(row=option_row_number, column=12, sticky=tk.W)
 
-        self.smallratingwindow_label = tk.Label(self.optionsframe, text="D) Use smaller rating window:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.smallratingwindow_label.grid(columnspan=5, row=5, column=0, sticky=tk.W)
+        option_row_number += 1  # go to next row of the options menu
+        self.maxkeptelites_label = tk.Label(self.optionsframe, text="C) Max kept elites (highest rated):", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.maxkeptelites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
+
+        # track if the threshold values are changed by the user and if so, update the morph info based on the setting
+        self.maxkeptelites_var = tk.IntVar()
+        self.maxkeptelites_var.set(DEFAULT_MAX_KEPT_ELITES)
+        self.maxkeptelites_var.trace_add("write", self.track_maxkeptelites_change)
+
+        self.maxkeptelites_entry = tk.Entry(self.optionsframe, textvariable=self.maxkeptelites_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
+        self.maxkeptelites_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
+
+        option_row_number += 1  # go to next row of the options menu
+        self.recursivedirectorysearch_label = tk.Label(self.optionsframe, text="D) Also read subdirectories in file selection:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.recursivedirectorysearch_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
+        self.recursivedirectorysearch_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(True))
+        self.recursivedirectorysearch_yesbutton.grid(row=option_row_number, column=10, sticky=tk.W)
+        self.recursivedirectorysearch_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(False))
+        self.recursivedirectorysearch_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
+
+        option_row_number += 1  # go to next row of the options menu
+        self.smallratingwindow_label = tk.Label(self.optionsframe, text="E) Use smaller rating window:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.smallratingwindow_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
         self.smallratingwindow_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(True))
-        self.smallratingwindow_yesbutton.grid(row=5, column=10, sticky=tk.W)
+        self.smallratingwindow_yesbutton.grid(row=option_row_number, column=10, sticky=tk.W)
         self.smallratingwindow_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(False))
-        self.smallratingwindow_nobutton.grid(row=5, column=11, sticky=tk.W)
+        self.smallratingwindow_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
 
         
         ###
@@ -318,6 +338,11 @@ class AppWindow(tk.Frame):
             self.minmorph_var.set(self.settings['min morph threshold'])
         else:
             self.settings['min morph threshold'] = 0
+
+        if 'max kept elites' in self.settings:
+            self.maxkeptelites_var.set(self.settings['max kept elites'])
+        else:
+            self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
             
         for i in range(1, POP_SIZE + 1):
             if 'file '+str(i) in self.settings:
@@ -488,6 +513,23 @@ class AppWindow(tk.Frame):
                 del self.settings['min morph threshold']
             self.update_found_labels()
             self.update_initialize_population_button()                    
+            return
+
+    def track_maxkeptelites_change(self, var, index, mode):
+        """ Keeps track if the user changes the 'max kept elites' value in the GUI.
+            If an invalid value is chosen, then we use the default value.
+            """
+        string = self.maxkeptelites_entry.get()
+        try:
+            value = int(string)
+
+            if 0 <= value <= POP_SIZE:
+                self.settings['max kept elites'] = value
+            else:
+                self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
+
+        except ValueError:
+            self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
             return
 
 
@@ -1046,11 +1088,10 @@ class AppWindow(tk.Frame):
             self.reset_ratings()
             return
 
-        new_population = []
-        elite = self.get_elite_from_population()
-        new_population.append(elite)
+        # Start the new population with the elites from the last generation (depending on settings)
+        new_population = self.get_elites_from_population()
         
-        for i in range(1, POP_SIZE): # we need one less child, since we already kept the elite
+        for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
             child_appearance = fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'], self.settings)
             new_population.append(child_appearance)
@@ -1096,14 +1137,19 @@ class AppWindow(tk.Frame):
         return choices
             
 
-    def get_elite_from_population(self):
-        ''' returns the fittest child appearance from the population '''
-        max_rating = float()
-        for i in range(1,POP_SIZE + 1):
-            if self.chromosome[str(i)]['rating'] > max_rating:
-                max_rating = self.chromosome[str(i)]['rating']
-                max_number = i
-        return self.chromosome[str(max_number)]['appearance']
+    def get_elites_from_population(self):
+        """ Returns the children appearances where the rating is the maximum rating that the user selected.
+            If the maximum selected rating is lower than MINIMAL_RATING_FOR_KEEP_ELITES, then no appearances are returned.
+            Returns a maximum of appearances equal to user setting 'max kept elites'.
+         """
+
+        max_selected_rating = max([chromosomeValue['rating'] for chromosomeValue in self.chromosome.values()])
+
+        if max_selected_rating < MINIMAL_RATING_FOR_KEEP_ELITES:
+            return []
+
+        return [chromosomeValue['appearance'] for chromosomeValue in self.chromosome.values()
+                if chromosomeValue['rating'] == max_selected_rating][:self.settings['max kept elites']]
 
         
     def reset_ratings(self):
@@ -1385,7 +1431,8 @@ def save_appearance(appearance, filename):
             thumbnailpath = os.path.splitext(filename)[0]+'.jpg'
             shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
             return True                    
-        except:
+        except Exception as exception:
+            print(f'{exception=}')
             print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
             time.sleep(2)
     raise Exception("Can't save appearance {}".format(filename))
