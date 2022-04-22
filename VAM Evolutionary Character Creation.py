@@ -247,7 +247,7 @@ class AppWindow(tk.Frame):
         self.maxkeptelites_label = tk.Label(self.optionsframe, text="C) Max kept elites (highest rated):", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
         self.maxkeptelites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
 
-        # track if the threshold values are changed by the user and if so, update the morph info based on the setting
+        # track if the maxkeptelites values are changed by the user
         self.maxkeptelites_var = tk.IntVar()
         self.maxkeptelites_var.set(DEFAULT_MAX_KEPT_ELITES)
         self.maxkeptelites_var.trace_add("write", self.track_maxkeptelites_change)
