@@ -1148,8 +1148,12 @@ class AppWindow(tk.Frame):
         if max_selected_rating < MINIMAL_RATING_FOR_KEEP_ELITES:
             return []
 
-        return [chromosomeValue['appearance'] for chromosomeValue in self.chromosome.values()
-                if chromosomeValue['rating'] == max_selected_rating][:self.settings['max kept elites']]
+        # Select all appearances with maximum rating.
+        appearances_with_maximum_rating = [chromosomeValue['appearance'] for chromosomeValue in self.chromosome.values()
+                                           if chromosomeValue['rating'] == max_selected_rating]
+
+        # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
+        return appearances_with_maximum_rating[:self.settings['max kept elites']]
 
         
     def reset_ratings(self):
