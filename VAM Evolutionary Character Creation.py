@@ -34,6 +34,8 @@ DATA_PATH = "data"
 SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
 CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
 POP_SIZE = 20
+MINIMAL_RATING_FOR_KEEP_ELITES = 2
+DEFAULT_MAX_KEPT_ELITES = 1
 DEFAULT_FONT = "Calibri"
 FILENAME_FONT = ("Courier", 9)
 BG_COLOR = "#F9F9F9"
@@ -206,51 +208,68 @@ class AppWindow(tk.Frame):
         self.optionsframe = tk.Frame(self.master, bg=BG_COLOR)
         self.optionsframe.grid(row=7, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
 
+        option_row_number = 1
         options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        options_label.grid(columnspan=9, row=1, sticky=tk.W, pady=(0,0))
+        options_label.grid(columnspan=9, row=option_row_number, sticky=tk.W, pady=(0,0))
 
-        self.treshold_label = tk.Label(self.optionsframe, text="A) Remove morphs with absolute value below:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.treshold_label.grid(columnspan=5, row=2, column=0, sticky=tk.W, padx=(0,0))
+        option_row_number += 1  # go to next row of the options menu
+        self.threshold_label = tk.Label(self.optionsframe, text="A) Remove morphs with absolute value below:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.threshold_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
 
-        # track if the treshold values are changed by the user and if so, update the morph info based on the setting
-        self.treshold_var = tk.DoubleVar()
-        self.treshold_var.set(0.01)
-        self.treshold_var.trace_add("write", self.track_treshold_change)
+        # track if the threshold values are changed by the user and if so, update the morph info based on the setting
+        self.threshold_var = tk.DoubleVar()
+        self.threshold_var.set(0.01)
+        self.threshold_var.trace_add("write", self.track_threshold_change)
 
-        self.treshold_entry = tk.Entry(self.optionsframe, textvariable=self.treshold_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
-        self.treshold_entry.grid(columnspan=2, row=2, column=10, sticky=tk.W)
+        self.threshold_entry = tk.Entry(self.optionsframe, textvariable=self.threshold_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
+        self.threshold_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
 
-        self.treshold_label = tk.Label(self.optionsframe, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.treshold_label.grid(row=2, column=12, sticky=tk.W)
+        self.threshold_label = tk.Label(self.optionsframe, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
+        self.threshold_label.grid(row=option_row_number, column=12, sticky=tk.W)
 
         # minimum morphs needed in appearance to be available in file selection
+        option_row_number += 1  # go to next row of the options menu
         self.minmorph_label = tk.Label(self.optionsframe, text="B) Only show appearances with morph count above:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.minmorph_label.grid(columnspan=5, row=3, column=0, sticky=tk.W, padx=(0,0))
+        self.minmorph_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
 
-        # track if the treshold values are changed by the user and if so, update the morph info based on the setting
+        # track if the threshold values are changed by the user and if so, update the morph info based on the setting
         self.minmorph_var = tk.IntVar()
         self.minmorph_var.set(0)
         self.minmorph_var.trace_add("write", self.track_minmorph_change)
 
         self.minmorph_entry = tk.Entry(self.optionsframe, textvariable=self.minmorph_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
-        self.minmorph_entry.grid(columnspan=2, row=3, column=10, sticky=tk.W)
-
+        self.minmorph_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
+        
         self.minmorph_infolabel = tk.Label(self.optionsframe, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.minmorph_infolabel.grid(row=3, column=12, sticky=tk.W)
+        self.minmorph_infolabel.grid(row=option_row_number, column=12, sticky=tk.W)
 
-        self.recursivedirectorysearch_label = tk.Label(self.optionsframe, text="C) Also read subdirectories in file selection:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.recursivedirectorysearch_label.grid(columnspan=5, row=4, column=0, sticky=tk.W)
+        option_row_number += 1  # go to next row of the options menu
+        self.maxkeptelites_label = tk.Label(self.optionsframe, text="C) Max kept elites (highest rated):", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.maxkeptelites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0,0))
+
+        # track if the maxkeptelites values are changed by the user
+        self.maxkeptelites_var = tk.IntVar()
+        self.maxkeptelites_var.set(DEFAULT_MAX_KEPT_ELITES)
+        self.maxkeptelites_var.trace_add("write", self.track_maxkeptelites_change)
+
+        self.maxkeptelites_entry = tk.Entry(self.optionsframe, textvariable=self.maxkeptelites_var, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=7)
+        self.maxkeptelites_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
+
+        option_row_number += 1  # go to next row of the options menu
+        self.recursivedirectorysearch_label = tk.Label(self.optionsframe, text="D) Also read subdirectories in file selection:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.recursivedirectorysearch_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
         self.recursivedirectorysearch_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(True))
-        self.recursivedirectorysearch_yesbutton.grid(row=4, column=10, sticky=tk.W)
+        self.recursivedirectorysearch_yesbutton.grid(row=option_row_number, column=10, sticky=tk.W)
         self.recursivedirectorysearch_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(False))
-        self.recursivedirectorysearch_nobutton.grid(row=4, column=11, sticky=tk.W)
+        self.recursivedirectorysearch_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
 
-        self.smallratingwindow_label = tk.Label(self.optionsframe, text="D) Use smaller rating window:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.smallratingwindow_label.grid(columnspan=5, row=5, column=0, sticky=tk.W)
+        option_row_number += 1  # go to next row of the options menu
+        self.smallratingwindow_label = tk.Label(self.optionsframe, text="E) Use smaller rating window:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.smallratingwindow_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
         self.smallratingwindow_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(True))
-        self.smallratingwindow_yesbutton.grid(row=5, column=10, sticky=tk.W)
+        self.smallratingwindow_yesbutton.grid(row=option_row_number, column=10, sticky=tk.W)
         self.smallratingwindow_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(False))
-        self.smallratingwindow_nobutton.grid(row=5, column=11, sticky=tk.W)
+        self.smallratingwindow_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
 
 
         ###
@@ -310,16 +329,21 @@ class AppWindow(tk.Frame):
             self.childtemplate['gender'] = get_appearance_gender(load_appearance(self.settings['child template']))
             self.press_childtemplate_button(self.childtemplate['gender'])
 
-        if 'morph treshold' in self.settings:
-            self.treshold_var.set(self.settings['morph treshold'])
+        if 'morph threshold' in self.settings:
+            self.threshold_var.set(self.settings['morph threshold'])
         else:
-            self.settings['morph treshold'] = 0.01
+            self.settings['morph threshold'] = 0.01
 
-        if 'min morph treshold' in self.settings:
-            self.minmorph_var.set(self.settings['min morph treshold'])
+        if 'min morph threshold' in self.settings:
+            self.minmorph_var.set(self.settings['min morph threshold'])
         else:
-            self.settings['min morph treshold'] = 0
+            self.settings['min morph threshold'] = 0
 
+        if 'max kept elites' in self.settings:
+            self.maxkeptelites_var.set(self.settings['max kept elites'])
+        else:
+            self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
+            
         for i in range(1, POP_SIZE + 1):
             if 'file '+str(i) in self.settings:
                 if len(self.settings['file '+str(i)]) > 0:
@@ -443,26 +467,26 @@ class AppWindow(tk.Frame):
         return labeltxt
 
 
-    def track_treshold_change(self, var, index, mode):
-        """ Keeps track if the user changes the morph treshold value in the GUI.
+    def track_threshold_change(self, var, index, mode):
+        """ Keeps track if the user changes the morph threshold value in the GUI.
             If so, validity of the entry is checked. GUI is also updated depending
             on validity, using update_XYZ calls """
-        string = self.treshold_entry.get()
+        string = self.threshold_entry.get()
         try:
             value = float(string)
             if value >= 0.0 and value < 1.0:
-                self.settings['morph treshold'] = value
+                self.settings['morph threshold'] = value
                 self.update_found_labels()
                 self.update_initialize_population_button()
             else:
-                if 'morph treshold' in self.settings:
-                    del self.settings['morph treshold']
+                if 'morph threshold' in self.settings:
+                    del self.settings['morph threshold']
                 self.update_found_labels()
                 self.update_initialize_population_button()
                 return
         except ValueError:
-            if 'morph treshold' in self.settings:
-                del self.settings['morph treshold']
+            if 'morph threshold' in self.settings:
+                del self.settings['morph threshold']
             self.update_found_labels()
             self.update_initialize_population_button()
             return
@@ -478,8 +502,8 @@ class AppWindow(tk.Frame):
         string = self.minmorph_entry.get()
         try:
             value = int(string)
-            self.settings['min morph treshold'] = value
-
+            self.settings['min morph threshold'] = value
+            
             # also update the morph info on Chosen Files
             for i in range(1, POP_SIZE + 1):
                 self.update_morph_info(i)
@@ -487,10 +511,27 @@ class AppWindow(tk.Frame):
             self.update_initialize_population_button()
 
         except ValueError:
-            if 'min morph treshold' in self.settings:
-                del self.settings['min morph treshold']
+            if 'min morph threshold' in self.settings:
+                del self.settings['min morph threshold']
             self.update_found_labels()
             self.update_initialize_population_button()
+            return
+
+    def track_maxkeptelites_change(self, var, index, mode):
+        """ Keeps track if the user changes the 'max kept elites' value in the GUI.
+            If an invalid value is chosen, then we use the default value.
+            """
+        string = self.maxkeptelites_entry.get()
+        try:
+            value = int(string)
+
+            if 0 <= value <= POP_SIZE:
+                self.settings['max kept elites'] = value
+            else:
+                self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
+
+        except ValueError:
+            self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
             return
 
 
@@ -741,11 +782,11 @@ class AppWindow(tk.Frame):
                 missing += "· Please have at least 2 Parent files\n"
         else:
             missing += "· Please have at least 2 Parent files\n"
-
-        if 'morph treshold' not in self.settings:
+        
+        if 'morph threshold' not in self.settings:
             missing += "· Please enter correct value for option A\n"
-
-        if 'min morph treshold' not in self.settings:
+        
+        if 'min morph threshold' not in self.settings:
             missing += "· Please enter correct value for option B\n"
 
         if len(missing) == 0:
@@ -803,7 +844,7 @@ class AppWindow(tk.Frame):
 
         filenames = list(self.data['appearances'].keys())
         if filteronmorphcount:
-            filenames = self.filter_filenamelist_on_morph_treshold_and_min_morphs(filenames)
+            filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
 
         # create popup window
@@ -859,13 +900,13 @@ class AppWindow(tk.Frame):
         self.file_selection_popup.wait_window()
         return self._file_selection
 
-
-    def filter_filenamelist_on_morph_treshold_and_min_morphs(self, filenames):
-        """ For a given list of filenames returns a list of filenames which meet the morph and min morph tresholds. Returns
+    
+    def filter_filenamelist_on_morph_threshold_and_min_morphs(self, filenames):
+        """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds. Returns
             an empty list if neither of these settings are available. """
-        if 'morph treshold' not in self.settings:
+        if 'morph threshold' not in self.settings:
             return []
-        elif 'min morph treshold' not in self.settings:
+        elif 'min morph threshold' not in self.settings:
             return []
 
         filtered = []
@@ -873,8 +914,8 @@ class AppWindow(tk.Frame):
             template_gender = self.data['gender'][f]
             appearance = self.data['appearances'][f]
             morphlist = get_morphlist_from_appearance(appearance)
-            morphlist = filter_morphs_below_treshold(morphlist, self.settings['morph treshold'])
-            if len(morphlist) > self.settings['min morph treshold']:
+            morphlist = filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
+            if len(morphlist) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
 
@@ -994,12 +1035,12 @@ class AppWindow(tk.Frame):
 
     def update_morph_info(self, number):
         """ Updates morph info in the GUI for Parent file 'number'. """
-        treshold = self.settings['morph treshold']
-        if treshold == "":
-            treshold = 0
+        threshold = self.settings['morph threshold']
+        if threshold == "":
+            threshold = 0
         else:
-            treshold = float(treshold)
-
+            threshold = float(threshold)
+            
         if 'gender' in self.childtemplate:
             template_gender = self.childtemplate['gender']
         else:
@@ -1012,9 +1053,9 @@ class AppWindow(tk.Frame):
                 return
 
             morphlist_tmp = copy.deepcopy(get_morphlist_from_appearance(self.chromosome[str(number)]['appearance']))
-            morphlist_tmp = filter_morphs_below_treshold(morphlist_tmp, treshold)
+            morphlist_tmp = filter_morphs_below_threshold(morphlist_tmp, threshold)
             nmorphs = str(len(morphlist_tmp))
-            if int(nmorphs) < self.settings['min morph treshold']:
+            if int(nmorphs) < self.settings['min morph threshold']:
                 if self.gencounter == 0: # only do this in the initialization selection step
                     self.hide_parentfile_from_view(number)
                     return
@@ -1080,11 +1121,10 @@ class AppWindow(tk.Frame):
             self.scan_vam_for_command_updates("Initialize")
             return
 
-        new_population = []
-        elite = self.get_elite_from_population()
-        new_population.append(elite)
+        # Start the new population with the elites from the last generation (depending on settings)
+        new_population = self.get_elites_from_population()
 
-        for i in range(1, POP_SIZE): # we need one less child, since we already kept the elite
+        for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
             child_appearance = fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'], self.settings)
             new_population.append(child_appearance)
@@ -1239,14 +1279,23 @@ class AppWindow(tk.Frame):
         return choices
 
 
-    def get_elite_from_population(self):
-        ''' returns the fittest child appearance from the population '''
-        max_rating = float()
-        for i in range(1,POP_SIZE + 1):
-            if self.chromosome[str(i)]['rating'] > max_rating:
-                max_rating = self.chromosome[str(i)]['rating']
-                max_number = i
-        return self.chromosome[str(max_number)]['appearance']
+    def get_elites_from_population(self):
+        """ Returns the children appearances where the rating is the maximum rating that the user selected.
+            If the maximum selected rating is lower than MINIMAL_RATING_FOR_KEEP_ELITES, then no appearances are returned.
+            Returns a maximum of appearances equal to user setting 'max kept elites'.
+         """
+
+        max_selected_rating = max([chromosomeValue['rating'] for chromosomeValue in self.chromosome.values()])
+
+        if max_selected_rating < MINIMAL_RATING_FOR_KEEP_ELITES:
+            return []
+
+        # Select all appearances with maximum rating.
+        appearances_with_maximum_rating = [chromosomeValue['appearance'] for chromosomeValue in self.chromosome.values()
+                                           if chromosomeValue['rating'] == max_selected_rating]
+
+        # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
+        return appearances_with_maximum_rating[:self.settings['max kept elites']]
 
 
     def reset_ratings(self):
@@ -1263,7 +1312,7 @@ class AppWindow(tk.Frame):
 
         if 'gender' in self.childtemplate:
             filenames = self.filter_filenamelist_on_genders(filenames, self.matching_genders(self.childtemplate['gender']))
-            filtered = self.filter_filenamelist_on_morph_treshold_and_min_morphs(filenames)
+            filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
         return filtered
@@ -1279,7 +1328,7 @@ class AppWindow(tk.Frame):
 
         if 'gender' in self.childtemplate:
             filenames = self.filter_filenamelist_on_genders(filenames, self.matching_genders(self.childtemplate['gender']))
-            filtered = self.filter_filenamelist_on_morph_treshold_and_min_morphs(filenames)
+            filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
         return filtered
@@ -1299,7 +1348,7 @@ class AppWindow(tk.Frame):
         elif source_files == "Choose Files":
             # use selected appearances
             parent_filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if self.chromosome[str(i)]['can load']]
-            parent_filenames = self.filter_filenamelist_on_morph_treshold_and_min_morphs(parent_filenames)
+            parent_filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(parent_filenames)
 
         print("Source files: {} ({} Files)".format(source_files, len(parent_filenames)))
 
@@ -1331,8 +1380,8 @@ class AppWindow(tk.Frame):
             filenames = self.get_all_appearance_files()
         elif source_files == "Choose Files":
             filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if self.chromosome[str(i)]['can load']]
-            self.filter_filenamelist_on_morph_treshold_and_min_morphs(filenames)
-
+            self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+            
         appearances = [self.data['appearances'][f] for f in filenames]
 
         print("Source files: {} ({} Files)".format(source_files, len(appearances)))
@@ -1348,8 +1397,8 @@ class AppWindow(tk.Frame):
         covariances = self.get_cov_from_morphlists(morphlists)
         new_population = []
         templatefile = self.settings['child template']
-        treshold = self.settings['morph treshold']
-
+        threshold = self.settings['morph threshold']
+        
         for i in range(1, POP_SIZE + 1):
             txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(POP_SIZE) + ")"
             self.generatechild.configure(text=txt, bg="red")
@@ -1360,7 +1409,7 @@ class AppWindow(tk.Frame):
             new_morphlist = copy.deepcopy(morphlists[0])
             for i, morph in enumerate(new_morphlist):
                 morph['value'] = sample[i]
-            new_morphlist = filter_morphs_below_treshold(new_morphlist, treshold)
+            new_morphlist = filter_morphs_below_threshold(new_morphlist, threshold)
             child_appearance = self.data['appearances'][templatefile]
             print("Using as appearance template:", templatefile)
             child_appearance = save_morph_to_appearance(new_morphlist, child_appearance)
@@ -1540,8 +1589,9 @@ def save_appearance(appearance, filename):
             # copy a vam character fusion thumbnail as well
             thumbnailpath = os.path.splitext(filename)[0]+'.jpg'
             shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
-            return True
-        except:
+            return True                    
+        except Exception as exception:
+            print(f'{exception=}')
             print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
             time.sleep(2)
     raise Exception("Can't save appearance {}".format(filename))
@@ -1765,25 +1815,25 @@ def dedupe_morphs(morphlists):
         new_morphlists.append(new_morph)
     return new_morphlists
 
-
-def count_morphvalues_below_treshold(morphlist, treshold):
-    ''' checks for each morph in morphlist if the absolut value is below the treshold and returns a count and percentage '''
+    
+def count_morphvalues_below_threshold(morphlist, threshold):
+    ''' checks for each morph in morphlist if the absolut value is below the threshold and returns a count and percentage '''
     count = 0
     percentage = 0
 
     for morph in morphlist:
-        if abs(float(morph['value'])) < treshold:
+        if abs(float(morph['value'])) < threshold:
             count += 1
     percentage = count / len(morphlist)
     return count, percentage
 
-
-def filter_morphs_below_treshold(morphlist, treshold):
-    ''' goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above treshold '''
+    
+def filter_morphs_below_threshold(morphlist, threshold):
+    ''' goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above threshold '''
     new_morphlist = []
     for morph in morphlist:
         if "value" in morph:
-            if abs(float(morph['value'])) < treshold:
+            if abs(float(morph['value'])) < threshold:
                 continue
             else:
                 new_morphlist.append(morph)
@@ -1802,7 +1852,7 @@ def get_all_morphnames_in_morphlists(morphlists):
 def fuse_characters(filename1, filename2, settings):
     """ Load both filename1 and filename2, and do a intuitive crossover between the two, and finally a non_uniform_mutation.
         Returns the child created by these procedures. """
-    treshold = settings['morph treshold']
+    threshold = settings['morph threshold']
     files = []
     files.append(filename1)
     files.append(filename2)
@@ -1812,7 +1862,7 @@ def fuse_characters(filename1, filename2, settings):
         print("Reading appearance:", f)
         appearance = load_appearance(f)
         morphlist = get_morphlist_from_appearance(appearance)
-        morphlist = filter_morphs_below_treshold(morphlist, treshold)
+        morphlist = filter_morphs_below_threshold(morphlist, threshold)
         morphlists.append(morphlist)
     morphlists = dedupe_morphs(morphlists)
 
