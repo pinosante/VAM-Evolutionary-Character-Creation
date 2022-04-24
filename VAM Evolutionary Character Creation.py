@@ -8,7 +8,6 @@ import json
 import os
 import sys
 import copy
-import math as m
 import random
 import tkinter as tk
 from fnmatch import fnmatch
@@ -775,7 +774,7 @@ class AppWindow(tk.Frame):
             elif self.settings['source files'] == "Choose Files":
                 source_files = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if self.chromosome[str(i)]['can load']]
             else:
-                missing += "· Please have at least 2 Parent files\n"
+                source_files = []
             if len(source_files) >= 2:
                 pass
             else:
@@ -1507,7 +1506,7 @@ class AppWindow(tk.Frame):
 
     def press_restart_button(self, givewarning = True):
         if givewarning:
-            answer = messagebox.askquestion("Warning!", "Warning! This will reset all your current progress, reinitialize the app and restart with a new Generation 1. Are you sure?")
+            answer = messagebox.askquestion("Warning!", "Warning! This will reset all your current progress, reinitialize the app and restart with a (newly generated) Generation 1. Are you sure?")
             if answer == "no":
                 return False
         print("We are restarting")
