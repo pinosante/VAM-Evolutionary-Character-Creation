@@ -423,9 +423,9 @@ class AppWindow(tk.Frame):
         #path = self.get_vam_default_appearance_path()
         path = self.settings['appearance dir']
         if self.settings['recursive directory search']:
-            filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive = True)
+            filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
         else:
-            filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive = False)
+            filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
         for f in filenames:
             appearance = load_appearance(f)
             if get_morph_index_with_characterinfo_from_appearance(appearance) == None: # just calling this function since it looks for morphs
@@ -665,7 +665,7 @@ class AppWindow(tk.Frame):
             if len(self.settings['VAM base dir']) > 0:
                 vamdir = self.settings['VAM base dir']
 
-        folder_path = tk.filedialog.askdirectory(initialdir = vamdir, title = "Please select the folder which has the VAM.exe file")
+        folder_path = tk.filedialog.askdirectory(initialdir=vamdir, title="Please select the folder which has the VAM.exe file")
         if os.path.exists(os.path.join(folder_path, "vam.exe")):
             self.settings['VAM base dir'] = folder_path
             self.vamdirlabel.configure(text=strip_dir_string_to_max_length(folder_path, MAX_VAMDIR_STRING_LENGTH))
@@ -812,7 +812,7 @@ class AppWindow(tk.Frame):
             as an item. Updates GUI and settings after (un)succesful template selection. """
         filename = self.file_selection_with_thumbnails(genderlist, title, filteronmorphcount=False)
 
-        if filename == "": # user did not select files
+        if filename == "":  # user did not select files
             self.childtemplate['label'].configure(text = NO_FILE_SELECTED_TEXT)
             self.press_childtemplate_button(None)
             if 'gender' in self.childtemplate:
@@ -831,6 +831,18 @@ class AppWindow(tk.Frame):
             self.update_morph_info(i)
         self.update_initialize_population_button()
         self.update_found_labels()
+
+
+    def change_template_file(self, title):
+        """ Called by the change template button in the rating windows. Opens a file selection dialogue which
+            specifically filters for the gender of the template which is currently being used. If user does not
+            select a valid new template file, the old template file is used. Updates GUI and settings after
+            (un)succesful template selection. """
+        filename = self.file_selection_with_thumbnails([self.childtemplate['gender']], title, filteronmorphcount=False)
+        if filename == "":  # user did not select files
+            return
+        self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
+        self.settings['child template'] = filename
 
 
     def file_selection_with_thumbnails(self, genderlist, title, filteronmorphcount=True):
@@ -1049,7 +1061,7 @@ class AppWindow(tk.Frame):
         if 'filename' in self.chromosome[str(number)]:
             gender = get_appearance_gender(load_appearance(self.chromosome[str(number)]['filename']))
             if not self.can_match_genders(gender, template_gender):
-                self.hide_parentfile_from_view(number)
+                self.hide_parentfile_from_view(number)  # hide, but don't delete, in case template later has matching gender
                 return
 
             morphlist_tmp = copy.deepcopy(get_morphlist_from_appearance(self.chromosome[str(number)]['appearance']))
@@ -1065,11 +1077,12 @@ class AppWindow(tk.Frame):
                     self.chromosome[str(number)]['can load'] = True
         else:
             nmorphs = "N/A"
-        self.chromosome[str(number)]['nmorphdisplay'].configure(text = str(nmorphs))
+        if self.gencounter == 0:  # after the app is initialized, the morph information is not being shown anymore
+            self.chromosome[str(number)]['nmorphdisplay'].configure(text = str(nmorphs))
 
 
     def hide_parentfile_from_view(self, number):
-        """ Replaces the filelabe of the parent file #number with '...'  and 'N/A' but keeps the file info dictionary """
+        """ Replaces the filelable of the parent file #number with '...'  and 'N/A' but keeps the file info dictionary """
         self.chromosome[str(number)]['filenamedisplay'].configure(text = NO_FILE_SELECTED_TEXT)
         self.chromosome[str(number)]['nmorphdisplay'].configure(text = "N/A")
         self.chromosome[str(number)]['can load'] = False
@@ -1107,8 +1120,6 @@ class AppWindow(tk.Frame):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
-
         if self.gencounter == 0:
             self.save_settings()
             if method == "Gaussian Samples":
@@ -1121,8 +1132,15 @@ class AppWindow(tk.Frame):
             self.scan_vam_for_command_updates("Initialize")
             return
 
+        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+
         # Start the new population with the elites from the last generation (depending on settings)
-        new_population = self.get_elites_from_population()
+        elites = self.get_elites_from_population()
+
+        # Save elite appearances over child template (we do this, because the user might have changed the template file)
+        elite_morph_lists = [get_morphlist_from_appearance(appearance) for appearance in elites]
+        template_appearance = load_appearance(self.settings['child template'])
+        new_population = [save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in elite_morph_lists]
 
         for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
@@ -1179,7 +1197,7 @@ class AppWindow(tk.Frame):
 
     def execute_VAM_command(self, command):
         """ Tries to parse a command string to execute coming from scan_vam_for_command_updates. These
-        command strings are generated by the VAM Evolutionary Character Creation Companion savefile,
+        command strings are generated by the VAM Evolutionary Character Creation Companion save file,
         and always have either the format:
             "Child 12; Rate 4"
         or
@@ -1477,6 +1495,15 @@ class AppWindow(tk.Frame):
 
         self.titlerestartbutton = tk.Button(self.titleframe, text="Restart", anchor=tk.E, bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED, command=lambda:self.press_restart_button())
         self.titlerestartbutton.grid(columnspan=10, row=0, column=1, sticky=tk.E)
+
+        self.changetemplateframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.changetemplateframe.grid(row=7, column=1, padx=(10, 0), pady=(5, 0), sticky=tk.W)
+        self.changetemplatebutton = tk.Button(self.changetemplateframe, text="Change template", anchor=tk.W, bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED, command=lambda:self.change_template_file("Please Select Parent Template"))
+        self.changetemplatebutton.grid(row=0, column=0, sticky=tk.W)
+
+        labeltxt = os.path.basename(self.settings['child template'])[7:-4]
+        self.changetemplatebuttonlabel = tk.Label(self.changetemplateframe, text=labeltxt, width=14, anchor="w", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
+        self.changetemplatebuttonlabel.grid(row=0, column=1, sticky=tk.W, padx=0)
 
         if self.settings['small rating window']:
             rating_font_size = 10
