@@ -34,6 +34,7 @@ SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
 CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
 POP_SIZE = 20
 MINIMAL_RATING_FOR_KEEP_ELITES = 2
+INITIAL_RATING = 3
 DEFAULT_MAX_KEPT_ELITES = 1
 DEFAULT_FONT = "Calibri"
 FILENAME_FONT = ("Courier", 9)
@@ -1300,7 +1301,7 @@ class AppWindow(tk.Frame):
     def reset_ratings(self):
         """ Clear all ratings in the GUI. """
         for i in range(1, POP_SIZE + 1):
-            self.press_rating_button(i, 1)
+            self.press_rating_button(i, INITIAL_RATING)
 
 
     def get_all_appearance_files(self):
@@ -1496,7 +1497,7 @@ class AppWindow(tk.Frame):
         for i in range(1, POP_SIZE + 1):
             self.chromosome[str(i)]['childlabel'] = tk.Label(self.parentselectionframe, text="Child "+str(i), font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w", bg=BG_COLOR, fg=FG_COLOR)
             self.chromosome[str(i)]['childlabel'].grid(row=i+1, column=0, sticky=tk.W)
-            self.chromosome[str(i)]['rating'] = 1
+            self.chromosome[str(i)]['rating'] = INITIAL_RATING
             for j in range(1, 6):
                 self.chromosome[str(i)]['rating button '+str(j)] = tk.Button(self.parentselectionframe, width=2, font=(DEFAULT_FONT, rating_font_size, "bold"), bg=RATING_RAISED_BG_COLOR, fg=RATING_RAISED_FG_COLOR, activebackground=RATING_ACTIVE_BG_COLOR, activeforeground=RATING_ACTIVE_FG_COLOR, text=str(j), command=lambda i=i, j=j:self.press_rating_button(i, j))
                 self.chromosome[str(i)]['rating button '+str(j)].grid(row=i+1, column=j)
