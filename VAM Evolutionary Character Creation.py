@@ -836,15 +836,16 @@ class AppWindow(tk.Frame):
     def press_change_template_file(self, title):
         """ Called by the change template button in the rating windows. Opens a file selection dialogue which
             specifically filters for the gender of the template which is currently being used. If user does not
-            select a valid new template file, the old template file is used. Updates GUI and settings after
-            (un)succesful template selection. """
-        filename = self.file_selection_with_thumbnails([self.childtemplate['gender']], title, filteronmorphcount=False)
+            select a valid new template file, the old template file is used. """
+        filename = self.file_selection_with_thumbnails(self.matching_genders(self.childtemplate['gender']), title, filteronmorphcount=False)
         if filename == "":  # user did not select files
             return
         self.change_template_file(filename)
 
 
     def change_template_file(self, filename):
+        """ Called by either the GUI or as a VAM command. Checks if the gender of the chosen file matches the
+            current template gender. Updates the GUI. """
         if "Preset_Evolutionary_Child" in filename:  # if the file is a child, it already has the current template
             return
         # we need to check if the chosen gender matches the gender of the current population (for example:
@@ -854,8 +855,16 @@ class AppWindow(tk.Frame):
             return
         self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
+        self.update_population_with_new_template()
 
 
+    def update_population_with_new_template(self):
+        """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
+        template_appearance = load_appearance(self.settings['child template'])
+        for i in range(1, POP_SIZE + 1):
+            morphlist = get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
+            updated_appearance = save_morph_to_appearance(morphlist, template_appearance)
+            save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
 
 
     def file_selection_with_thumbnails(self, genderlist, title, filteronmorphcount=True):
