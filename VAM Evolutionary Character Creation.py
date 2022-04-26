@@ -1185,8 +1185,8 @@ class AppWindow(tk.Frame):
                 if lastcommand == "Initialize": # if we Initialize we have to set the lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
-                    self.execute_VAM_command(command)
                     self.broadcast_last_command_to_VAM(command)
+                    self.execute_VAM_command(command)
                     print("We have a new command: {}".format(command))
         except IOError as e:
             print (e)
@@ -1214,6 +1214,12 @@ class AppWindow(tk.Frame):
             self.press_rating_button(child, rating)
         elif command == "Generate Next Population":
             self.generate_next_population(self.settings['method'])
+            self.broadcast_generation_number_to_VAM(self.gencounter)
+        elif command == "Reset":
+            # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
+            # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
+            # takes more than the 5 second Connection-check-timeout in VAM.
+            self.press_restart_button(givewarning = False)
             self.broadcast_generation_number_to_VAM(self.gencounter)
 
 
@@ -1421,6 +1427,7 @@ class AppWindow(tk.Frame):
             txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(POP_SIZE) + ")"
             self.generatechild.configure(text=txt, bg="red")
             self.generatechild.update()
+            self.broadcast_message_to_VAM_rating_blocker(txt)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
             sample = [str(x) for x in sample]
