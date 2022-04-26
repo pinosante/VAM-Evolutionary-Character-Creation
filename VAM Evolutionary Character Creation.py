@@ -833,7 +833,7 @@ class AppWindow(tk.Frame):
         self.update_found_labels()
 
 
-    def change_template_file(self, title):
+    def press_change_template_file(self, title):
         """ Called by the change template button in the rating windows. Opens a file selection dialogue which
             specifically filters for the gender of the template which is currently being used. If user does not
             select a valid new template file, the old template file is used. Updates GUI and settings after
@@ -841,8 +841,21 @@ class AppWindow(tk.Frame):
         filename = self.file_selection_with_thumbnails([self.childtemplate['gender']], title, filteronmorphcount=False)
         if filename == "":  # user did not select files
             return
+        self.change_template_file(filename)
+
+
+    def change_template_file(self, filename):
+        if "Preset_Evolutionary_Child" in filename:  # if the file is a child, it already has the current template
+            return
+        # we need to check if the chosen gender matches the gender of the current population (for example:
+        # we can't suddenly switch from a male population to a female population or vice versa).
+        gender = get_appearance_gender(load_appearance(filename))
+        if not self.can_match_genders(gender, self.childtemplate['gender']):
+            return
         self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
+
+
 
 
     def file_selection_with_thumbnails(self, genderlist, title, filteronmorphcount=True):
@@ -1212,6 +1225,9 @@ class AppWindow(tk.Frame):
             rating = commands[1].split(" ")
             rating = int(rating[1])
             self.press_rating_button(child, rating)
+        elif "use template" in commands[0].lower():
+            filename = self.get_VAM_path(commands[1])
+            self.change_template_file(filename)
         elif command == "Generate Next Population":
             self.generate_next_population(self.settings['method'])
             self.broadcast_generation_number_to_VAM(self.gencounter)
@@ -1505,7 +1521,7 @@ class AppWindow(tk.Frame):
 
         self.changetemplateframe = tk.Frame(self.master, bg=BG_COLOR)
         self.changetemplateframe.grid(row=7, column=1, padx=(10, 0), pady=(5, 0), sticky=tk.W)
-        self.changetemplatebutton = tk.Button(self.changetemplateframe, text="Change template", anchor=tk.W, bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED, command=lambda:self.change_template_file("Please Select Parent Template"))
+        self.changetemplatebutton = tk.Button(self.changetemplateframe, text="Change template", anchor=tk.W, bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED, command=lambda:self.press_change_template_file("Please Select Parent Template"))
         self.changetemplatebutton.grid(row=0, column=0, sticky=tk.W)
 
         labeltxt = os.path.basename(self.settings['child template'])[7:-4]
