@@ -848,15 +848,24 @@ class AppWindow(tk.Frame):
         """ Called by either the GUI or as a VAM command. Checks if the gender of the chosen file matches the
             current template gender. Updates the GUI. """
         if "Preset_Evolutionary_Child" in filename:  # if the file is a child, it already has the current template
+            self.broadcast_message_to_VAM_rating_blocker("")
             return
+        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = get_appearance_gender(load_appearance(filename))
         if not self.can_match_genders(gender, self.childtemplate['gender']):
+            matches = self.matching_genders(self.childtemplate['gender'])
+            if len(matches) > 1:  # Female and Futa
+                selectmsg = "Please select a Female or Futa as template."
+            else:
+                selectmsg = "Please select a Male as template."
+            self.broadcast_message_to_VAM_rating_blocker("Failure: Gender does not match population.\n\n" + selectmsg)
             return
         self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
         self.update_population_with_new_template()
+        self.broadcast_message_to_VAM_rating_blocker("")
 
 
     def update_population_with_new_template(self):
