@@ -427,6 +427,7 @@ class AppWindow(tk.Frame):
         else:
             filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
         for f in filenames:
+            f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
             if get_morph_index_with_characterinfo_from_appearance(appearance) == None: # just calling this function since it looks for morphs
                 print("File {} is not a valid Appearance file, skipping.".format(f))
@@ -991,7 +992,7 @@ class AppWindow(tk.Frame):
         """ Saves settings and returns the filename through self._file_selection """
         self.settings['file selection geometry'] = self.file_selection_popup.winfo_geometry()
         self.settings['thumbnails per row'] = self.thumbnails_per_row
-        self._file_selection = filename
+        self._file_selection = str(pathlib.Path(filename))  # use uniform filename formatting
         self.file_selection_popup.destroy()
 
 
@@ -1236,6 +1237,7 @@ class AppWindow(tk.Frame):
             self.press_rating_button(child, rating)
         elif "use template" in commands[0].lower():
             filename = self.get_VAM_path(commands[1])
+            filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
         elif command == "Generate Next Population":
             self.generate_next_population(self.settings['method'])
