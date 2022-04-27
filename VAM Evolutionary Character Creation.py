@@ -1305,7 +1305,6 @@ class AppWindow(tk.Frame):
         self.methodframe.grid_remove()
         self.parentselectionframe.grid()
         self.chromosomelabel.configure(text="Rate Children")
-        self.generatechild.configure(text="Generate Next Population")
         self.favoritesframe.grid_remove()
         self.optionsframe.grid_remove()
 
@@ -1470,6 +1469,7 @@ class AppWindow(tk.Frame):
 
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
+        self.generatechild.configure(text="Generate Next Population")
         self.generatechild.update()
         return
 
