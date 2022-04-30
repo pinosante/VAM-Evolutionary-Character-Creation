@@ -1397,7 +1397,6 @@ class AppWindow(tk.Frame):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization. Updates
             population info and the GUI. """
         print("Using random pairwise chromosome crossover for sample initialization.")
-        self.save_settings()
 
         # select source files
         if source_files == "Choose All Favorites":
@@ -1429,8 +1428,6 @@ class AppWindow(tk.Frame):
         print("Using random samples from multivariate gaussian distribution for initialization.")
         self.generatechild.configure(text="Generating Population\n Please be patient!\n", bg="red")
         self.generatechild.update()
-
-        self.save_settings()
 
         # select source files
         if source_files == "Choose All Favorites":
