@@ -375,6 +375,14 @@ class AppWindow(tk.Frame):
         else:
             self.use_small_rating_window(False)
 
+        if 'generation counter' in self.settings:
+            self.gencounter = self.settings['generation counter']
+            answer = messagebox.askquestion("Continue last session?", f"Your last session ended at Generation {self.gencounter}. Do you want to continue that session?")
+            if answer == "yes":
+                self.continue_last_session()
+            else:
+                del self.settings['generation counter']
+
         self.update_initialize_population_button()
 
 
@@ -1153,7 +1161,7 @@ class AppWindow(tk.Frame):
             (self.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
         if self.gencounter == 0:
-            self.save_settings()
+            self.save_settings()  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files = self.settings['source files'])
             elif method == "Random Crossover":
@@ -1182,10 +1190,27 @@ class AppWindow(tk.Frame):
         self.update_population(new_population)
 
         self.gencounter += 1
+        self.settings['generation counter'] = self.gencounter
         self.titlelabel.configure(text = "Generation "+str(self.gencounter))
         self.reset_ratings()
         self.broadcast_message_to_VAM_rating_blocker("")
+        self.save_settings()
         return
+
+
+    def continue_last_session(self):
+        """ Skip choosing the settings and continue from the last session. This only means switching the layout to
+            the rating window and setting the generation counter to the last known value. """
+        path = self.get_vam_default_appearance_path()
+        save_path = os.path.join(path, SAVED_CHILDREN_PATH)
+        for i in range(1, POP_SIZE + 1):
+            filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i) + ".vap")
+            self.chromosome[str(i)]['filename'] = filename
+            self.chromosome[str(i)]['appearance'] = load_appearance(filename)
+        self.change_parent_to_generation_display()
+        self.switch_layout_to_rating()
+        self.reset_ratings()
+        self.scan_vam_for_command_updates("Initialize")
 
 
     def get_VAM_path(self, pathstring):
