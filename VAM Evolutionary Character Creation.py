@@ -376,9 +376,9 @@ class AppWindow(tk.Frame):
             self.use_small_rating_window(False)
 
         if 'generation counter' in self.settings:
-            self.gencounter = self.settings['generation counter']
-            answer = messagebox.askquestion("Continue last session?", f"Your last session ended at Generation {self.gencounter}. Do you want to continue that session?")
+            answer = messagebox.askquestion("Continue last session?", f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
+                self.gencounter = self.settings['generation counter']
                 self.continue_last_session()
             else:
                 del self.settings['generation counter']
@@ -1442,8 +1442,10 @@ class AppWindow(tk.Frame):
             new_population.append(child_appearance)
         self.save_population(new_population)
         self.gencounter += 1
-
         self.update_population(new_population)
+        self.generatechild.configure(bg="lightgreen", text="")
+        self.generatechild.configure(text="Generate Next Population")
+        self.generatechild.update()
         return
 
 
