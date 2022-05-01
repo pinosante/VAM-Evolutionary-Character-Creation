@@ -1494,7 +1494,7 @@ class AppWindow(tk.Frame):
             for i, morph in enumerate(new_morphlist):
                 morph['value'] = sample[i]
             new_morphlist = filter_morphs_below_threshold(new_morphlist, threshold)
-            child_appearance = self.data['appearances'][templatefile]
+            child_appearance = load_appearance(templatefile)
             print("Using as appearance template:", templatefile)
             child_appearance = save_morph_to_appearance(new_morphlist, child_appearance)
             new_population.append(child_appearance)
