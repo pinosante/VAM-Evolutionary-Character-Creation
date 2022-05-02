@@ -876,6 +876,30 @@ class AppWindow(tk.Frame):
         self.broadcast_message_to_VAM_rating_blocker("")
 
 
+    def variate_population_with_templates(self):
+        """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
+            templates """
+        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        filenames = list(self.data['appearances'].keys())
+        random.shuffle(filenames)
+        index = 0
+        appearance_templates = []
+        while len(appearance_templates) < POP_SIZE:
+            filename = filenames[index]
+            appearance = load_appearance(filename)
+            gender = get_appearance_gender(appearance)
+            if gender == self.childtemplate['gender']:
+                appearance_templates.append(appearance)
+            index += 1
+        for i in range(1, POP_SIZE + 1):
+            morphlist = get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
+            updated_appearance = save_morph_to_appearance(morphlist, appearance_templates[i-1])
+            nude_appearance = remove_clothing_from_appearance(updated_appearance)
+            save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
+        self.broadcast_message_to_VAM_rating_blocker("")
+
+
+
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
         template_appearance = load_appearance(self.settings['child template'])
@@ -1273,6 +1297,12 @@ class AppWindow(tk.Frame):
             filename = self.get_VAM_path(commands[1])
             filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
+        elif "variate population" in commands[0].lower():
+            # the random number in commands[1] is not used in any way in the variation call, but is only used to make
+            # sure that in case the user wants to "variate population" again after having pressed it before, the
+            # lastcommand != command in scan_vam_for_command_updates() (because the random numbers in commands[1]
+            # differ)
+            self.variate_population_with_templates()
         elif command == "Generate Next Population":
             self.generate_next_population(self.settings['method'])
             self.broadcast_generation_number_to_VAM(self.gencounter)
@@ -1839,7 +1869,6 @@ def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replace
     return None
 
 
-
 def get_appearance_gender(appearance):
     """ Return the gender of the appearance, or False if it could not be determined """
     # determine futa
@@ -1876,6 +1905,27 @@ def get_value_for_key_and_id_in_appearance(appearance, idx, key):
                 if key in item:
                     return item[key]
     return False
+
+
+def remove_clothing_from_appearance(appearance):
+    """ Removes the clothing and references to the clothing from the appearance. """
+    for dictionary in appearance['storables']:
+        if dictionary['id'] == 'geometry':
+            clothing = dictionary['clothing']
+            dictionary['clothing'] = []
+    if len(clothing) == 0:
+        return appearance
+    ids_to_delete = [item['internalId'] for item in clothing if 'internalId' in item]
+
+    indexes_to_delete = []
+    for idx, dictionary in enumerate(appearance['storables']):
+        for id in ids_to_delete:
+            if id in dictionary['id']:
+                indexes_to_delete.append(idx)
+    indexes_to_delete = list(set(indexes_to_delete))
+    for index in sorted(indexes_to_delete, reverse=True):
+        del appearance['storables'][index]
+    return appearance
 
 
 def save_morph_to_appearance(morphlist, appearance):
