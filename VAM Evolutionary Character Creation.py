@@ -319,7 +319,6 @@ class AppWindow(tk.Frame):
             else:
                 vamdir = strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH)
                 self.vamdirbutton.configure(relief=tk.SUNKEN)
-                #self.fill_data_with_all_appearances()
         else:
             vamdir = NO_FILE_SELECTED_TEXT
         self.vamdirlabel.configure(text=vamdir)
@@ -380,10 +379,12 @@ class AppWindow(tk.Frame):
             if answer == "yes":
                 self.gencounter = self.settings['generation counter']
                 self.continue_last_session()
+                return
             else:
                 del self.settings['generation counter']
 
         self.update_initialize_population_button()
+
 
 
     def use_recursive_directory_search(self, choice):
@@ -1234,6 +1235,7 @@ class AppWindow(tk.Frame):
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
+        self.generatechild.configure(text="Generate Next Population")
         self.scan_vam_for_command_updates("Initialize")
 
 
