@@ -1379,24 +1379,23 @@ class AppWindow(tk.Frame):
             rating = commands[1].split(" ")
             rating = int(rating[1])
             self.press_rating_button(child, rating)
+        # the random number in commands[1] for the if statements below are not used in any way by this script, except
+        # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
+        # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
         elif "use template" in commands[0].lower():
             filename = self.get_VAM_path(commands[1])
             filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
         elif "variate population" in commands[0].lower():
-            # the random number in commands[1] is not used in any way in the variation call, but is only used to make
-            # sure that in case the user wants to "variate population" again after having pressed it before, the
-            # lastcommand != command in scan_vam_for_command_updates() (because the random numbers in commands[1]
-            # differ)
             self.variate_population_with_templates()
         elif "connect to app" in commands[0].lower():
             self.connected_to_VAM = True
             self.reset_ratings()
             self.switch_layout_to_overview()
-        elif command == "Generate Next Population":
+        elif "generate next population" in commands[0].lower():
             self.generate_next_population(self.settings['method'])
             self.broadcast_generation_number_to_VAM(self.gencounter)
-        elif command == "Reset":
+        elif "reset" in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
