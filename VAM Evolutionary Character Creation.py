@@ -13,6 +13,7 @@ import tkinter as tk
 from fnmatch import fnmatch
 from tkinter import ttk
 from tkinter import messagebox
+from datetime import datetime
 import pathlib
 import shutil
 import numpy as np
@@ -287,12 +288,14 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
 
-        # some data variables
+        # some (data) variables
         self.gencounter = 0
         self.data = {}
         self.data['appearances'] = {}
         self.data['thumbnails'] = {}
         self.data['gender'] = {}
+        self.lastfivecommands = []
+        self.connected_to_VAM = False
 
 
     def initialize(self):
@@ -384,7 +387,6 @@ class AppWindow(tk.Frame):
                 del self.settings['generation counter']
 
         self.update_initialize_population_button()
-
 
 
     def use_recursive_directory_search(self, choice):
@@ -877,6 +879,57 @@ class AppWindow(tk.Frame):
         self.broadcast_message_to_VAM_rating_blocker("")
 
 
+    def switch_layout_to_overview(self):
+        self.broadcast_generation_number_to_VAM(self.gencounter)
+        print("VAM is ready, let's go.")
+        print("Switching view")
+        for widget in self.master.winfo_children():
+            widget.grid_forget()
+        self.overviewframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.overviewframe.grid(row=0, column=0, padx=10, pady=0, sticky="nsew")
+        self.warninglabel = tk.Label(self.overviewframe, text="Important: do NOT close this window!", font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
+        self.warninglabel.grid(row=0, columnspan=2, column=0, padx=(10,10), pady=(10, 0), sticky="w")
+        self.overviewlabel = tk.Label(self.overviewframe, text="Overview:", font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
+        self.overviewlabel.grid(row=1, columnspan=2, column=0, padx=(10,0), pady=(10, 0), sticky="w")
+        self.generationlabel = tk.Label(self.overviewframe, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
+        self.generationlabel.grid(row=2, column=0, padx=(10,0), pady=(0,0), sticky="w")
+        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.gencounter, font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR, anchor="w", justify=tk.LEFT)
+        self.generationnumberlabel.grid(row=2, column=1, padx=0, pady=(0,0), sticky="w")
+        self.templatelabel = tk.Label(self.overviewframe, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
+        self.templatelabel.grid(row=3, column=0, padx=(10,0), pady=(0,0), sticky="w")
+        self.templatefilelabel = tk.Label(self.overviewframe, text="", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR, anchor="w", justify=tk.LEFT)
+        self.templatefilelabel.grid(row=3, column=1, padx=0, pady=(0,), sticky="w")
+        self.templatefilelabel.configure(text=self.create_template_labeltext(self.settings['child template']))
+        self.lastcommandsframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.lastcommandsframe.grid(row=1, column=0, padx=10, pady=(10, 0), sticky="nsew")
+        self.lastcommandslabel = tk.Label(self.lastcommandsframe, text="Last five commands:", font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
+        self.lastcommandslabel.grid(row=0, column=0, padx=10, pady=0, sticky="w")
+        self.commandslabel = tk.Label(self.lastcommandsframe, text="...", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR, justify=tk.LEFT, anchor="w")
+        self.commandslabel.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
+        print("Resetting ratings")
+        self.reset_ratings()
+        print("Sending generation number")
+        self.broadcast_generation_number_to_VAM(self.gencounter)
+        self.broadcast_message_to_VAM_rating_blocker("")
+
+
+    def update_overview_window(self):
+        self.generationnumberlabel.config(text=self.gencounter)
+        self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
+        self.commandslabel.config(text=self.lastgivecommands_to_string(self.lastfivecommands))
+
+
+    def lastgivecommands_to_string(self, list_of_commands):
+        """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
+            to a string with \n for line separation """
+        string = ""
+        for command_dict in list_of_commands:
+            line = command_dict['time'] + ": " + command_dict['command'] + "\n"
+            string = string + line
+        string = string[:-1]  # remove the extra \n at the end
+        return string
+
+
     def variate_population_with_templates(self):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
@@ -1194,6 +1247,7 @@ class AppWindow(tk.Frame):
             self.change_parent_to_generation_display()
             self.switch_layout_to_rating()
             self.reset_ratings()
+            self.change_GUI_to_show_user_to_start_VAM()
             self.scan_vam_for_command_updates("Initialize")
             return
 
@@ -1223,6 +1277,23 @@ class AppWindow(tk.Frame):
         return
 
 
+    def change_GUI_to_show_user_to_start_VAM(self):
+        for widget in self.master.winfo_children():
+            widget.grid_forget()
+        self.messageframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.messageframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
+        self.messagelabel = tk.Label(self.messageframe, text="App is ready. \nPlease start VAM, load the", font=(DEFAULT_FONT, 14, ""), bg=BG_COLOR, fg=FG_COLOR)
+        self.messagelabel.pack(side=tk.TOP)
+        self.messagelabel = tk.Label(self.messageframe, text="VAM Evolutionary Character Creation Companion", font=(DEFAULT_FONT, 14, "italic"), bg=BG_COLOR, fg=FG_COLOR)
+        self.messagelabel.pack(side=tk.TOP)
+        self.messagelabel = tk.Label(self.messageframe, text="save, and click on 'Connect to App'", font=(DEFAULT_FONT, 14, ""), bg=BG_COLOR, fg=FG_COLOR)
+        self.messagelabel.pack(side=tk.TOP)
+        self.warninglabel = tk.Label(self.messageframe, text="\nImportant: do NOT close this window.\n ", font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
+        self.warninglabel.pack(side=tk.TOP)
+        self.lastmessagelabel = tk.Label(self.messageframe, text="This app needs to stay active to communicate with VAM.", font=(DEFAULT_FONT, 14, ""), bg=BG_COLOR, fg=FG_COLOR)
+        self.lastmessagelabel.pack(side=tk.TOP)
+
+
     def continue_last_session(self):
         """ Skip choosing the settings and continue from the last session. This only means switching the layout to
             the rating window and setting the generation counter to the last known value. """
@@ -1236,6 +1307,7 @@ class AppWindow(tk.Frame):
         self.switch_layout_to_rating()
         self.reset_ratings()
         self.generatechild.configure(text="Generate Next Population")
+        self.change_GUI_to_show_user_to_start_VAM()
         self.scan_vam_for_command_updates("Initialize")
 
 
@@ -1286,6 +1358,18 @@ class AppWindow(tk.Frame):
         or
             "Generate Next Population"
         """
+        if self.connected_to_VAM:
+            # add command to last five commands
+            command_dict = {}
+            now = datetime.now()
+            time_string = now.strftime("%d-%m-%Y %H:%M:%S")
+            command_dict['time'] = time_string
+            command_dict['command'] = command
+            self.lastfivecommands.insert(0, command_dict)
+            if len(self.lastfivecommands) == 6:
+                self.lastfivecommands.pop()
+            self.update_overview_window()
+
         # parse rate child commands
         commands = command.split(";")
         commands = [x.lstrip().rstrip() for x in commands]
@@ -1305,6 +1389,10 @@ class AppWindow(tk.Frame):
             # lastcommand != command in scan_vam_for_command_updates() (because the random numbers in commands[1]
             # differ)
             self.variate_population_with_templates()
+        elif "connect to app" in commands[0].lower():
+            self.connected_to_VAM = True
+            self.reset_ratings()
+            self.switch_layout_to_overview()
         elif command == "Generate Next Population":
             self.generate_next_population(self.settings['method'])
             self.broadcast_generation_number_to_VAM(self.gencounter)
@@ -1314,6 +1402,12 @@ class AppWindow(tk.Frame):
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(givewarning = False)
             self.broadcast_generation_number_to_VAM(self.gencounter)
+
+        if self.connected_to_VAM:
+            self.update_overview_window()
+
+    def add_command_to_lastfive_commands(self, list_of_commands):
+        pass
 
 
     def broadcast_generation_number_to_VAM(self, number):
