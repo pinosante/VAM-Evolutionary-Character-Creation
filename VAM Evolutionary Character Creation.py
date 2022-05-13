@@ -693,7 +693,7 @@ class AppWindow(tk.Frame):
         folder_path = tk.filedialog.askdirectory(initialdir=vamdir,
                                                  title="Please select the folder which has the VAM.exe file")
         if os.path.exists(os.path.join(folder_path, "vam.exe")):
-            self.settings['VAM base dir'] = folder_path
+            self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
             self.vamdirlabel.configure(text=strip_dir_string_to_max_length(folder_path, MAX_VAMDIR_STRING_LENGTH))
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
@@ -723,7 +723,7 @@ class AppWindow(tk.Frame):
             self.appearancedirbutton.configure(relief=tk.RAISED)
             self.clear_data_with_all_appearances()
         else:
-            self.settings['appearance dir'] = folder_path
+            self.settings['appearance dir'] = str(pathlib.Path(folder_path))
             self.appearancedirlabel.configure(
                 text=strip_dir_string_to_max_length(folder_path, MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearancedirbutton.configure(relief=tk.SUNKEN)
