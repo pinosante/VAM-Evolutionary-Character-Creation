@@ -858,9 +858,6 @@ class AppWindow(tk.Frame):
     def change_template_file(self, filename):
         """ Called by either the GUI or as a VAM command. Checks if the gender of the chosen file matches the
             current template gender. Updates the GUI. """
-        if "Preset_Evolutionary_Child" in filename:  # if the file is a child, it already has the current template
-            self.broadcast_message_to_VAM_rating_blocker("")
-            return
         self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
