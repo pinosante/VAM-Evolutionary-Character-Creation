@@ -1505,7 +1505,7 @@ class AppWindow(tk.Frame):
         path = self.settings['appearance dir']
         filenames = glob.glob(os.path.join(path, "Preset_*.fav"))
         filenames = [f[:-4] for f in filenames]
-        filenames = [f for f in filenames if os.path.exists(f)]
+        filenames = [str(pathlib.Path(f)) for f in filenames if os.path.exists(f)]
 
         if 'gender' in self.childtemplate:
             filenames = self.filter_filenamelist_on_genders(filenames, self.matching_genders(self.childtemplate['gender']))
