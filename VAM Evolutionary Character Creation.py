@@ -264,14 +264,6 @@ class AppWindow(tk.Frame):
         self.recursivedirectorysearch_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_recursive_directory_search(False))
         self.recursivedirectorysearch_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
 
-        option_row_number += 1  # go to next row of the options menu
-        self.smallratingwindow_label = tk.Label(self.optionsframe, text="E) Use smaller rating window:", anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.smallratingwindow_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
-        self.smallratingwindow_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(True))
-        self.smallratingwindow_yesbutton.grid(row=option_row_number, column=10, sticky=tk.W)
-        self.smallratingwindow_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, command=lambda:self.use_small_rating_window(False))
-        self.smallratingwindow_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
-
 
         ###
         ### GENERATE CHILD BUTTON
@@ -372,11 +364,6 @@ class AppWindow(tk.Frame):
         if 'thumbnails per row' not in self.settings:
             self.settings['thumbnails per row'] = 5
 
-        if 'small rating window' in self.settings:
-            self.use_small_rating_window(self.settings['small rating window'])
-        else:
-            self.use_small_rating_window(False)
-
         if 'generation counter' in self.settings:
             answer = messagebox.askquestion("Continue last session?", f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
@@ -404,18 +391,6 @@ class AppWindow(tk.Frame):
         self.clear_data_with_all_appearances()
         self.fill_data_with_all_appearances()
         self.update_found_labels()
-
-
-    def use_small_rating_window(self, choice):
-        """ Called by the use small rating window button in the app. Depending on the choice, sinks the GUI button
-            pressed and raises the other and keeps track of the choice in settings. """
-        self.settings['small rating window'] = choice
-        if choice:
-            self.smallratingwindow_yesbutton.configure(relief = tk.SUNKEN)
-            self.smallratingwindow_nobutton.configure(relief = tk.RAISED)
-        else:
-            self.smallratingwindow_yesbutton.configure(relief = tk.RAISED)
-            self.smallratingwindow_nobutton.configure(relief = tk.SUNKEN)
 
 
     def press_childtemplate_button(self, gender):
@@ -1694,13 +1669,8 @@ class AppWindow(tk.Frame):
         self.changetemplatebuttonlabel = tk.Label(self.changetemplateframe, text=labeltxt, width=14, anchor="w", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.changetemplatebuttonlabel.grid(row=0, column=1, sticky=tk.W, padx=0)
 
-        if self.settings['small rating window']:
-            rating_font_size = 10
-            self.generatechild.configure(width=25, height=2)
-            self.filler_bottom.configure(height=5)
-        else:
-            rating_font_size = 13
-            self.generatechild.configure(width=27, height=6)
+        rating_font_size = 13
+        self.generatechild.configure(width=27, height=6)
 
         for i in range(1, POP_SIZE + 1):
             self.chromosome[str(i)]['filebutton'].destroy()
