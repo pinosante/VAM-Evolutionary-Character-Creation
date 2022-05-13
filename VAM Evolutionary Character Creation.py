@@ -319,9 +319,10 @@ class AppWindow(tk.Frame):
         self.vamdirlabel.configure(text=vamdir)
 
         if 'child template' in self.settings:
-            self.childtemplate['label'].configure(text=self.create_template_labeltext(self.settings['child template']))
-            self.childtemplate['gender'] = get_appearance_gender(load_appearance(self.settings['child template']))
-            self.press_childtemplate_button(self.childtemplate['gender'])
+            if os.path.isfile(self.settings['child template']):
+                self.childtemplate['label'].configure(text=self.create_template_labeltext(self.settings['child template']))
+                self.childtemplate['gender'] = get_appearance_gender(load_appearance(self.settings['child template']))
+                self.press_childtemplate_button(self.childtemplate['gender'])
 
         if 'morph threshold' in self.settings:
             self.threshold_var.set(self.settings['morph threshold'])
