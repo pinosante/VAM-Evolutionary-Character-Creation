@@ -26,7 +26,7 @@ The fastest way to get results, is to:
 9.	In VAM click on "Connect to App"
 10.	In VAM rate the corresponding 1-20 appearances
 11.	In vAM click on Generate Population after you have rated them all
-12.	Go to 8 and keep repeating until you're satisfied with the generated appearances
+12.	Go to 10 and keep repeating until you're satisfied with the generated appearances
 13.	Save your favorite appearance to a new file.
 
 # So how do I use this? (Detailed Explanation)
