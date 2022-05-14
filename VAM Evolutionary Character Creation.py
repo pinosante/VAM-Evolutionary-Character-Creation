@@ -1378,7 +1378,7 @@ class AppWindow(tk.Frame):
             command_dict['time'] = time_string
             command_dict['command'] = command
             self.lastfivecommands.insert(0, command_dict)
-            if len(self.lastfivecommands) == 6:
+            if len(self.lastfivecommands) > 5:
                 self.lastfivecommands.pop()
             self.update_overview_window()
 
