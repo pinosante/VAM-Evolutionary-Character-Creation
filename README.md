@@ -78,17 +78,17 @@ After all characters are rated a roulette wheel selection takes place. This mean
 There are different ways of defining a "futa" file, but the one I use in this app is by looking if the "MVR_G2Female" morph is in the appearance file. This seems to be a popular futa format and is easy to work with. An example of a futa like this is: https://hub.virtamate.com/resources/violet-look-futa.8977/ (But there are many more to be found on the hub). If you choose a futa as a template, you can then either choose females or other futas, as parents! The reverse is also true: if you choose a female template and there are some futa files you really like, you can use those as parents for your female template as well. The "All Appearances" / "Favorited Appearances" / "Choose Files" buttons all support this, and will always show you the matching appearances (so futa + female parents for either a female or futa template).
 
 # Some useful tips
-•	With this version of the app you can actually use it in VR! Make sure you start the python app first, then enter VR load the companion save and "Connect to app".
-•	Really make sure to set option B to a value like 150, otherwise you end up with characters based on a single morph, which will mess up the genetic algorithm.
-•	If you have very similar looking children, only rate one of them, and keep the other at 1. This way you keep the gene pool more diverse.
-•	When doing the first few generations, make sure to keep the super weird/broken characters at 1 and everything which looks decently normal, at 2 (even if ugly). This way you will get rid of the weird/broken characters.
-•	If there is a character which has an ugly face, but some other good features (body/look) consider still rating with a 2 or 3 to keep those body genes in the pool.
-•	It is best to use a template appearance of a naked person, this loads faster and makes it easier to rate the generated appearances.
-•	If for some reason the app doesn't work, or stops working, go to the data directory in the app folder and delete "settings.json". This will give you a new "fresh" version of the app.
+- With this version of the app you can actually use it in VR! Make sure you start the python app first, then enter VR load the companion save and "Connect to app".
+- Really make sure to set option B to a value like 150, otherwise you end up with characters based on a single morph, which will mess up the genetic algorithm.
+- If you have very similar looking children, only rate one of them, and keep the other at 1. This way you keep the gene pool more diverse.
+- When doing the first few generations, make sure to keep the super weird/broken characters at 1 and everything which looks decently normal, at 2 (even if ugly). This way you will get rid of the weird/broken characters.
+- If there is a character which has an ugly face, but some other good features (body/look) consider still rating with a 2 or 3 to keep those body genes in the pool.
+- It is best to use a template appearance of a naked person, this loads faster and makes it easier to rate the generated appearances.
+- If for some reason the app doesn't work, or stops working, go to the data directory in the app folder and delete "settings.json". This will give you a new "fresh" version of the app.
 
 # Shout out to
-•	Felka99 for beta testing, adding some great suggestions, looking at my code, adding some features and helping me out to do this whole github thing. Thanks a bunch!
-•	ypeckak/unnamedplugins for beta testing and adding some great suggetsions!
+- Felka99 for beta testing, adding some great suggestions, looking at my code, adding some features and helping me out to do this whole github thing. Thanks a bunch!
+- ypeckak/unnamedplugins for beta testing and adding some great suggestions!
 
 # Enjoy!
 Please make my day and share what you create! I'm really curious what you come up with, so feel free to share screenshots or var's of the looks you created with this app! Let me also know in the discussion, if the app was able to capture some of the "flavour" of your favorite appearances! This is what keeps me motivated.
