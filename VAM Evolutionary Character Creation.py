@@ -694,7 +694,8 @@ class AppWindow(tk.Frame):
                                                  title="Please select the folder which has the VAM.exe file")
         if os.path.exists(os.path.join(folder_path, "vam.exe")):
             self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
-            self.vamdirlabel.configure(text=strip_dir_string_to_max_length(folder_path, MAX_VAMDIR_STRING_LENGTH))
+            self.vamdirlabel.configure(
+                text=strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH))
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.clear_data_with_all_appearances()
@@ -725,7 +726,7 @@ class AppWindow(tk.Frame):
         else:
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
             self.appearancedirlabel.configure(
-                text=strip_dir_string_to_max_length(folder_path, MAX_APPEARANCEDIR_STRING_LENGTH))
+                text=strip_dir_string_to_max_length(self.settings['appearance dir'], MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearancedirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.clear_data_with_all_appearances()
@@ -1847,16 +1848,16 @@ def strip_dir_string_to_max_length(dirstring, length):
         """
     if len(dirstring) <= length:
         return dirstring
-    parts = dirstring.split("/")
+    parts = dirstring.split("\\")
     stripped_string = ""
     index = len(parts) - 1
     while (len(parts[index]) + 1) <= ((length - 4) - (len(stripped_string) - 1)):
         if index == -1:
             break
-        stripped_string = parts[index] + "/" + stripped_string
+        stripped_string = parts[index] + "\\" + stripped_string
         index -= 1
-    stripped_string = stripped_string[:-1]  # remove trailing "/"
-    return "(…)/" + stripped_string
+    stripped_string = stripped_string[:-1]  # remove trailing "\"
+    return "(…)\\" + stripped_string
 
 
 def get_morphnames(morphlist):
