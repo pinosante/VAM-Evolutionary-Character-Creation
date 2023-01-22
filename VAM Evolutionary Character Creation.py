@@ -386,7 +386,8 @@ class AppWindow(tk.Frame):
         if 'min morph threshold' in self.settings:
             self.minmorph_var.set(self.settings['min morph threshold'])
         else:
-            self.settings['min morph threshold'] = 0
+            self.settings['min morph threshold'] = 150
+            self.minmorph_var.set(150)
 
         if 'max kept elites' in self.settings:
             self.maxkeptelites_var.set(self.settings['max kept elites'])
