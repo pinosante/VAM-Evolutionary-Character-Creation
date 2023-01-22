@@ -1346,8 +1346,8 @@ class AppWindow(tk.Frame):
                 linestring = f.read()
                 lines = linestring.split('\n')
                 # print(f"Length of lines {len(lines)}")
-                if len(lines) < 73:  # incomplete file
-                    raise IOError("Not enough lines in the file.")
+                if len(lines) < 70:  # incomplete file
+                    raise IOError(f"Not enough lines ({len(lines)}) in the file ")
                 # f.seek(0) # back to start of file
                 command_json = json.loads(linestring)
                 command = value_from_id_in_dict_list(command_json['storables'], "Text", "text")
