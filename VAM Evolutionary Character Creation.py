@@ -1602,7 +1602,7 @@ class AppWindow(tk.Frame):
 
         morphlists = [get_morphlist_from_appearance(appearance) for appearance in appearances]
         morphnames = get_all_morphnames_in_morphlists(morphlists)
-        morphlists = pad_morphnames_to_morphlists(morphlists, morphnames)
+        morphlists = pad_morphnames_to_morphlists(morphlists, morphnames, filenames)
         morphlists = dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
@@ -1877,16 +1877,19 @@ def morphname_in_morphlist(morphname, morphlist):
     return False
 
 
-def get_uid_from_morphname(morphname, morphlists):
+def get_uid_from_morphname(morphname, morphlists, filenames):
     """ look through list of morphlists for morphname and returns the first found corresponding uid """
-    for morphlist in morphlists:
+    for idx, morphlist in enumerate(morphlists):
         for m in morphlist:
             if m['name'] == morphname:
-                return m['uid']
+                if 'uid' in m:
+                    return m['uid']
+                else:
+                    raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
     return False
 
 
-def pad_morphnames_to_morphlists(morphlists, morphnames):
+def pad_morphnames_to_morphlists(morphlists, morphnames, filenames):
     """ adds uid keys to each morphlist in morphlists and sets the values to 0 if uid key doesn't exist """
     morphlists = copy.deepcopy(morphlists)
 
@@ -1897,7 +1900,7 @@ def pad_morphnames_to_morphlists(morphlists, morphnames):
                 continue
             else:
                 new_morph = {
-                    'uid': get_uid_from_morphname(morphname, morphlists),
+                    'uid': get_uid_from_morphname(morphname, morphlists, filenames),
                     'name': morphname,
                     'value': '0.0'
                 }
