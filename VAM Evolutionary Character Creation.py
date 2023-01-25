@@ -1012,7 +1012,7 @@ class AppWindow(tk.Frame):
         self.my_canvas.configure(yscrollcommand=my_scrollbar.set)
         self.my_canvas.bind('<Configure>', lambda e: self.my_canvas.configure(scrollregion=self.my_canvas.bbox("all")))
         self.my_canvas.bind_all('<MouseWheel>', lambda e: self.my_canvas.yview_scroll(int(-1 * e.delta / 120), "units"))
-        self.my_canvas.bind_all('<Escape>', lambda e: self.end_file_selection_with_thumbnails(event=e))
+        self.my_canvas.bind_all('<Escape>', lambda e: self.file_selection_popup.destroy())
 
         # we basically have a canvas for the scrollbar, and put this frame in it
         self.appearancesframe = tk.Frame(self.my_canvas, bg=BG_COLOR)
@@ -1044,6 +1044,8 @@ class AppWindow(tk.Frame):
                            activebackground=BUTTON_ACTIVE_COLOR, command=self.end_file_selection_with_thumbnails)
         button.pack(side=tk.LEFT)
         self.file_selection_popup.wait_window()
+        self.my_canvas.unbind_all('<MouseWheel>')
+        self.my_canvas.unbind_all('<Escape>')
         return self._file_selection
 
     def filter_filenamelist_on_morph_threshold_and_min_morphs(self, filenames):
@@ -1643,7 +1645,10 @@ class AppWindow(tk.Frame):
         means = defaultdict(lambda: 0.0)
         for morphlist in morphlists:
             for morph in morphlist:
-                means[morph['name']] += float(morph['value']) * 1 / len(morphlists)
+                if 'value' in morph:
+                    means[morph['name']] += float(morph['value']) * 1 / len(morphlists)
+                else:
+                    means[morph['name']] += 0 / len(morphlists)  # just assume missing values to be 0
         return means
 
     def get_cov_from_morphlists(self, morphlists):
@@ -1877,7 +1882,7 @@ def morphname_in_morphlist(morphname, morphlist):
     return False
 
 
-def get_uid_from_morphname(morphname, morphlists, filenames):
+def get_uid_from_morphname(morphname, morphlists, filenames=None):
     """ look through list of morphlists for morphname and returns the first found corresponding uid """
     for idx, morphlist in enumerate(morphlists):
         for m in morphlist:
@@ -1885,11 +1890,15 @@ def get_uid_from_morphname(morphname, morphlists, filenames):
                 if 'uid' in m:
                     return m['uid']
                 else:
-                    raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
+                    if filenames is None:  # this is the case when called from fuse_characters()
+                        raise KeyError("Could not find a morph with key 'uid'")
+                    else:
+                        raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
+
     return False
 
 
-def pad_morphnames_to_morphlists(morphlists, morphnames, filenames):
+def pad_morphnames_to_morphlists(morphlists, morphnames, filenames=None):
     """ adds uid keys to each morphlist in morphlists and sets the values to 0 if uid key doesn't exist """
     morphlists = copy.deepcopy(morphlists)
 
