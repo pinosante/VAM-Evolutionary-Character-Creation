@@ -920,16 +920,16 @@ class AppWindow(tk.Frame):
         appearance_templates = []
         while len(appearance_templates) < POP_SIZE:
             filename = filenames[index]
-            appearance = load_appearance(filename)
-            gender = get_appearance_gender(appearance)
+            appearance = ecc_logic.load_appearance(filename)
+            gender = ecc_logic.get_appearance_gender(appearance)
             if gender == self.childtemplate['gender']:
                 appearance_templates.append(appearance)
             index += 1
         for i in range(1, POP_SIZE + 1):
-            morphlist = get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
-            updated_appearance = save_morph_to_appearance(morphlist, appearance_templates[i - 1])
-            nude_appearance = remove_clothing_from_appearance(updated_appearance)
-            save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
+            morphlist = ecc_logic.get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
+            updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
+            nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
+            ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
         self.broadcast_message_to_VAM_rating_blocker("")
 
     def update_population_with_new_template(self):
@@ -1134,14 +1134,14 @@ class AppWindow(tk.Frame):
             template_gender = ""
 
         if 'filename' in self.chromosome[str(number)]:
-            gender = get_appearance_gender(load_appearance(self.chromosome[str(number)]['filename']))
+            gender = ecc_logic.get_appearance_gender(load_appearance(self.chromosome[str(number)]['filename']))
             if not self.can_match_genders(gender, template_gender):
                 self.hide_parentfile_from_view(
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
 
             morphlist_tmp = copy.deepcopy(get_morphlist_from_appearance(self.chromosome[str(number)]['appearance']))
-            morphlist_tmp = filter_morphs_below_threshold(morphlist_tmp, threshold)
+            morphlist_tmp = ecc_logic.filter_morphs_below_threshold(morphlist_tmp, threshold)
             nmorphs = str(len(morphlist_tmp))
             if int(nmorphs) < self.settings['min morph threshold']:
                 if self.gencounter == 0:  # only do this in the initialization selection step
@@ -1216,13 +1216,13 @@ class AppWindow(tk.Frame):
 
         # Save elite appearances over child template (we do this, because the user might have changed the template file)
         elite_morph_lists = [get_morphlist_from_appearance(appearance) for appearance in elites]
-        template_appearance = load_appearance(self.settings['child template'])
-        new_population = [save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in
+        template_appearance = ecc_logic.load_appearance(self.settings['child template'])
+        new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in
                           elite_morph_lists]
 
         for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
-            child_appearance = fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'],
+            child_appearance = ecc_logic.fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'],
                                                self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
@@ -1301,7 +1301,7 @@ class AppWindow(tk.Frame):
                     raise IOError(f"Not enough lines ({len(lines)}) in the file ")
                 # f.seek(0) # back to start of file
                 command_json = json.loads(linestring)
-                command = value_from_id_in_dict_list(command_json['storables'], "Text", "text")
+                command = ecc_logic.value_from_id_in_dict_list(command_json['storables'], "Text", "text")
                 if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
@@ -1406,7 +1406,7 @@ class AppWindow(tk.Frame):
         try:
             with open(path, encoding="utf-8") as f:
                 text_json = json.load(f)
-            text_json['storables'] = replace_value_from_id_in_dict_list(text_json['storables'], id_string, needed_key,
+            text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json['storables'], id_string, needed_key,
                                                                         replacement_string)
             with open(path, "w", encoding="utf-8") as json_file:
                 json.dump(text_json, json_file, indent=3)
@@ -1492,7 +1492,7 @@ class AppWindow(tk.Frame):
 
         if 'gender' in self.childtemplate:
             filenames = self.filter_filenamelist_on_genders(filenames,
-                                                            self.matching_genders(self.childtemplate['gender']))
+                                                            ecc_logic.matching_genders(self.childtemplate['gender']))
             filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
@@ -1530,6 +1530,7 @@ class AppWindow(tk.Frame):
         return
 
     def gaussian_initialize_population(self, source_files):
+        # todo: split the UI and the BL parts
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print("Using random samples from multivariate gaussian distribution for initialization.")
@@ -1550,10 +1551,10 @@ class AppWindow(tk.Frame):
 
         print("Source files: {} ({} Files)".format(source_files, len(appearances)))
 
-        morphlists = [get_morphlist_from_appearance(appearance) for appearance in appearances]
-        morphnames = get_all_morphnames_in_morphlists(morphlists)
-        morphlists = pad_morphnames_to_morphlists(morphlists, morphnames, filenames)
-        morphlists = dedupe_morphs(morphlists)
+        morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
+        morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
+        morphlists = ecc_logic.pad_morphnames_to_morphlists(morphlists, morphnames, filenames)
+        morphlists = ecc_logic.dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
 
@@ -1573,14 +1574,14 @@ class AppWindow(tk.Frame):
             new_morphlist = copy.deepcopy(morphlists[0])
             for i, morph in enumerate(new_morphlist):
                 morph['value'] = sample[i]
-            new_morphlist = filter_morphs_below_threshold(new_morphlist, threshold)
-            child_appearance = load_appearance(templatefile)
+            new_morphlist = ecc_logic.filter_morphs_below_threshold(new_morphlist, threshold)
+            child_appearance = ecc_logic.load_appearance(templatefile)
             print("Using as appearance template:", templatefile)
-            child_appearance = save_morph_to_appearance(new_morphlist, child_appearance)
+            child_appearance = ecc_logic.save_morph_to_appearance(new_morphlist, child_appearance)
             new_population.append(child_appearance)
 
         self.save_population(new_population)
-        self.gencounter += 1
+        self.generator.gencounter += 1
 
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
@@ -1618,7 +1619,7 @@ class AppWindow(tk.Frame):
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
             savefilename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i + 1) + ".vap")
-            save_appearance(child_appearance, savefilename)
+            ecc_logic.save_appearance(child_appearance, savefilename)
         return True
 
     def update_population(self, population):
@@ -1633,7 +1634,7 @@ class AppWindow(tk.Frame):
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.titlelabel.configure(text="Generation " + str(self.gencounter))
+        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
         self.columninfo['1'].destroy()
         self.columninfo['2'].destroy()
         self.columninfo['3'].destroy()
