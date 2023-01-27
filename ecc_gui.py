@@ -1,9 +1,8 @@
-###
-### By Pino Sante
-###
-### Please credit me if you change, use or adapt this file.
-###
-
+'''
+GUI for VAM Evolutionary Character Creation 
+By Pino Sante
+Please credit me if you change, use or adapt this file.
+'''
 import json
 import os
 import sys
@@ -22,6 +21,10 @@ import time
 from collections import defaultdict
 from tkinter import filedialog
 from PIL import ImageTk, Image
+
+
+import ecc_logic
+
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
@@ -77,9 +80,10 @@ RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
 
 
 class AppWindow(tk.Frame):
-    def __init__(self, settings):
+    def __init__(self, settings, generator):
         super().__init__()
         self.settings = settings
+        self.generator = generator
         self.initUI()
 
     def initUI(self):
@@ -94,8 +98,8 @@ class AppWindow(tk.Frame):
         self.titleframe = tk.Frame(self.master, bg=BG_COLOR)
         self.titleframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
         self.titleframe.grid_columnconfigure(0, weight=1)
-        self.titlelabel = tk.Label(self.titleframe, text="Initialization", font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR,
-                                   fg=FG_COLOR)
+        self.titlelabel = tk.Label(self.titleframe, text="Initialization",
+                            font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
         self.titlelabel.grid(row=0, column=0, sticky=tk.W)
 
         ###
@@ -103,15 +107,18 @@ class AppWindow(tk.Frame):
         ###
         self.vamdirframe = tk.Frame(self.master, bg=BG_COLOR)
         self.vamdirframe.grid(row=1, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.vamdirtitlelabel = tk.Label(self.vamdirframe, text="Step 1: Select VAM Base Folder (with VaM.exe)",
-                                         font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.vamdirtitlelabel = tk.Label(self.vamdirframe,
+                            text="Step 1: Select VAM Base Folder (with VaM.exe)",
+                            font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.vamdirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                      activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                      command=lambda: self.select_vamdir())
+        self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
+                            fg=BUTTON_FG_COLOR,
+                            activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                            command=lambda: self.select_vamdir())
         self.vamdirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT, anchor=tk.W,
-                                    width=MAX_VAMDIR_STRING_LENGTH, bg=BG_COLOR, fg=FG_COLOR)
+        self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT,
+                            font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
+                            bg=BG_COLOR, fg=FG_COLOR)
         self.vamdirlabel.grid(row=1, column=1, sticky=tk.W)
 
         ###
@@ -119,15 +126,18 @@ class AppWindow(tk.Frame):
         ###
         self.appearancedirframe = tk.Frame(self.master, bg=BG_COLOR)
         self.appearancedirframe.grid(row=2, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.appearancedirtitlelabel = tk.Label(self.appearancedirframe, text="Step 2: Select Appearance folder to use",
-                                                font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.appearancedirtitlelabel = tk.Label(self.appearancedirframe,
+                            text="Step 2: Select Appearance folder to use",
+                            font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.appearancedirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder", bg=BUTTON_BG_COLOR,
-                                             fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                             command=lambda: self.select_appearancedir())
+        self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder",
+                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                            activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                            command=lambda: self.select_appearancedir())
         self.appearancedirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT,
-                                           anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH, bg=BG_COLOR, fg=FG_COLOR)
+        self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT,
+                            font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
+                            bg=BG_COLOR, fg=FG_COLOR)
         self.appearancedirlabel.grid(row=1, column=1, sticky=tk.W)
 
         ###
@@ -135,28 +145,29 @@ class AppWindow(tk.Frame):
         ###
         self.childtemplateframe = tk.Frame(self.master, bg=BG_COLOR)
         self.childtemplateframe.grid(row=3, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.childtemplatelabel = tk.Label(self.childtemplateframe, text="Step 3: Select Child Template Appearance",
-                                           font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.childtemplatelabel = tk.Label(self.childtemplateframe,
+                            text="Step 3: Select Child Template Appearance", font=subtitlefont,
+                            bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
         self.childtemplatebutton = {}
-        self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female", bg=BUTTON_BG_COLOR,
-                                                       fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                       command=lambda: self.select_template_file(["Female"],
-                                                       "Please Select Parent Template"))
+        self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female",
+                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                            command=lambda: self.select_template_file(["Female"],
+                            "Please Select Parent Template"))
         self.childtemplatebutton['Female'].grid(row=1, column=0, sticky=tk.W, padx=0)
-        self.childtemplatebutton['Male'] = tk.Button(self.childtemplateframe, text="Male", bg=BUTTON_BG_COLOR,
-                                                     fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                     command=lambda: self.select_template_file(["Male"],
-                                                     "Please Select Parent Template"))
+        self.childtemplatebutton['Male'] = tk.Button(self.childtemplateframe, text="Male",
+                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                            command=lambda: self.select_template_file(["Male"],
+                            "Please Select Parent Template"))
         self.childtemplatebutton['Male'].grid(row=1, column=1, sticky=tk.W, padx=0)
-        self.childtemplatebutton['Futa'] = tk.Button(self.childtemplateframe, text="Futa", bg=BUTTON_BG_COLOR,
-                                                     fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                     command=lambda: self.select_template_file(["Futa"],
-                                                     "Please Select Parent Template"))
+        self.childtemplatebutton['Futa'] = tk.Button(self.childtemplateframe, text="Futa",
+                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                            command=lambda: self.select_template_file(["Futa"],
+                            "Please Select Parent Template"))
         self.childtemplatebutton['Futa'].grid(row=1, column=2, sticky=tk.W, padx=0)
         self.childtemplate = {}
-        self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT, font=FILENAME_FONT,
-                                               bg=BG_COLOR, fg=FG_COLOR)
+        self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
+                            font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplate['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
 
         ###
@@ -333,14 +344,6 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
 
-        # some (data) variables
-        self.gencounter = 0
-        self.data = {}
-        self.data['appearances'] = {}
-        self.data['thumbnails'] = {}
-        self.data['gender'] = {}
-        self.lastfivecommands = []
-        self.connected_to_VAM = False
 
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
@@ -349,7 +352,7 @@ class AppWindow(tk.Frame):
             if len(self.settings['appearance dir']) < 1:
                 appearancedir = NO_FILE_SELECTED_TEXT
             else:
-                appearancedir = strip_dir_string_to_max_length(self.settings['appearance dir'],
+                appearancedir = Logic.strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                                MAX_APPEARANCEDIR_STRING_LENGTH)
                 self.appearancedirbutton.configure(relief=tk.SUNKEN)
         else:
@@ -478,13 +481,6 @@ class AppWindow(tk.Frame):
                 print("Loading file {} into database.".format(f))
                 self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
                 self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
-
-    def clear_data_with_all_appearances(self):
-        """ Clears the data stored in the data dictionaries. This is called when loading the VAM
-            directory fails, to delete old data. """
-        self.data['appearances'].clear()
-        self.data['thumbnails'].clear()
-        self.data['gender'].clear()
 
     def get_thumbnail_for_filename(self, filename):
         """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
@@ -700,13 +696,13 @@ class AppWindow(tk.Frame):
                 text=strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH))
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
-            self.clear_data_with_all_appearances()
+            self.generator.clear_data_with_all_appearances()
             self.fill_data_with_all_appearances()
         else:
             self.settings['VAM base dir'] = ""
             self.vamdirlabel.configure(text=NO_FILE_SELECTED_TEXT)
             self.vamdirbutton.configure(relief=tk.RAISED)
-            self.clear_data_with_all_appearances()
+            self.generator.clear_data_with_all_appearances()
         self.update_initialize_population_button()
         self.update_found_labels()
 
@@ -724,14 +720,14 @@ class AppWindow(tk.Frame):
             self.settings['appearance dir'] = ""
             self.appearancedirlabel.configure(text=NO_FILE_SELECTED_TEXT)
             self.appearancedirbutton.configure(relief=tk.RAISED)
-            self.clear_data_with_all_appearances()
+            self.generator.clear_data_with_all_appearances()
         else:
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
             self.appearancedirlabel.configure(
                 text=strip_dir_string_to_max_length(self.settings['appearance dir'], MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearancedirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
-            self.clear_data_with_all_appearances()
+            self.generator.clear_data_with_all_appearances()
             self.fill_data_with_all_appearances()
         self.update_initialize_population_button()
         self.update_found_labels()
@@ -1076,25 +1072,6 @@ class AppWindow(tk.Frame):
                     filtered.append(f)
         return filtered
 
-    def matching_genders(self, gender):
-        """ returns list of matching genders for a given gender (Female, Male, Futa) """
-        if gender == "Futa" or gender == "Female":
-            match = ["Female", "Futa"]
-        elif gender == "Male":
-            match = ["Male"]
-        else:
-            match = []
-        return match
-
-    def can_match_genders(self, gender1, gender2):
-        """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
-        if gender1 == gender2:
-            return True
-        if gender1 == 'Female' and gender2 == 'Futa':
-            return True
-        if gender1 == 'Futa' and gender2 == 'Female':
-            return True
-        return False
 
     def end_file_selection_with_thumbnails(self, filename="", event=None):
         """ Saves settings and returns the filename through self._file_selection """
@@ -1424,7 +1401,7 @@ class AppWindow(tk.Frame):
 
     def broadcast_generation_number_to_VAM(self, number):
         """ Updates the file
-            PATH_TO_VAM\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMGeneration.vap
+            PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMGeneration.vap
             with the generation number, so the Vam Evoluationary Character Creation Companion can display the
             proper generation number. """
         # try to save file

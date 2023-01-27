@@ -1,8 +1,8 @@
-###
-### By Pino Sante
-###
-### Please credit me if you change, use or adapt this file.
-###
+'''
+Business logic for VAM Evolutionary Character Creation 
+By Pino Sante
+Please credit me if you change, use or adapt this file.
+'''
 
 import json
 import os
@@ -55,6 +55,29 @@ RATING_HOVER_BG_COLOR = BUTTON_BG_COLOR
 RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
 RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
+
+settings = {}
+
+
+class Generator:
+    def __init__(self, settings):
+        self.settings = settings
+
+        # some (data) variables
+        self.gencounter = 0
+        self.data = {}
+        self.data['appearances'] = {}
+        self.data['thumbnails'] = {}
+        self.data['gender'] = {}
+        self.lastfivecommands = []
+        self.connected_to_VAM = False
+
+    def clear_data_with_all_appearances(self):
+        """ Clears the data stored in the data dictionaries. This is called when loading the VAM
+            directory fails, to delete old data. """
+        self.data['appearances'].clear()
+        self.data['thumbnails'].clear()
+        self.data['gender'].clear()
 
 
 
@@ -404,6 +427,32 @@ def fuse_characters(filename1, filename2, settings):
     print("Using as appearance template:", templatefile)
     child_appearance = save_morph_to_appearance(child_morphlist, child_appearance)
     return child_appearance
+
+
+
+
+def matching_genders(gender):
+    """ returns list of matching genders for a given gender (Female, Male, Futa) """
+    if gender == "Futa" or gender == "Female":
+        match = ["Female", "Futa"]
+    elif gender == "Male":
+        match = ["Male"]
+    else:
+        match = []
+    return match
+
+def can_match_genders(gender1, gender2):
+    """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
+    if gender1 == gender2:
+        return True
+    if gender1 == 'Female' and gender2 == 'Futa':
+        return True
+    if gender1 == 'Futa' and gender2 == 'Female':
+        return True
+    return False
+
+
+
 
 if __name__ == '__main__':
     print('I am just a module, please launch the main script "VAM Evolutionary Character Creation.py".')

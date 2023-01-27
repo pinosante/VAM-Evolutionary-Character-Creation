@@ -11,8 +11,8 @@ import sys
 import json
 import tkinter as tk
 
-import GUI
-import Logic
+import ecc_gui
+import ecc_logic
 
 
 BG_COLOR = "#F9F9F9"
@@ -54,12 +54,16 @@ def main():
     '''
     settings = load_settings()
 
+    # todo: convert Logic into class later
+
+    generator = ecc_logic.Generator(settings)
+
     main_window = tk.Tk()
     main_window.configure(bg=BG_COLOR)
     main_window.option_add("*font", "Calibri 9")
     main_window.iconbitmap(os.path.join(DATA_PATH, ICON_FILENAME))
 
-    app = GUI.AppWindow(settings)
+    app = ecc_gui.AppWindow(settings, generator)
 
     app.initialize()
     main_window.mainloop()
