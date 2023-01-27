@@ -24,6 +24,7 @@ from PIL import ImageTk, Image
 
 
 import ecc_logic
+import ecc_utility
 
 
 THUMBNAIL_SIZE = 184, 184
@@ -352,7 +353,7 @@ class AppWindow(tk.Frame):
             if len(self.settings['appearance dir']) < 1:
                 appearancedir = NO_FILE_SELECTED_TEXT
             else:
-                appearancedir = Logic.strip_dir_string_to_max_length(self.settings['appearance dir'],
+                appearancedir = ecc_utility.strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                                MAX_APPEARANCEDIR_STRING_LENGTH)
                 self.appearancedirbutton.configure(relief=tk.SUNKEN)
         else:
@@ -369,7 +370,7 @@ class AppWindow(tk.Frame):
             if len(self.settings['VAM base dir']) < 1:
                 vamdir = NO_FILE_SELECTED_TEXT
             else:
-                vamdir = strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH)
+                vamdir = ecc_utility.strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH)
                 self.vamdirbutton.configure(relief=tk.SUNKEN)
         else:
             vamdir = NO_FILE_SELECTED_TEXT
@@ -379,7 +380,7 @@ class AppWindow(tk.Frame):
             if os.path.isfile(self.settings['child template']):
                 self.childtemplate['label'].configure(
                     text=self.create_template_labeltext(self.settings['child template']))
-                self.childtemplate['gender'] = get_appearance_gender(load_appearance(self.settings['child template']))
+                self.childtemplate['gender'] = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(self.settings['child template']))
                 self.press_childtemplate_button(self.childtemplate['gender'])
 
         if 'morph threshold' in self.settings:
@@ -448,8 +449,8 @@ class AppWindow(tk.Frame):
             self.recursivedirectorysearch_nobutton.configure(relief=tk.SUNKEN)
         self.recursivedirectorysearch_yesbutton.update()
         self.recursivedirectorysearch_nobutton.update()
-        self.clear_data_with_all_appearances()
-        self.fill_data_with_all_appearances()
+        self.generator.clear_data_with_all_appearances()
+        self.generator.fill_data_with_all_appearances()
         self.update_found_labels()
 
     def press_childtemplate_button(self, gender):
@@ -461,42 +462,10 @@ class AppWindow(tk.Frame):
         for remaining in remaining_genders:
             self.childtemplatebutton[remaining].configure(relief=tk.RAISED)
 
-    def fill_data_with_all_appearances(self):
-        """ Loads all available presets found in the default VAM directory into dictionaries
-            to save loading-times when using the app """
-        # path = self.get_vam_default_appearance_path()
-        path = self.settings['appearance dir']
-        if self.settings['recursive directory search']:
-            filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
-        else:
-            filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
-        for f in filenames:
-            f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
-            appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(
-                    appearance) is None:  # just calling this function since it looks for morphs
-                print("File {} is not a valid Appearance file, skipping.".format(f))
-            else:
-                self.data['appearances'][f] = appearance
-                print("Loading file {} into database.".format(f))
-                self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
-                self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
-
-    def get_thumbnail_for_filename(self, filename):
-        """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
-            PATH_TO/NAME_OF_APPEARANCE.vap as format """
-        thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
-        if not os.path.exists(thumbnailpath):
-            thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
-        image = Image.open(thumbnailpath)
-        image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
-        thumbnail = ImageTk.PhotoImage(image)
-        return thumbnail
-
     def create_template_labeltext(self, filename):
         """ Returns a formatted label text for a given Appearance file with
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
-        template_gender = get_appearance_gender(load_appearance(filename))
+        template_gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
         # labeltxt = os.path.basename(filename)[7:-4] + " (" + template_gender + " Template)"
         labeltxt = os.path.basename(filename)[7:-4]
         self.childtemplate['gender'] = template_gender
@@ -819,12 +788,12 @@ class AppWindow(tk.Frame):
 
     def update_GUI_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
-        if filename not in self.data['appearances']:
+        if filename not in self.generator.data['appearances']:
             return
         self.chromosome[str(number)]['filename'] = filename
         self.chromosome[str(number)]['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
         self.chromosome[str(number)]['filenamedisplay'].configure(text=self.chromosome[str(number)]['shortfilename'])
-        self.chromosome[str(number)]['appearance'] = self.data['appearances'][filename]
+        self.chromosome[str(number)]['appearance'] = self.generator.data['appearances'][filename]
         self.chromosome[str(number)]['can load'] = True
 
     def select_template_file(self, genderlist, title):
@@ -845,7 +814,7 @@ class AppWindow(tk.Frame):
             self.update_found_labels()
             return
         self.childtemplate['label'].configure(text=self.create_template_labeltext(filename))
-        self.childtemplate['gender'] = self.data['gender'][filename]
+        self.childtemplate['gender'] = self.generator.data['gender'][filename]
         self.press_childtemplate_button(self.childtemplate['gender'])
         self.settings['child template'] = filename
         for i in range(1, POP_SIZE + 1):
@@ -980,7 +949,7 @@ class AppWindow(tk.Frame):
 
         self.thumbnails_per_row = self.settings['thumbnails per row']
 
-        filenames = list(self.data['appearances'].keys())
+        filenames = list(self.generator.data['appearances'].keys())
         if filteronmorphcount:
             filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
@@ -1055,9 +1024,9 @@ class AppWindow(tk.Frame):
 
         filtered = []
         for f in filenames:
-            appearance = self.data['appearances'][f]
-            morphlist = get_morphlist_from_appearance(appearance)
-            morphlist = filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
+            appearance = self.generator.data['appearances'][f]
+            morphlist = ecc_logic.get_morphlist_from_appearance(appearance)
+            morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
             if len(morphlist) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
@@ -1066,7 +1035,7 @@ class AppWindow(tk.Frame):
         """ For a give list of filenames, filters on gender. """
         filtered = []
         for f in filenames:
-            gender = self.data['gender'][f]
+            gender = self.generator.data['gender'][f]
             if gender:
                 if gender in genderlist:
                     filtered.append(f)
@@ -1121,7 +1090,7 @@ class AppWindow(tk.Frame):
 
     def make_appearance_button(self, window, filename, row, column, fileindex):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        thumbnail = self.data['thumbnails'][filename]
+        thumbnail = self.generator.data['thumbnails'][filename]
         name = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
         self.appearancebutton[str(fileindex)] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR, command=lambda
                                                 filename=filename: self.end_file_selection_with_thumbnails(filename))
@@ -1185,7 +1154,7 @@ class AppWindow(tk.Frame):
                     self.chromosome[str(number)]['can load'] = True
         else:
             nmorphs = "N/A"
-        if self.gencounter == 0:  # after the app is initialized, the morph information is not being shown anymore
+        if self.generator.gencounter == 0:  # after the app is initialized, the morph information is not being shown anymore
             self.chromosome[str(number)]['nmorphdisplay'].configure(text=str(nmorphs))
 
     def hide_parentfile_from_view(self, number):
@@ -1226,8 +1195,9 @@ class AppWindow(tk.Frame):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
-        if self.gencounter == 0:
-            self.save_settings()  # in case of a bug we want to have the settings saved before we start the algorithm
+        if self.generator.gencounter == 0:
+            # to do: save settings! disabled for now  
+            #self.save_settings()  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
             elif method == "Random Crossover":
@@ -1501,12 +1471,12 @@ class AppWindow(tk.Frame):
     def get_all_appearance_files(self):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
             filters are applied. """
-        filenames = list(self.data['appearances'].keys())
+        filenames = list(self.generator.data['appearances'].keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
         if 'gender' in self.childtemplate:
             filenames = self.filter_filenamelist_on_genders(filenames,
-                                                            self.matching_genders(self.childtemplate['gender']))
+                                                            ecc_logic.matching_genders(self.childtemplate['gender']))
             filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
@@ -1576,7 +1546,7 @@ class AppWindow(tk.Frame):
                          self.chromosome[str(i)]['can load']]
             self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
 
-        appearances = [self.data['appearances'][f] for f in filenames]
+        appearances = [self.generator.data['appearances'][f] for f in filenames]
 
         print("Source files: {} ({} Files)".format(source_files, len(appearances)))
 

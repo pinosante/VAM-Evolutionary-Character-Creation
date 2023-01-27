@@ -79,14 +79,45 @@ class Generator:
         self.data['thumbnails'].clear()
         self.data['gender'].clear()
 
+    def fill_data_with_all_appearances(self):
+        """ Loads all available presets found in the default VAM directory into dictionaries
+            to save loading-times when using the app """
+        # path = self.get_vam_default_appearance_path()
+        path = self.settings['appearance dir']
+        if self.settings['recursive directory search']:
+            filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
+        else:
+            filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
+        for f in filenames:
+            f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
+            appearance = load_appearance(f)
+            if get_morph_index_with_characterinfo_from_appearance(
+                    appearance) is None:  # just calling this function since it looks for morphs
+                print("File {} is not a valid Appearance file, skipping.".format(f))
+            else:
+                self.data['appearances'][f] = appearance
+                print("Loading file {} into database.".format(f))
+                self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
+                self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
+
+    # to do: does this belong into GUI?        
+    def get_thumbnail_for_filename(self, filename):
+        """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
+            PATH_TO/NAME_OF_APPEARANCE.vap as format """
+        thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
+        if not os.path.exists(thumbnailpath):
+            thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+        image = Image.open(thumbnailpath)
+        image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
+        thumbnail = ImageTk.PhotoImage(image)
+        return thumbnail
 
 
 def load_appearance(filename):
     """ Loads appearance from filename and returns it, or returns False if the appearance couldn't be loaded """
     if os.path.isfile(filename):
         with open(filename, encoding="utf-8") as f:
-            appearance = json.load(f)
-            return appearance
+            return json.load(f)
     return False
 
 
@@ -110,33 +141,6 @@ def save_appearance(appearance, filename):
             print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
             time.sleep(2)
     raise Exception("Can't save appearance {}".format(filename))
-
-
-def strip_dir_string_to_max_length(dirstring, length):
-    """ Takes a string directory, and cuts it at the '/' in the string such that the
-        length of the stripped string is as large as possible but stays smaller than
-        the total 'length'. A '(…)/' is added if the string had to be cut.
-
-        Example:
-        strip_dir_string_to_max_length("C:/456/890/234.txt", 99)
-        >C:/456/890/234.txt
-        strip_dir_string_to_max_length("C:/456/890/234.txt", 15)
-        >(…)/890/234.txt
-        strip_dir_string_to_max_length("C:/456/890/234.txt", 14)
-        >(…)/234.txt
-        """
-    if len(dirstring) <= length:
-        return dirstring
-    parts = dirstring.split("\\")
-    stripped_string = ""
-    index = len(parts) - 1
-    while (len(parts[index]) + 1) <= ((length - 4) - (len(stripped_string) - 1)):
-        if index == -1:
-            break
-        stripped_string = parts[index] + "\\" + stripped_string
-        index -= 1
-    stripped_string = stripped_string[:-1]  # remove trailing "\"
-    return "(…)\\" + stripped_string
 
 
 def get_morphnames(morphlist):
