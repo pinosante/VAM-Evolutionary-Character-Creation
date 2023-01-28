@@ -666,7 +666,7 @@ class AppWindow(tk.Frame):
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
-            self.fill_data_with_all_appearances()
+            self.generator.fill_data_with_all_appearances()
         else:
             self.settings['VAM base dir'] = ""
             self.vamdirlabel.configure(text=NO_FILE_SELECTED_TEXT)
@@ -936,11 +936,11 @@ class AppWindow(tk.Frame):
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
-        template_appearance = load_appearance(self.settings['child template'])
+        template_appearance = ecc_logic.load_appearance(self.settings['child template'])
         for i in range(1, POP_SIZE + 1):
-            morphlist = get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
-            updated_appearance = save_morph_to_appearance(morphlist, template_appearance)
-            save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
+            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+            updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, template_appearance)
+            ecc_logic.save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
 
     def file_selection_with_thumbnails(self, genderlist, title, filteronmorphcount=True):
         """ Called by select_template_file and select_file. Creates a custom file selection popup window, with icons
