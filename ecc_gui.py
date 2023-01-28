@@ -913,12 +913,14 @@ class AppWindow(tk.Frame):
     def variate_population_with_templates(self):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
+        print('variate_population_with_templates')
         self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
-        filenames = list(self.data['appearances'].keys())
+        filenames = list(self.generator.data['appearances'].keys())
         random.shuffle(filenames)
         index = 0
         appearance_templates = []
         while len(appearance_templates) < POP_SIZE:
+            print(index, POP_SIZE)
             filename = filenames[index]
             appearance = ecc_logic.load_appearance(filename)
             gender = ecc_logic.get_appearance_gender(appearance)
@@ -1196,8 +1198,7 @@ class AppWindow(tk.Frame):
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
         if self.generator.gencounter == 0:
-            # to do: save settings! disabled for now  
-            #self.save_settings()  # in case of a bug we want to have the settings saved before we start the algorithm
+            ecc_utility.save_settings(self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
             elif method == "Random Crossover":
@@ -1233,7 +1234,7 @@ class AppWindow(tk.Frame):
         self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
         self.reset_ratings()
         self.broadcast_message_to_VAM_rating_blocker("")
-        self.save_settings()
+        ecc_utility.save_settings(self.settings)
         return
 
     def change_GUI_to_show_user_to_start_VAM(self):
