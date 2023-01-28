@@ -838,9 +838,9 @@ class AppWindow(tk.Frame):
         self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
-        gender = get_appearance_gender(load_appearance(filename))
-        if not self.can_match_genders(gender, self.childtemplate['gender']):
-            matches = self.matching_genders(self.childtemplate['gender'])
+        gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
+        if not ecc_logic.can_match_genders(gender, self.childtemplate['gender']):
+            matches = ecc_logic.matching_genders(self.childtemplate['gender'])
             if len(matches) > 1:  # Female and Futa
                 selectmsg = "Please select a Female or Futa as template."
             else:
