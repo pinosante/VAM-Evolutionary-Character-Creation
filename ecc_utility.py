@@ -27,3 +27,5 @@ def strip_dir_string_to_max_length(dirstring, length):
     return "(…)\\" + stripped_string
 
 
+if __name__ == '__main__':
+    print('I am just a module, please launch the main script "VAM Evolutionary Character Creation.py".')
