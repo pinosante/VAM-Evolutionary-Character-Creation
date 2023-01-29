@@ -21,7 +21,7 @@ import glob
 import time
 from collections import defaultdict
 from tkinter import filedialog
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, UnidentifiedImageError
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
@@ -84,21 +84,28 @@ class Generator:
             to save loading-times when using the app """
         # path = self.get_vam_default_appearance_path()
         path = self.settings['appearance dir']
+        
         if self.settings['recursive directory search']:
             filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
         else:
             filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
+
         for f in filenames:
             f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(
-                    appearance) is None:  # just calling this function since it looks for morphs
+            if get_morph_index_with_characterinfo_from_appearance(appearance) is None: 
+                # just calling this function since it looks for morphs
                 print("File {} is not a valid Appearance file, skipping.".format(f))
             else:
+                f_fav = f + '.fav'
+                appearance['is_fav'] = os.path.isfile(f_fav);    
+                if appearance['is_fav']:
+                    print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
                 self.data['appearances'][f] = appearance
                 print("Loading file {} into database.".format(f))
                 self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
                 self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
+
 
     # to do: does this belong into GUI?        
     def get_thumbnail_for_filename(self, filename):
@@ -107,7 +114,23 @@ class Generator:
         thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
         if not os.path.exists(thumbnailpath):
             thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
-        image = Image.open(thumbnailpath)
+
+        inage = None
+        jpg_loaded = False    
+        try:
+            image = Image.open(thumbnailpath)
+            jpg_loaded = True
+        except UnidentifiedImageError as e:
+            print(f'*** Warning! {e}')
+            print(f'*** The thumbnail file cannot be read, using dummy image instead.')
+
+        if not jpg_loaded:    
+            try:
+                thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+                image = Image.open(thumbnailpath)
+            except Exception as e:
+                print(f'*** Error! {e}')
+           
         image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
         thumbnail = ImageTk.PhotoImage(image)
         return thumbnail
@@ -117,6 +140,7 @@ def load_appearance(filename):
     """ Loads appearance from filename and returns it, or returns False if the appearance couldn't be loaded """
     if os.path.isfile(filename):
         with open(filename, encoding="utf-8") as f:
+            print(f'load_appearance: loading file {filename}')
             return json.load(f)
     return False
 
@@ -171,7 +195,6 @@ def get_uid_from_morphname(morphname, morphlists, filenames=None):
                         raise KeyError("Could not find a morph with key 'uid'")
                     else:
                         raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
-
     return False
 
 
@@ -433,8 +456,6 @@ def fuse_characters(filename1, filename2, settings):
     return child_appearance
 
 
-
-
 def matching_genders(gender):
     """ returns list of matching genders for a given gender (Female, Male, Futa) """
     if gender == "Futa" or gender == "Female":
@@ -445,6 +466,7 @@ def matching_genders(gender):
         match = []
     return match
 
+
 def can_match_genders(gender1, gender2):
     """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
     if gender1 == gender2:
@@ -454,8 +476,6 @@ def can_match_genders(gender1, gender2):
     if gender1 == 'Futa' and gender2 == 'Female':
         return True
     return False
-
-
 
 
 if __name__ == '__main__':
