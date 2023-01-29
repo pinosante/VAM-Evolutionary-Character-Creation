@@ -84,21 +84,28 @@ class Generator:
             to save loading-times when using the app """
         # path = self.get_vam_default_appearance_path()
         path = self.settings['appearance dir']
+        
         if self.settings['recursive directory search']:
             filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
         else:
             filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
+
         for f in filenames:
             f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(
-                    appearance) is None:  # just calling this function since it looks for morphs
+            if get_morph_index_with_characterinfo_from_appearance(appearance) is None: 
+                # just calling this function since it looks for morphs
                 print("File {} is not a valid Appearance file, skipping.".format(f))
             else:
+                f_fav = f + '.fav'
+                appearance['is_fav'] = os.path.isfile(f_fav);    
+                if appearance['is_fav']:
+                    print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
                 self.data['appearances'][f] = appearance
                 print("Loading file {} into database.".format(f))
                 self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
                 self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
+
 
     # to do: does this belong into GUI?        
     def get_thumbnail_for_filename(self, filename):
