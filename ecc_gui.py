@@ -1045,7 +1045,6 @@ class AppWindow(tk.Frame):
                     filtered.append(f)
         return filtered
 
-
     def end_file_selection_with_thumbnails(self, filename="", event=None):
         """ Saves settings and returns the filename through self._file_selection """
         self.settings['file selection geometry'] = self.file_selection_popup.winfo_geometry()
@@ -1237,7 +1236,6 @@ class AppWindow(tk.Frame):
         self.reset_ratings()
         self.broadcast_message_to_VAM_rating_blocker("")
         ecc_utility.save_settings(self.settings)
-        return
 
     def change_GUI_to_show_user_to_start_VAM(self):
         """ After initialization this method is called, to remove all the setup widgets and replace them with a window
@@ -1598,7 +1596,7 @@ class AppWindow(tk.Frame):
         for morphlist in morphlists:
             for morph in morphlist:
                 if 'value' in morph:
-                    means[morph['name']] += float(morph['value']) * 1 / len(morphlists)
+                    means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morphlists)
                 else:
                     means[morph['name']] += 0 / len(morphlists)  # just assume missing values to be 0
         return means
@@ -1608,7 +1606,7 @@ class AppWindow(tk.Frame):
         values = defaultdict(lambda: [])
         for morphlist in morphlists:
             for morph in morphlist:
-                values[morph['name']].append(float(morph['value']))
+                values[morph['name']].append(np.nan_to_num(float(morph['value'])))
         listofvalues = []
         for key, value in values.items():
             listofvalues.append(value)

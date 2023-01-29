@@ -187,7 +187,6 @@ def get_uid_from_morphname(morphname, morphlists, filenames=None):
                         raise KeyError("Could not find a morph with key 'uid'")
                     else:
                         raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
-
     return False
 
 
@@ -449,8 +448,6 @@ def fuse_characters(filename1, filename2, settings):
     return child_appearance
 
 
-
-
 def matching_genders(gender):
     """ returns list of matching genders for a given gender (Female, Male, Futa) """
     if gender == "Futa" or gender == "Female":
@@ -461,6 +458,7 @@ def matching_genders(gender):
         match = []
     return match
 
+
 def can_match_genders(gender1, gender2):
     """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
     if gender1 == gender2:
@@ -470,8 +468,6 @@ def can_match_genders(gender1, gender2):
     if gender1 == 'Futa' and gender2 == 'Female':
         return True
     return False
-
-
 
 
 if __name__ == '__main__':
