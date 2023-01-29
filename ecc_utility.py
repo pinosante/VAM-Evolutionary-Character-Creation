@@ -35,7 +35,6 @@ def load_settings():
     return settings
 
 
-
 def strip_dir_string_to_max_length(dirstring, length):
     """ Takes a string directory, and cuts it at the '/' in the string such that the
         length of the stripped string is as large as possible but stays smaller than
@@ -61,6 +60,13 @@ def strip_dir_string_to_max_length(dirstring, length):
         index -= 1
     stripped_string = stripped_string[:-1]  # remove trailing "\"
     return "(…)\\" + stripped_string
+
+
+def generate_list_element(lst):
+    """ Returns one element of the list, starts again, if list is depleted """
+    while True:
+        for elem in lst:
+            yield elem
 
 
 if __name__ == '__main__':
