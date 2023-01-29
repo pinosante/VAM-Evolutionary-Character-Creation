@@ -915,23 +915,25 @@ class AppWindow(tk.Frame):
             templates """
         print('variate_population_with_templates')
         self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+
         filenames = list(self.generator.data['appearances'].keys())
         random.shuffle(filenames)
-        index = 0
+        filename_generator = ecc_utility.generate_list_element(filenames)    
+
         appearance_templates = []
         while len(appearance_templates) < POP_SIZE:
-            print(index, POP_SIZE)
-            filename = filenames[index]
+            filename = next(filename_generator)
             appearance = ecc_logic.load_appearance(filename)
             gender = ecc_logic.get_appearance_gender(appearance)
             if gender == self.childtemplate['gender']:
                 appearance_templates.append(appearance)
-            index += 1
+
         for i in range(1, POP_SIZE + 1):
             morphlist = ecc_logic.get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
+        
         self.broadcast_message_to_VAM_rating_blocker("")
 
     def update_population_with_new_template(self):
