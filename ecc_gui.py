@@ -1475,10 +1475,8 @@ class AppWindow(tk.Frame):
             filters are applied. """
         filenames = list()
         if (get_only_favourites):
-            filenames = [key for key, value in self.generator.data['appearances'].items() if ecc_utility.is_favourite(value)]
-            #filenames = [key for key, value in self.generator.data['appearances'].items() ]
+            filenames = [f for f, app in self.generator.data['appearances'].items() if ecc_utility.is_favourite(app)]
         else:
-            #filenames = list(self.generator.data['appearances'].keys())
             filenames = list(self.generator.data['appearances'].keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
@@ -1489,22 +1487,6 @@ class AppWindow(tk.Frame):
         else:
             filtered = []
         return filtered
-
-    # def get_favorited_appearance_files(self):
-    #     """ Returns a list of all favorited appearance files in the default VAM Appearance directory, after gender and
-    #         morph filters are applied. """
-    #     path = self.settings['appearance dir']
-    #     filenames = glob.glob(os.path.join(path, "Preset_*.fav"))
-    #     filenames = [f[:-4] for f in filenames]
-    #     filenames = [str(pathlib.Path(f)) for f in filenames if os.path.exists(f)]
-
-    #     if 'gender' in self.childtemplate:
-    #         filenames = self.filter_filenamelist_on_genders(filenames,
-    #                                                         ecc_logic.matching_genders(self.childtemplate['gender']))
-    #         filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
-    #     else:
-    #         filtered = []
-    #     return filtered
 
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
