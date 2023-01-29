@@ -21,7 +21,7 @@ import glob
 import time
 from collections import defaultdict
 from tkinter import filedialog
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, UnidentifiedImageError
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
@@ -107,7 +107,23 @@ class Generator:
         thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
         if not os.path.exists(thumbnailpath):
             thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
-        image = Image.open(thumbnailpath)
+
+        inage = None
+        jpg_loaded = False    
+        try:
+            image = Image.open(thumbnailpath)
+            jpg_loaded = True
+        except UnidentifiedImageError as e:
+            print(f'*** Warning! {e}')
+            print(f'*** The thumbnail file cannot be read, using dummy image instead.')
+
+        if not jpg_loaded:    
+            try:
+                thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+                image = Image.open(thumbnailpath)
+            except Exception as e:
+                print(f'*** Error! {e}')
+           
         image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
         thumbnail = ImageTk.PhotoImage(image)
         return thumbnail
