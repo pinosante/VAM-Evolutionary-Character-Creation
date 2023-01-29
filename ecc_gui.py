@@ -616,7 +616,7 @@ class AppWindow(tk.Frame):
             show a file selection window filtered for matching genders. Updates the GUI with choices and saves to
             settings. """
         if 'gender' in self.childtemplate:
-            match = self.matching_genders(self.childtemplate['gender'])
+            match = ecc_logic.matching_genders(self.childtemplate['gender'])
         else:
             return
 
@@ -826,7 +826,7 @@ class AppWindow(tk.Frame):
         """ Called by the change template button in the rating windows. Opens a file selection dialogue which
             specifically filters for the gender of the template which is currently being used. If user does not
             select a valid new template file, the old template file is used. """
-        filename = self.file_selection_with_thumbnails(self.matching_genders(self.childtemplate['gender']), title,
+        filename = self.file_selection_with_thumbnails(ecc_logic.matching_genders(self.childtemplate['gender']), title,
                                                        filteronmorphcount=False)
         if filename == "":  # user did not select files
             return
@@ -1139,7 +1139,7 @@ class AppWindow(tk.Frame):
 
         if 'filename' in self.chromosome[str(number)]:
             gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(self.chromosome[str(number)]['filename']))
-            if not self.can_match_genders(gender, template_gender):
+            if not ecc_logic.can_match_genders(gender, template_gender):
                 self.hide_parentfile_from_view(
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
