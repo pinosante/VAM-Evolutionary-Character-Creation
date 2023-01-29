@@ -133,6 +133,7 @@ def load_appearance(filename):
     """ Loads appearance from filename and returns it, or returns False if the appearance couldn't be loaded """
     if os.path.isfile(filename):
         with open(filename, encoding="utf-8") as f:
+            print(f'load_appearance: loading file {filename}')
             return json.load(f)
     return False
 
