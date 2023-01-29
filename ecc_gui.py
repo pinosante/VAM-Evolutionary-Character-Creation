@@ -929,7 +929,7 @@ class AppWindow(tk.Frame):
                 appearance_templates.append(appearance)
 
         for i in range(1, POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(load_appearance(self.chromosome[str(i)]['filename']))
+            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
