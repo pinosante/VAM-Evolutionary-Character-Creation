@@ -37,16 +37,18 @@ class Generator:
 
         # some (data) variables
         self.gencounter = 0
-        self.data = {'appearances': {}, 'thumbnails': {}, 'gender': {}}
-        self.lastfivecommands = []
+        self.appearances = dict()
+        self.gender = dict()
+        self.thumbnails = dict()
+        self.lastfivecommands = list()
         self.connected_to_VAM = False
 
     def clear_data_with_all_appearances(self):
         """ Clears the data stored in the data dictionaries. This is called when loading the VAM
             directory fails, to delete old data. """
-        self.data['appearances'].clear()
-        self.data['thumbnails'].clear()
-        self.data['gender'].clear()
+        self.appearances.clear()
+        self.thumbnails.clear()
+        self.gender.clear()
 
     def fill_data_with_all_appearances(self):
         """ Loads all available presets found in the default VAM directory into dictionaries
@@ -70,10 +72,10 @@ class Generator:
                 appearance['is_fav'] = os.path.isfile(f_fav)
                 if appearance['is_fav']:
                     print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
-                self.data['appearances'][f] = appearance
+                self.appearances[f] = appearance
                 print("Loading file {} into database.".format(f))
-                self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
-                self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
+                self.thumbnails[f] = self.get_thumbnail_for_filename(f)
+                self.gender[f] = get_appearance_gender(self.appearances[f])
 
     # to do: does this belong into GUI?
     @staticmethod

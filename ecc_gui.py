@@ -796,13 +796,13 @@ class AppWindow(tk.Frame):
 
     def update_GUI_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
-        if filename not in self.generator.data['appearances']:
+        if filename not in self.generator.appearances:
             return
         chromosome = self.chromosome[str(number)]
         chromosome['filename'] = filename
         chromosome['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
         chromosome['filenamedisplay'].configure(text=chromosome['shortfilename'])
-        chromosome['appearance'] = self.generator.data['appearances'][filename]
+        chromosome['appearance'] = self.generator.appearances[filename]
         chromosome['can load'] = True
 
     def select_template_file(self, genderlist, title):
@@ -823,7 +823,7 @@ class AppWindow(tk.Frame):
             self.update_found_labels()
             return
         self.childtemplate['label'].configure(text=self.create_template_labeltext(filename))
-        self.childtemplate['gender'] = self.generator.data['gender'][filename]
+        self.childtemplate['gender'] = self.generator.gender[filename]
         self.press_childtemplate_button(self.childtemplate['gender'])
         self.settings['child template'] = filename
         for i in range(1, POP_SIZE + 1):
@@ -925,7 +925,7 @@ class AppWindow(tk.Frame):
         print('variate_population_with_templates')
         self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
 
-        filenames = list(self.generator.data['appearances'].keys())
+        filenames = list(self.generator.appearances.keys())
         random.shuffle(filenames)
         filename_generator = ecc_utility.generate_list_element(filenames)    
 
@@ -963,7 +963,7 @@ class AppWindow(tk.Frame):
 
         self.thumbnails_per_row = self.settings['thumbnails per row']
 
-        filenames = list(self.generator.data['appearances'].keys())
+        filenames = list(self.generator.appearances.keys())
         if filteronmorphcount:
             filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
@@ -1038,7 +1038,7 @@ class AppWindow(tk.Frame):
 
         filtered = []
         for f in filenames:
-            appearance = self.generator.data['appearances'][f]
+            appearance = self.generator.appearances[f]
             morphlist = ecc_logic.get_morphlist_from_appearance(appearance)
             morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
             if len(morphlist) > self.settings['min morph threshold']:
@@ -1049,7 +1049,7 @@ class AppWindow(tk.Frame):
         """ For a give list of filenames, filters on gender. """
         filtered = []
         for f in filenames:
-            gender = self.generator.data['gender'][f]
+            gender = self.generator.gender[f]
             if gender:
                 if gender in genderlist:
                     filtered.append(f)
@@ -1103,7 +1103,7 @@ class AppWindow(tk.Frame):
 
     def make_appearance_button(self, window, filename, row, column, fileindex):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        thumbnail = self.generator.data['thumbnails'][filename]
+        thumbnail = self.generator.thumbnails[filename]
         name = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
 
         self.appearancebutton[str(fileindex)] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR, command=lambda
@@ -1487,9 +1487,9 @@ class AppWindow(tk.Frame):
             filters are applied. """
         filenames = list()
         if get_only_favorites:
-            filenames = [f for f, app in self.generator.data['appearances'].items() if ecc_utility.is_favorite(app)]
+            filenames = [f for f, app in self.generator.appearances.items() if ecc_utility.is_favorite(app)]
         else:
-            filenames = list(self.generator.data['appearances'].keys())
+            filenames = list(self.generator.appearances.keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
         if 'gender' in self.childtemplate:
@@ -1548,7 +1548,7 @@ class AppWindow(tk.Frame):
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
 
-        appearances = [self.generator.data['appearances'][f] for f in filenames]
+        appearances = [self.generator.appearances[f] for f in filenames]
 
         print("Source files: {} ({} Files)".format(source_files, len(appearances)))
 
