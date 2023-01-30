@@ -260,7 +260,7 @@ def get_morphlist_from_appearance(appearance):
 def get_morph_index_with_characterinfo_from_appearance(appearance):
     """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
     character_key_found = False
-    for index, dictionary in enumerate(appearance['storables']):
+    for dictionary in appearance['storables']:
         if "character" in dictionary:
             character_key_found = True
     if not character_key_found:
@@ -369,9 +369,7 @@ def dedupe_morphs(morphlists):
         found = []
         found_morphs = {}
         for morph in morphlist:
-            if morph['name'] in found:
-                continue
-            else:
+            if morph['name'] not in found:
                 found.append(morph['name'])
                 found_morphs[morph['name']] = morph
                 new_morph.append(morph)
@@ -397,9 +395,7 @@ def filter_morphs_below_threshold(morphlist, threshold):
     new_morphlist = []
     for morph in morphlist:
         if "value" in morph:
-            if abs(float(morph['value'])) < threshold:
-                continue
-            else:
+            if abs(float(morph['value'])) >= threshold:
                 new_morphlist.append(morph)
     return new_morphlist
 
