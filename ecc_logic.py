@@ -57,10 +57,7 @@ class Generator:
 
         # some (data) variables
         self.gencounter = 0
-        self.data = {}
-        self.data['appearances'] = {}
-        self.data['thumbnails'] = {}
-        self.data['gender'] = {}
+        self.data = {'appearances': {}, 'thumbnails': {}, 'gender': {}}
         self.lastfivecommands = []
         self.connected_to_VAM = False
 
@@ -107,7 +104,7 @@ class Generator:
         if not os.path.exists(thumbnailpath):
             thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
 
-        inage = None
+        image = None
         jpg_loaded = False    
         try:
             image = Image.open(thumbnailpath)

@@ -61,15 +61,15 @@ def strip_dir_string_to_max_length(dirstring, length):
     stripped_string = stripped_string[:-1]  # remove trailing "\"
     return "(…)\\" + stripped_string
 
-def is_favourite(appearance):
+def is_favorite(appearance):
     return appearance['is_fav']
 
 
 def generate_list_element(lst):
-    """ Returns one element of the list, starts again, if list is depleted """
+    """ Returns one element of the list, starts again if list is depleted """
     while True:
-        for elem in lst:
-            yield elem
+        for element in lst:
+            yield element
 
 
 if __name__ == '__main__':

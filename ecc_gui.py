@@ -54,6 +54,10 @@ RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
 RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
 
+# selection of appearances method texts
+CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
+CHOOSE_ALL_TEXT = "Choose All Appearances"
+CHOOSE_FILES_TEXT = "Choose Files"
 
 ###
 ### Below are the settings for a dark theme
@@ -79,6 +83,14 @@ class AppWindow(tk.Frame):
         super().__init__()
         self.settings = settings
         self.generator = generator
+
+        # create a dictionary to select appearances
+        self.select_appearances_strategies = {
+            CHOOSE_ALL_FAVORITES_TEXT: lambda: self.get_fav_appearance_files(),
+            CHOOSE_ALL_TEXT: lambda: self.get_all_appearance_files(),
+            CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_files()
+        }
+
         self.initUI()
 
     def initUI(self):
@@ -182,7 +194,7 @@ class AppWindow(tk.Frame):
                                             fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                             command=lambda: self.choose_all_favorites())
         self.allfavoritesbutton.grid(row=1, column=1, sticky=tk.W)
-        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text="Choose Files", bg=BUTTON_BG_COLOR,
+        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
                                            fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                            command=lambda: self.choose_files())
         self.choosefilesbutton.grid(row=1, column=2, sticky=tk.W)
@@ -404,11 +416,11 @@ class AppWindow(tk.Frame):
                     self.update_morph_info(i)
 
         if 'source files' in self.settings:
-            if self.settings['source files'] == "Choose Files":
+            if self.settings['source files'] == CHOOSE_FILES_TEXT:
                 self.choose_files()
-            elif self.settings['source files'] == "Choose All Favorites":
+            elif self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
                 self.choose_all_favorites()
-            elif self.settings['source files'] == "Choose All Appearances":
+            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 self.choose_all_appearances()
 
         if 'method' in self.settings:
@@ -537,14 +549,14 @@ class AppWindow(tk.Frame):
     def update_found_labels(self):
         """ Depending on the choice for the source files, updates the GUI """
         if 'source files' in self.settings:
-            if self.settings['source files'] == "Choose All Favorites":
+            if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
                 self.update_favorites_found_label()
-            elif self.settings['source files'] == "Choose All Appearances":
+            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 self.update_all_appearances_found_label()
 
     def update_all_appearances_found_label(self):
         """ Counts the amount of appearance available in the default VAM directory and updates the GUI """
-        filenames = self.get_appearance_files(get_only_favourites=False)
+        filenames = self.get_all_appearance_files()
         txt = str(len(filenames)) + " appearances found"
         self.favoritesinfo.configure(text=txt)
         self.update_initialize_population_button()
@@ -553,7 +565,7 @@ class AppWindow(tk.Frame):
     def update_favorites_found_label(self):
         """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
         #filenames = self.get_favorited_appearance_files()
-        filenames = self.get_appearance_files(get_only_favourites=True)
+        filenames = self.get_fav_appearance_files()
         txt = str(len(filenames)) + " favorite appearances found"
         self.favoritesinfo.configure(text=txt)
         self.favoriteslabel.configure(text="Step 5: All Favorited Appearances Chosen")
@@ -567,7 +579,7 @@ class AppWindow(tk.Frame):
         self.allappearancesbutton.configure(relief=tk.SUNKEN)
         self.allfavoritesbutton.configure(relief=tk.RAISED)
         self.choosefilesbutton.configure(relief=tk.RAISED)
-        self.settings['source files'] = "Choose All Appearances"
+        self.settings['source files'] = CHOOSE_ALL_TEXT
         self.update_found_labels()
 
     def choose_all_favorites(self):
@@ -578,7 +590,7 @@ class AppWindow(tk.Frame):
         self.allappearancesbutton.configure(relief=tk.RAISED)
         self.allfavoritesbutton.configure(relief=tk.SUNKEN)
         self.choosefilesbutton.configure(relief=tk.RAISED)
-        self.settings['source files'] = "Choose All Favorites"
+        self.settings['source files'] = CHOOSE_ALL_FAVORITES_TEXT
         self.update_found_labels()
 
     def choose_files(self):
@@ -589,7 +601,7 @@ class AppWindow(tk.Frame):
         self.allappearancesbutton.configure(relief=tk.RAISED)
         self.allfavoritesbutton.configure(relief=tk.RAISED)
         self.choosefilesbutton.configure(relief=tk.SUNKEN)
-        self.settings['source files'] = "Choose Files"
+        self.settings['source files'] = CHOOSE_FILES_TEXT
         self.update_initialize_population_button()
 
     def choose_gaussian_samples(self):
@@ -755,11 +767,11 @@ class AppWindow(tk.Frame):
             missing += "· Please select a child template appearance\n"
 
         if 'source files' in self.settings:
-            if self.settings['source files'] == "Choose All Favorites":
-                source_files = self.get_appearance_files(get_only_favourites=True)
-            elif self.settings['source files'] == "Choose All Appearances":
-                source_files = self.get_appearance_files(get_only_favourites=False)
-            elif self.settings['source files'] == "Choose Files":
+            if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
+                source_files = self.get_fav_appearance_files()
+            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
+                source_files = self.get_all_appearance_files()
+            elif self.settings['source files'] == CHOOSE_FILES_TEXT:
                 source_files = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
                                 self.chromosome[str(i)]['can load']]
             else:
@@ -1172,13 +1184,13 @@ class AppWindow(tk.Frame):
         print(f"Restarting, with {method}")
         self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
 
-        # If the user used "Choose Files" as the source, we have to reload them into the chromosomes
+        # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
         # since the chromosomes now contain the Evolutionary Children files at this stage. Only the
         # files which were saved to settings are loaded into the chromosomes. There is no need to
         # delete the other chromosomes (which contain the Evolutionary Child filenames), because
         # they all have a False flag for self.chromosome[str(i)]['can load'] which is used
         # later on in Gaussian and Crossover generation to skip loading them.
-        if self.settings['source files'] == "Choose Files":
+        if self.settings['source files'] == CHOOSE_FILES_TEXT:
             for i in range(1, POP_SIZE + 1):
                 if 'file ' + str(i) in self.settings:
                     if len(self.settings['file ' + str(i)]) > 0:
@@ -1469,12 +1481,12 @@ class AppWindow(tk.Frame):
         for i in range(1, POP_SIZE + 1):
             self.press_rating_button(i, INITIAL_RATING)
 
-    def get_appearance_files(self, get_only_favourites):
+    def get_appearance_files(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
             filters are applied. """
         filenames = list()
-        if get_only_favourites:
-            filenames = [f for f, app in self.generator.data['appearances'].items() if ecc_utility.is_favourite(app)]
+        if get_only_favorites:
+            filenames = [f for f, app in self.generator.data['appearances'].items() if ecc_utility.is_favorite(app)]
         else:
             filenames = list(self.generator.data['appearances'].keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
@@ -1488,10 +1500,17 @@ class AppWindow(tk.Frame):
         return filtered
 
     def get_all_appearance_files(self):
-        return self.get_appearance_files(get_only_favourites=False)
+        return self.get_appearance_files(get_only_favorites=False)
 
     def get_fav_appearance_files(self):
-        return self.get_appearance_files(get_only_favourites=True)
+        return self.get_appearance_files(get_only_favorites=True)
+
+    def get_selected_appearance_files(self):
+        filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
+                     self.chromosome[str(i)]['can load']]
+        self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+        return filenames
+
 
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
@@ -1499,15 +1518,7 @@ class AppWindow(tk.Frame):
         print("Using random pairwise chromosome crossover for sample initialization.")
 
         # select source files
-        if source_files == "Choose All Favorites":
-            parent_filenames = self.get_fav_appearance_files()
-        elif source_files == "Choose All Appearances":
-            parent_filenames = self.get_all_appearance_files()
-        elif source_files == "Choose Files":
-            # use selected appearances
-            parent_filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
-                                self.chromosome[str(i)]['can load']]
-            parent_filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(parent_filenames)
+        parent_filenames = self.select_appearances_strategies[source_files]()
 
         print("Source files: {} ({} Files)".format(source_files, len(parent_filenames)))
 
@@ -1520,6 +1531,7 @@ class AppWindow(tk.Frame):
         self.generator.gencounter += 1
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
+        # to do: why two lines?
         self.generatechild.configure(text="Generate Next Population")
         self.generatechild.update()
         return
@@ -1533,14 +1545,7 @@ class AppWindow(tk.Frame):
         self.generatechild.update()
 
         # select source files
-        if source_files == "Choose All Favorites":
-            filenames = self.get_fav_appearance_files()
-        elif source_files == "Choose All Appearances":
-            filenames = self.get_all_appearance_files()
-        elif source_files == "Choose Files":
-            filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
-                         self.chromosome[str(i)]['can load']]
-            self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+        filenames = self.select_appearances_strategies[source_files]()
 
         appearances = [self.generator.data['appearances'][f] for f in filenames]
 
@@ -1583,6 +1588,7 @@ class AppWindow(tk.Frame):
         self.generatechild.configure(text="Generate Next Population")
         self.generatechild.update()
         return
+
 
     def get_means_from_morphlists(self, morphlists):
         """ returns a dictionary of morph means for each morph found in the morphlists """
