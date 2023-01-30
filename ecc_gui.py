@@ -144,6 +144,7 @@ class AppWindow(tk.Frame):
                             text="Step 3: Select Child Template Appearance", font=subtitlefont,
                             bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
+
         self.childtemplatebutton = {}
         self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female",
                             bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
@@ -160,7 +161,7 @@ class AppWindow(tk.Frame):
                             command=lambda: self.select_template_file(["Futa"],
                             "Please Select Parent Template"))
         self.childtemplatebutton['Futa'].grid(row=1, column=2, sticky=tk.W, padx=0)
-        self.childtemplate = {}
+        self.childtemplate = dict()
         self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
                             font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplate['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
@@ -195,7 +196,7 @@ class AppWindow(tk.Frame):
                                         font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.chromosomelabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
 
-        self.columninfo = {}
+        self.columninfo = dict()
         self.columninfo['1'] = tk.Label(self.parentselectionframe, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
         self.columninfo['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
         self.columninfo['2'] = tk.Label(self.parentselectionframe, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
@@ -203,22 +204,24 @@ class AppWindow(tk.Frame):
         self.columninfo['3'] = tk.Label(self.parentselectionframe, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
         self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
 
-        self.chromosome = {}
+        self.chromosome = dict()
         for i in range(1, POP_SIZE + 1):
-            self.chromosome[str(i)] = {}
-            self.chromosome[str(i)]['filebutton'] = tk.Button(self.parentselectionframe, text="Parent " + str(i),
+            new_chromosome = dict()
+            new_chromosome['filebutton'] = tk.Button(self.parentselectionframe, text="Parent " + str(i),
                                                               bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                                                               activebackground=BUTTON_ACTIVE_COLOR,
                                                               command=lambda i=i: self.select_file(i), width=10)
-            self.chromosome[str(i)]['filebutton'].grid(row=i + 1, column=0, sticky=tk.W)
-            self.chromosome[str(i)]['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT,
+            new_chromosome['filebutton'].grid(row=i + 1, column=0, sticky=tk.W)
+            new_chromosome['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT,
                                                                   font=FILENAME_FONT, width=28, anchor="w", bg=BG_COLOR,
                                                                   fg=FG_COLOR)
-            self.chromosome[str(i)]['filenamedisplay'].grid(row=i + 1, column=1, sticky=tk.W)
-            self.chromosome[str(i)]['nmorphdisplay'] = tk.Label(self.parentselectionframe, text="N/A", bg=BG_COLOR,
+            new_chromosome['filenamedisplay'].grid(row=i + 1, column=1, sticky=tk.W)
+            new_chromosome['nmorphdisplay'] = tk.Label(self.parentselectionframe, text="N/A", bg=BG_COLOR,
                                                                 fg=FG_COLOR)
-            self.chromosome[str(i)]['nmorphdisplay'].grid(row=i + 1, column=2, sticky=tk.W)
-            self.chromosome[str(i)]['can load'] = False
+            new_chromosome['nmorphdisplay'].grid(row=i + 1, column=2, sticky=tk.W)
+            new_chromosome['can load'] = False
+
+            self.chromosome[str(i)] = new_chromosome
 
         ###
         ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
@@ -715,6 +718,7 @@ class AppWindow(tk.Frame):
             self.generatechild.configure(relief="raised",
                                          bg="lightgreen", font=(DEFAULT_FONT, 12, "bold"), text="Initialize Population",
                                          width=52, height=6,
+                                         state='normal',
                                          command=lambda: self.generate_next_population(self.settings['method']))
         else:
             txt = ("Cannot Initialize Population:\n" + missing).rstrip()
@@ -723,11 +727,8 @@ class AppWindow(tk.Frame):
                                          width=52, height=6,
                                          activebackground="#D0D0D0",
                                          text=txt,
-                                         command=lambda: self.do_nothing())
-
-    def do_nothing(self):
-        """ Called by the Initialize Population Button to do nothing if criteria are not met. """
-        pass
+                                         state='disabled',
+                                         command=None)
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
