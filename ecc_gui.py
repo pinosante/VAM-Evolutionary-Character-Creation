@@ -429,7 +429,7 @@ class AppWindow(tk.Frame):
             answer = messagebox.askquestion("Continue last session?",
                                             f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
-                self.gencounter = self.settings['generation counter']
+                self.generator.gencounter = self.settings['generation counter']
                 self.continue_last_session()
                 return
             else:
@@ -1512,7 +1512,7 @@ class AppWindow(tk.Frame):
             child_appearance = ecc_logic.fuse_characters(random_parents[0], random_parents[1], self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
-        self.gencounter += 1
+        self.generator.gencounter += 1
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
         self.generatechild.configure(text="Generate Next Population")
