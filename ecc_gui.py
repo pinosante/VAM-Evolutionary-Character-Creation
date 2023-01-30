@@ -1486,6 +1486,12 @@ class AppWindow(tk.Frame):
             filtered = []
         return filtered
 
+    def get_all_appearance_files(self):
+        return self.get_appearance_files(get_only_favourites=False)
+
+    def get_fav_appearance_files(self):
+        return self.get_appearance_files(get_only_favourites=True)
+
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
             Updates population info and the GUI. """
@@ -1493,9 +1499,9 @@ class AppWindow(tk.Frame):
 
         # select source files
         if source_files == "Choose All Favorites":
-            parent_filenames = self.get_appearance_files(get_only_favourites=True)
+            parent_filenames = self.get_fav_appearance_files()
         elif source_files == "Choose All Appearances":
-            parent_filenames = self.get_appearance_files(get_only_favourites=False)
+            parent_filenames = self.get_all_appearance_files()
         elif source_files == "Choose Files":
             # use selected appearances
             parent_filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
@@ -1527,9 +1533,9 @@ class AppWindow(tk.Frame):
 
         # select source files
         if source_files == "Choose All Favorites":
-            filenames = self.get_appearance_files(get_only_favourites=True)
+            filenames = self.get_fav_appearance_files()
         elif source_files == "Choose All Appearances":
-            filenames = self.get_appearance_files(get_only_favourites=False)
+            filenames = self.get_all_appearance_files()
         elif source_files == "Choose Files":
             filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
                          self.chromosome[str(i)]['can load']]
