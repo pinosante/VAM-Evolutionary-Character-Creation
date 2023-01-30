@@ -7,14 +7,11 @@ Please credit me if you change, use or adapt this file.
 '''
 
 import os
-import sys
-import json
 import tkinter as tk
 
-import ecc_utility
 import ecc_gui
 import ecc_logic
-
+import ecc_utility
 
 BG_COLOR = "#F9F9F9"
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"

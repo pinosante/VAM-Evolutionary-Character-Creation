@@ -4,23 +4,15 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 '''
 
+import copy
+import glob
 import json
 import os
-import sys
-import copy
-import random
-import tkinter as tk
-from fnmatch import fnmatch
-from tkinter import ttk
-from tkinter import messagebox
-from datetime import datetime
 import pathlib
+import random
 import shutil
-import numpy as np
-import glob
 import time
-from collections import defaultdict
-from tkinter import filedialog
+
 from PIL import ImageTk, Image, UnidentifiedImageError
 
 THUMBNAIL_SIZE = 184, 184
@@ -98,7 +90,7 @@ class Generator:
                 print("File {} is not a valid Appearance file, skipping.".format(f))
             else:
                 f_fav = f + '.fav'
-                appearance['is_fav'] = os.path.isfile(f_fav);    
+                appearance['is_fav'] = os.path.isfile(f_fav)
                 if appearance['is_fav']:
                     print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
                 self.data['appearances'][f] = appearance

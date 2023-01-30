@@ -3,29 +3,23 @@ GUI for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
 '''
+import copy
 import json
 import os
-import sys
-import copy
+import pathlib
 import random
 import tkinter as tk
-from fnmatch import fnmatch
-from tkinter import ttk
-from tkinter import messagebox
-from datetime import datetime
-import pathlib
-import shutil
-import numpy as np
-import glob
-import time
 from collections import defaultdict
+from datetime import datetime
+from fnmatch import fnmatch
 from tkinter import filedialog
-from PIL import ImageTk, Image
+from tkinter import messagebox
+from tkinter import ttk
 
+import numpy as np
 
 import ecc_logic
 import ecc_utility
-
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
@@ -791,11 +785,12 @@ class AppWindow(tk.Frame):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
         if filename not in self.generator.data['appearances']:
             return
-        self.chromosome[str(number)]['filename'] = filename
-        self.chromosome[str(number)]['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
-        self.chromosome[str(number)]['filenamedisplay'].configure(text=self.chromosome[str(number)]['shortfilename'])
-        self.chromosome[str(number)]['appearance'] = self.generator.data['appearances'][filename]
-        self.chromosome[str(number)]['can load'] = True
+        chromosome = self.chromosome[str(number)]
+        chromosome['filename'] = filename
+        chromosome['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
+        chromosome['filenamedisplay'].configure(text=chromosome['shortfilename'])
+        chromosome['appearance'] = self.generator.data['appearances'][filename]
+        chromosome['can load'] = True
 
     def select_template_file(self, genderlist, title):
         """ Called by the Female, Male and Futa load template file buttons. Opens a file selection dialogue which
@@ -1096,6 +1091,7 @@ class AppWindow(tk.Frame):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
         thumbnail = self.generator.data['thumbnails'][filename]
         name = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
+
         self.appearancebutton[str(fileindex)] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR, command=lambda
                                                 filename=filename: self.end_file_selection_with_thumbnails(filename))
         self.appearancebutton[str(fileindex)].grid(row=row * 2, column=column, padx=0, pady=0)
@@ -1476,7 +1472,7 @@ class AppWindow(tk.Frame):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
             filters are applied. """
         filenames = list()
-        if (get_only_favourites):
+        if get_only_favourites:
             filenames = [f for f, app in self.generator.data['appearances'].items() if ecc_utility.is_favourite(app)]
         else:
             filenames = list(self.generator.data['appearances'].keys())
