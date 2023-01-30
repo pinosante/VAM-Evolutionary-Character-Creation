@@ -1164,9 +1164,10 @@ class AppWindow(tk.Frame):
     def hide_parentfile_from_view(self, number):
         """ Replaces the filelable of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
-        self.chromosome[str(number)]['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
-        self.chromosome[str(number)]['nmorphdisplay'].configure(text="N/A")
-        self.chromosome[str(number)]['can load'] = False
+        chromosome = self.chromosome[str(number)]
+        chromosome['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
+        chromosome['nmorphdisplay'].configure(text="N/A")
+        chromosome['can load'] = False
 
     def restart_population(self, method):
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
@@ -1442,10 +1443,11 @@ class AppWindow(tk.Frame):
             pick = random.uniform(0, total_ratings)
             current = 0
             for i in range(1, POP_SIZE + 1):
-                current += self.chromosome[str(i)]['rating']
+                chromosome = self.chromosome[str(i)]
+                current += chromosome['rating']
                 if current > pick:
-                    if not self.chromosome[str(i)] in choices:
-                        choices.append(self.chromosome[str(i)])
+                    if not chromosome in choices:
+                        choices.append(chromosome)
                     break
         return choices
 
@@ -1651,21 +1653,23 @@ class AppWindow(tk.Frame):
         self.generatechild.configure(width=27, height=6)
 
         for i in range(1, POP_SIZE + 1):
-            self.chromosome[str(i)]['filebutton'].destroy()
-            self.chromosome[str(i)]['filenamedisplay'].destroy()
-            self.chromosome[str(i)]['nmorphdisplay'].destroy()
-            del self.chromosome[str(i)]['filebutton']
-            del self.chromosome[str(i)]['filenamedisplay']
-            del self.chromosome[str(i)]['nmorphdisplay']
+            chromosome = self.chromosome[str(i)]
+            chromosome['filebutton'].destroy()
+            chromosome['filenamedisplay'].destroy()
+            chromosome['nmorphdisplay'].destroy()
+            del chromosome['filebutton']
+            del chromosome['filenamedisplay']
+            del chromosome['nmorphdisplay']
 
         for i in range(1, POP_SIZE + 1):
-            self.chromosome[str(i)]['childlabel'] = tk.Label(self.parentselectionframe, text="Child " + str(i),
-                                                             font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
-                                                             bg=BG_COLOR, fg=FG_COLOR)
-            self.chromosome[str(i)]['childlabel'].grid(row=i + 1, column=0, sticky=tk.W)
-            self.chromosome[str(i)]['rating'] = INITIAL_RATING
+            chromosome = self.chromosome[str(i)]
+            chromosome['childlabel'] = tk.Label(self.parentselectionframe, text="Child " + str(i),
+                                        font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
+                                        bg=BG_COLOR, fg=FG_COLOR)
+            chromosome['childlabel'].grid(row=i + 1, column=0, sticky=tk.W)
+            chromosome['rating'] = INITIAL_RATING
             for j in range(1, 6):
-                self.chromosome[str(i)]['rating button ' + str(j)] = \
+                chromosome['rating button ' + str(j)] = \
                     tk.Button(self.parentselectionframe, width=2,
                               font=(
                                   DEFAULT_FONT, rating_font_size,
@@ -1675,12 +1679,12 @@ class AppWindow(tk.Frame):
                               activebackground=RATING_ACTIVE_BG_COLOR,
                               activeforeground=RATING_ACTIVE_FG_COLOR,
                               text=str(j), command=lambda i=i, j=j: self.press_rating_button(i, j))
-                self.chromosome[str(i)]['rating button ' + str(j)].grid(row=i + 1, column=j)
-                self.chromosome[str(i)]['rating button ' + str(j)].bind("<Enter>",
-                                                                        lambda e, i=i, j=j: self.on_enter_rating_button(
+                chromosome['rating button ' + str(j)].grid(row=i + 1, column=j)
+                chromosome['rating button ' + str(j)].bind("<Enter>",
+                                                   lambda e, i=i, j=j: self.on_enter_rating_button(
                                                                             i, j, event=e))
-                self.chromosome[str(i)]['rating button ' + str(j)].bind("<Leave>",
-                                                                        lambda e, i=i, j=j: self.on_leave_rating_button(
+                chromosome['rating button ' + str(j)].bind("<Leave>",
+                                                   lambda e, i=i, j=j: self.on_leave_rating_button(
                                                                             i, j, event=e))
 
     def press_restart_button(self, givewarning=True):
@@ -1697,31 +1701,34 @@ class AppWindow(tk.Frame):
 
     def on_enter_rating_button(self, child, rating, event=None):
         """ Show hover effect when entering mouse over a rating button. """
-        if rating == self.chromosome[str(child)]['rating']:
+        chromosome = self.chromosome[str(child)]
+        if rating == chromosome['rating']:
             return
-        self.chromosome[str(child)]['rating button ' + str(rating)]['background'] = RATING_HOVER_BG_COLOR
-        self.chromosome[str(child)]['rating button ' + str(rating)]['foreground'] = RATING_HOVER_FG_COLOR
+        chromosome['rating button ' + str(rating)]['background'] = RATING_HOVER_BG_COLOR
+        chromosome['rating button ' + str(rating)]['foreground'] = RATING_HOVER_FG_COLOR
 
     def on_leave_rating_button(self, child, rating, event=None):
         """ Show hover effect when exiting mouse over a rating button. """
-        if rating == self.chromosome[str(child)]['rating']:
+        chromosome = self.chromosome[str(child)]
+        if rating == chromosome['rating']:
             return
-        self.chromosome[str(child)]['rating button ' + str(rating)]['background'] = RATING_RAISED_BG_COLOR
-        self.chromosome[str(child)]['rating button ' + str(rating)]['foreground'] = RATING_RAISED_FG_COLOR
+        chromosome['rating button ' + str(rating)]['background'] = RATING_RAISED_BG_COLOR
+        chromosome['rating button ' + str(rating)]['foreground'] = RATING_RAISED_FG_COLOR
 
     def press_rating_button(self, child, rating):
         """ Presses the rating button. """
-        self.chromosome[str(child)]['rating button ' + str(rating)].configure(relief=tk.SUNKEN,
-                                                                              bg=RATING_SUNKEN_BG_COLOR,
-                                                                              fg=RATING_SUNKEN_FG_COLOR)
-        self.chromosome[str(child)]['rating'] = rating
+        chromosome = self.chromosome[str(child)]
+        chromosome['rating button ' + str(rating)].configure(relief=tk.SUNKEN,
+                                                         bg=RATING_SUNKEN_BG_COLOR,
+                                                         fg=RATING_SUNKEN_FG_COLOR)
+        chromosome['rating'] = rating
 
         # reset unchosen buttons
         rest = [x for x in range(1, 6) if x != rating]
         for n in rest:
-            self.chromosome[str(child)]['rating button ' + str(n)].configure(relief=tk.RAISED,
-                                                                             bg=RATING_RAISED_BG_COLOR,
-                                                                             fg=RATING_RAISED_FG_COLOR)
+            chromosome['rating button ' + str(n)].configure(relief=tk.RAISED,
+                                                        bg=RATING_RAISED_BG_COLOR,
+                                                        fg=RATING_RAISED_FG_COLOR)
 
 
 if __name__ == '__main__':
