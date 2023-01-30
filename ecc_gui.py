@@ -929,9 +929,10 @@ class AppWindow(tk.Frame):
         random.shuffle(filenames)
         filename_generator = ecc_utility.generate_list_element(filenames)    
 
-        appearance_templates = []
-        while len(appearance_templates) < POP_SIZE:
-            filename = next(filename_generator)
+        appearance_templates = list()
+        for filename in filename_generator:
+            if len(appearance_templates) >= POP_SIZE:
+                break
             appearance = ecc_logic.load_appearance(filename)
             gender = ecc_logic.get_appearance_gender(appearance)
             if gender == self.childtemplate['gender']:
