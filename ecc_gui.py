@@ -1495,7 +1495,7 @@ class AppWindow(tk.Frame):
 
         # select source files
         if source_files == "Choose All Favorites":
-            parent_filenames = self.get_aappearance_files(get_only_favourites=True)
+            parent_filenames = self.get_appearance_files(get_only_favourites=True)
         elif source_files == "Choose All Appearances":
             parent_filenames = self.get_appearance_files(get_only_favourites=False)
         elif source_files == "Choose Files":
