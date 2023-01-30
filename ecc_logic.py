@@ -34,8 +34,6 @@ MAX_APPEARANCEDIR_STRING_LENGTH = 45
 class Generator:
     def __init__(self, settings):
         self.settings = settings
-
-        # some (data) variables
         self.gencounter = 0
         self.appearances = dict()
         self.gender = dict()

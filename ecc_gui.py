@@ -86,9 +86,9 @@ class AppWindow(tk.Frame):
 
         # create a dictionary to select appearances
         self.select_appearances_strategies = {
-            CHOOSE_ALL_FAVORITES_TEXT: lambda: self.get_fav_appearance_files(),
-            CHOOSE_ALL_TEXT: lambda: self.get_all_appearance_files(),
-            CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_files()
+            CHOOSE_ALL_FAVORITES_TEXT: lambda: self.get_fav_appearance_filenames(),
+            CHOOSE_ALL_TEXT: lambda: self.get_all_appearance_filenames(),
+            CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
         }
 
         self.initUI()
@@ -556,7 +556,7 @@ class AppWindow(tk.Frame):
 
     def update_all_appearances_found_label(self):
         """ Counts the amount of appearance available in the default VAM directory and updates the GUI """
-        filenames = self.get_all_appearance_files()
+        filenames = self.get_all_appearance_filenames()
         txt = str(len(filenames)) + " appearances found"
         self.favoritesinfo.configure(text=txt)
         self.update_initialize_population_button()
@@ -565,7 +565,7 @@ class AppWindow(tk.Frame):
     def update_favorites_found_label(self):
         """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
         #filenames = self.get_favorited_appearance_files()
-        filenames = self.get_fav_appearance_files()
+        filenames = self.get_fav_appearance_filenames()
         txt = str(len(filenames)) + " favorite appearances found"
         self.favoritesinfo.configure(text=txt)
         self.favoriteslabel.configure(text="Step 5: All Favorited Appearances Chosen")
@@ -768,9 +768,9 @@ class AppWindow(tk.Frame):
 
         if 'source files' in self.settings:
             if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
-                source_files = self.get_fav_appearance_files()
+                source_files = self.get_fav_appearance_filenames()
             elif self.settings['source files'] == CHOOSE_ALL_TEXT:
-                source_files = self.get_all_appearance_files()
+                source_files = self.get_all_appearance_filenames()
             elif self.settings['source files'] == CHOOSE_FILES_TEXT:
                 source_files = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
                                 self.chromosome[str(i)]['can load']]
@@ -1482,7 +1482,7 @@ class AppWindow(tk.Frame):
         for i in range(1, POP_SIZE + 1):
             self.press_rating_button(i, INITIAL_RATING)
 
-    def get_appearance_files(self, get_only_favorites):
+    def get_appearance_filenames(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
             filters are applied. """
         filenames = list()
@@ -1500,13 +1500,13 @@ class AppWindow(tk.Frame):
             filtered = []
         return filtered
 
-    def get_all_appearance_files(self):
-        return self.get_appearance_files(get_only_favorites=False)
+    def get_all_appearance_filenames(self):
+        return self.get_appearance_filenames(get_only_favorites=False)
 
-    def get_fav_appearance_files(self):
-        return self.get_appearance_files(get_only_favorites=True)
+    def get_fav_appearance_filenames(self):
+        return self.get_appearance_filenames(get_only_favorites=True)
 
-    def get_selected_appearance_files(self):
+    def get_selected_appearance_filenames(self):
         filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
                      self.chromosome[str(i)]['can load']]
         self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
