@@ -1,8 +1,8 @@
-'''
-Business logic for VAM Evolutionary Character Creation 
+"""
+Business logic for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
-'''
+"""
 
 import copy
 import glob
@@ -18,8 +18,6 @@ from PIL import ImageTk, Image, UnidentifiedImageError
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
-ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
-APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
 NO_FILE_SELECTED_TEXT = "…"
 SETTINGS_FILENAME = "settings.json"
 DATA_PATH = "data"
@@ -29,26 +27,8 @@ POP_SIZE = 20
 MINIMAL_RATING_FOR_KEEP_ELITES = 2
 INITIAL_RATING = 3
 DEFAULT_MAX_KEPT_ELITES = 1
-DEFAULT_FONT = "Calibri"
-FILENAME_FONT = ("Courier", 9)
-BG_COLOR = "#F9F9F9"
-FG_COLOR = "black"
-BUTTON_BG_COLOR = "#ffbeed"
-BUTTON_FG_COLOR = "black"
-BUTTON_ACTIVE_COLOR = BUTTON_BG_COLOR
-HOVER_COLOR = "#f900ff"
 MAX_VAMDIR_STRING_LENGTH = 42
 MAX_APPEARANCEDIR_STRING_LENGTH = 45
-RATING_SUNKEN_BG_COLOR = BUTTON_BG_COLOR
-RATING_SUNKEN_FG_COLOR = BUTTON_FG_COLOR
-RATING_RAISED_BG_COLOR = BG_COLOR
-RATING_RAISED_FG_COLOR = FG_COLOR
-RATING_HOVER_BG_COLOR = BUTTON_BG_COLOR
-RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
-RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
-RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
-
-settings = {}
 
 
 class Generator:
@@ -73,7 +53,7 @@ class Generator:
             to save loading-times when using the app """
         # path = self.get_vam_default_appearance_path()
         path = self.settings['appearance dir']
-        
+
         if self.settings['recursive directory search']:
             filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
         else:
@@ -82,7 +62,7 @@ class Generator:
         for f in filenames:
             f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(appearance) is None: 
+            if get_morph_index_with_characterinfo_from_appearance(appearance) is None:
                 # just calling this function since it looks for morphs
                 print("File {} is not a valid Appearance file, skipping.".format(f))
             else:
@@ -95,9 +75,9 @@ class Generator:
                 self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
                 self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
 
-
-    # to do: does this belong into GUI?        
-    def get_thumbnail_for_filename(self, filename):
+    # to do: does this belong into GUI?
+    @staticmethod
+    def get_thumbnail_for_filename(filename):
         """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
         thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
@@ -105,7 +85,7 @@ class Generator:
             thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
 
         image = None
-        jpg_loaded = False    
+        jpg_loaded = False
         try:
             image = Image.open(thumbnailpath)
             jpg_loaded = True
@@ -113,13 +93,13 @@ class Generator:
             print(f'*** Warning! {e}')
             print(f'*** The thumbnail file cannot be read, using dummy image instead.')
 
-        if not jpg_loaded:    
+        if not jpg_loaded:
             try:
                 thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
                 image = Image.open(thumbnailpath)
             except Exception as e:
                 print(f'*** Error! {e}')
-           
+
         image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
         thumbnail = ImageTk.PhotoImage(image)
         return thumbnail
@@ -325,10 +305,11 @@ def get_value_for_key_and_id_in_appearance(appearance, idx, key):
 
 def remove_clothing_from_appearance(appearance):
     """ Removes the clothing and references to the clothing from the appearance. """
+    clothing = list()
     for dictionary in appearance['storables']:
         if dictionary['id'] == 'geometry':
             clothing = dictionary['clothing']
-            dictionary['clothing'] = []
+            dictionary['clothing'] = list()
     if len(clothing) == 0:
         return appearance
     ids_to_delete = [item['internalId'] for item in clothing if 'internalId' in item]
@@ -406,7 +387,7 @@ def get_all_morphnames_in_morphlists(morphlists):
 
 
 def fuse_characters(filename1, filename2, settings):
-    """ Load both filename1 and filename2, and do a intuitive crossover between the two, and finally a
+    """ Load both filename1 and filename2, and do an intuitive crossover between the two, and finally a
         non_uniform_mutation. Returns the child created by these procedures. """
     threshold = settings['morph threshold']
     files = [filename1, filename2]
