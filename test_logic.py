@@ -25,7 +25,7 @@ class TestLogicMethods(unittest.TestCase):
             g2 = test_case[1]
             expected_result = test_case[2]
             result = ecc_logic.can_match_genders(g1, g2)
-            self.assertTrue(expected_result == result)
+            self.assertTrue(expected_result == result, msg=test_case)
 
 
 if __name__ == '__main__':
