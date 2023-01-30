@@ -381,7 +381,6 @@ def count_morphvalues_below_threshold(morphlist, threshold):
     """ checks for each morph in morphlist if the absolut value is below the threshold and returns a count and
         percentage """
     count = 0
-
     for morph in morphlist:
         if abs(float(morph['value'])) < threshold:
             count += 1
@@ -413,10 +412,7 @@ def fuse_characters(filename1, filename2, settings):
     """ Load both filename1 and filename2, and do a intuitive crossover between the two, and finally a
         non_uniform_mutation. Returns the child created by these procedures. """
     threshold = settings['morph threshold']
-    files = []
-    files.append(filename1)
-    files.append(filename2)
-
+    files = [filename1, filename2]
     morphlists = []
     for i, f in enumerate(files):
         print("Reading appearance:", f)
@@ -446,13 +442,11 @@ def fuse_characters(filename1, filename2, settings):
 
 def matching_genders(gender):
     """ returns list of matching genders for a given gender (Female, Male, Futa) """
-    if gender == "Futa" or gender == "Female":
-        match = ["Female", "Futa"]
-    elif gender == "Male":
-        match = ["Male"]
-    else:
-        match = []
-    return match
+    gender_names = [['Male'], ['Female', 'Futa']]
+    for gn in gender_names:
+        if gender in gn:
+            return gn
+    return list()
 
 
 def can_match_genders(gender1, gender2):
