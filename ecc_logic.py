@@ -15,6 +15,10 @@ import time
 
 from PIL import ImageTk, Image, UnidentifiedImageError
 
+MALE = 'Male'
+FEMALE = 'Female'
+FUTA = 'Futa'
+
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
@@ -62,11 +66,11 @@ class Appearance:
 class Generator:
     def __init__(self, settings):
         self.settings = settings
-        self.gencounter = 0
+        self.gen_counter = 0
         self.appearances = dict()
         self.gender = dict()
         self.thumbnails = dict()
-        self.lastfivecommands = list()
+        self.last_five_commands = list()
         self.connected_to_VAM = False
 
     def clear_data_with_all_appearances(self):
@@ -108,14 +112,14 @@ class Generator:
     def get_thumbnail_for_filename(filename):
         """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
-        thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
-        if not os.path.exists(thumbnailpath):
-            thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+        thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
+        if not os.path.exists(thumbnail_path):
+            thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
 
         image = None
         jpg_loaded = False
         try:
-            image = Image.open(thumbnailpath)
+            image = Image.open(thumbnail_path)
             jpg_loaded = True
         except UnidentifiedImageError as e:
             print(f'*** Warning! {e}')
@@ -123,8 +127,8 @@ class Generator:
 
         if not jpg_loaded:
             try:
-                thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
-                image = Image.open(thumbnailpath)
+                thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+                image = Image.open(thumbnail_path)
             except Exception as e:
                 print(f'*** Error! {e}')
 
@@ -154,8 +158,8 @@ def save_appearance(appearance, filename):
                 print("Writing appearance to:", filename)
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
-            thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
-            shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
+            thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
+            shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
             return True
         except Exception as exception:
             print(f'{exception=}')
@@ -229,7 +233,6 @@ def calculate_single_mutation(value, b=0.5):
     """ Create random mutation based on a value and b """
     r1 = random.random()
     r2 = random.random()
-
     if r1 >= 0.5:
         return (1.0 - float(value)) * r2 * b
     else:
@@ -239,7 +242,7 @@ def calculate_single_mutation(value, b=0.5):
 def get_morph_list_from_appearance(appearance):
     """ Based on gender, either returns the morphs or morphsOtherGender from the appearance json """
     gender = get_appearance_gender(appearance)
-    if gender == "Futa":
+    if gender == FUTA:
         target_morphs = "morphsOtherGender"
     else:
         target_morphs = "morphs"
@@ -286,13 +289,13 @@ def get_appearance_gender(appearance):
     morph_names = [morph.name for morph in morph_list]
 
     if "MVR_G2Female" in morph_names and appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "true":
-        return 'Futa'
+        return FUTA
 
     # determine female
     if get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomyAlt', 'enabled') == "true" or \
             get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomy', 'enabled') == "true" or \
-            'Female' in appearance['storables'][char_index]['character']:
-        return 'Female'
+            FEMALE in appearance['storables'][char_index]['character']:
+        return FEMALE
 
     # determine male
     if appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "false" and \
@@ -425,7 +428,7 @@ def fuse_characters(filename1, filename2, settings):
 
 def matching_genders(gender):
     """ returns list of matching genders for a given gender (Female, Male, Futa) """
-    gender_names = [['Male'], ['Female', 'Futa']]
+    gender_names = [[MALE], [FEMALE, FUTA]]
     for gn in gender_names:
         if gender in gn:
             return gn
@@ -436,9 +439,9 @@ def can_match_genders(gender1, gender2):
     """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
     if gender1 == gender2:
         return True
-    if gender1 == 'Female' and gender2 == 'Futa':
+    if gender1 == FEMALE and gender2 == FUTA:
         return True
-    if gender1 == 'Futa' and gender2 == 'Female':
+    if gender1 == FUTA and gender2 == FEMALE:
         return True
     return False
 

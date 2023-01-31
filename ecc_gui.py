@@ -438,7 +438,7 @@ class AppWindow(tk.Frame):
             answer = messagebox.askquestion("Continue last session?",
                                             f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
-                self.generator.gencounter = self.settings['generation counter']
+                self.generator.gen_counter = self.settings['generation counter']
                 self.continue_last_session()
                 return
             else:
@@ -866,7 +866,7 @@ class AppWindow(tk.Frame):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
             app. This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
-        self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+        self.broadcast_generation_number_to_VAM(self.generator.gen_counter)
         print("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
@@ -881,7 +881,7 @@ class AppWindow(tk.Frame):
         self.overviewlabel.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
         self.generationlabel = tk.Label(self.overviewframe, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
         self.generationlabel.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gencounter, font=FILENAME_FONT, bg=BG_COLOR,
+        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gen_counter, font=FILENAME_FONT, bg=BG_COLOR,
                                               fg=FG_COLOR, anchor="w", justify=tk.LEFT)
         self.generationnumberlabel.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
         self.templatelabel = tk.Label(self.overviewframe, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
@@ -901,14 +901,14 @@ class AppWindow(tk.Frame):
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
-        self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+        self.broadcast_generation_number_to_VAM(self.generator.gen_counter)
         self.broadcast_message_to_VAM_rating_blocker("")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
-        self.generationnumberlabel.config(text=self.generator.gencounter)
+        self.generationnumberlabel.config(text=self.generator.gen_counter)
         self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commandslabel.config(text=self.lastgivecommands_to_string(self.generator.lastfivecommands))
+        self.commandslabel.config(text=self.lastgivecommands_to_string(self.generator.last_five_commands))
 
     def lastgivecommands_to_string(self, list_of_commands):
         """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
@@ -1159,17 +1159,17 @@ class AppWindow(tk.Frame):
             morphlist_tmp = ecc_logic.filter_morphs_below_threshold(morphlist_tmp, threshold)
             nmorphs = str(len(morphlist_tmp))
             if int(nmorphs) < self.settings['min morph threshold']:
-                if self.generator.gencounter == 0:  # only do this in the initialization selection step
+                if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.hide_parentfile_from_view(number)
                     return
             else:
-                if self.generator.gencounter == 0:  # only do this in the initialization selection step
+                if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.chromosome[str(number)]['filenamedisplay'].configure(
                         text=self.chromosome[str(number)]['shortfilename'])
                     self.chromosome[str(number)]['can load'] = True
         else:
             nmorphs = "N/A"
-        if self.generator.gencounter == 0:  # after the app is initialized, the morph information is not being shown anymore
+        if self.generator.gen_counter == 0:  # after the app is initialized, the morph information is not being shown anymore
             self.chromosome[str(number)]['nmorphdisplay'].configure(text=str(nmorphs))
 
     def hide_parentfile_from_view(self, number):
@@ -1202,8 +1202,8 @@ class AppWindow(tk.Frame):
             self.gaussian_initialize_population(source_files=self.settings['source files'])
         elif method == "Random Crossover":
             self.crossover_initialize_population(self.settings['source files'])
-        self.generator.gencounter = 1
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.generator.gen_counter = 1
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_VAM_rating_blocker("")
 
@@ -1211,7 +1211,7 @@ class AppWindow(tk.Frame):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
-        if self.generator.gencounter == 0:
+        if self.generator.gen_counter == 0:
             ecc_utility.save_settings(self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
@@ -1243,9 +1243,9 @@ class AppWindow(tk.Frame):
         self.save_population(new_population)
         self.update_population(new_population)
 
-        self.generator.gencounter += 1
-        self.settings['generation counter'] = self.generator.gencounter
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.generator.gen_counter += 1
+        self.settings['generation counter'] = self.generator.gen_counter
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_VAM_rating_blocker("")
         ecc_utility.save_settings(self.settings)
@@ -1343,9 +1343,9 @@ class AppWindow(tk.Frame):
             time_string = now.strftime("%d-%m-%Y %H:%M:%S")
             command_dict['time'] = time_string
             command_dict['command'] = command
-            self.generator.lastfivecommands.insert(0, command_dict)
-            if len(self.generator.lastfivecommands) > 5:
-                self.generator.lastfivecommands.pop()
+            self.generator.last_five_commands.insert(0, command_dict)
+            if len(self.generator.last_five_commands) > 5:
+                self.generator.last_five_commands.pop()
             self.update_overview_window()
 
         # parse rate child commands
@@ -1372,13 +1372,13 @@ class AppWindow(tk.Frame):
             self.switch_layout_to_overview()
         elif "generate next population" in commands[0].lower():
             self.generate_next_population(self.settings['method'])
-            self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+            self.broadcast_generation_number_to_VAM(self.generator.gen_counter)
         elif "reset" in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(givewarning=False)
-            self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+            self.broadcast_generation_number_to_VAM(self.generator.gen_counter)
 
         if self.generator.connected_to_VAM:
             self.update_overview_window()
@@ -1530,7 +1530,7 @@ class AppWindow(tk.Frame):
             child_appearance = ecc_logic.fuse_characters(random_parents[0], random_parents[1], self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
-        self.generator.gencounter += 1
+        self.generator.gen_counter += 1
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
         # to do: why two lines?
@@ -1583,7 +1583,7 @@ class AppWindow(tk.Frame):
             new_population.append(child_appearance)
 
         self.save_population(new_population)
-        self.generator.gencounter += 1
+        self.generator.gen_counter += 1
 
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
@@ -1637,7 +1637,7 @@ class AppWindow(tk.Frame):
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.columninfo['1'].destroy()
         self.columninfo['2'].destroy()
         self.columninfo['3'].destroy()
