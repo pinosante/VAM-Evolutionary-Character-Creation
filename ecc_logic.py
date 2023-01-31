@@ -30,6 +30,7 @@ DEFAULT_MAX_KEPT_ELITES = 1
 MAX_VAMDIR_STRING_LENGTH = 42
 MAX_APPEARANCEDIR_STRING_LENGTH = 45
 
+
 class Morph:
     """ replaces the dict based morph data structure.
         What properties has a morph?
@@ -49,6 +50,13 @@ class Morph:
         self.name = name if name else ''
         self.uid = uid if uid else ''
         self.value = value if value else 0.0
+
+# sketch
+
+
+class Appearance:
+    # storables
+    pass
 
 
 class Generator:
@@ -82,7 +90,7 @@ class Generator:
         for f in filenames:
             f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(appearance) is None:
+            if get_morph_index_with_character_info_from_appearance(appearance) is None:
                 # just calling this function since it looks for morphs
                 print(f"File {f} is not a valid Appearance file, skipping.")
             else:
@@ -156,34 +164,33 @@ def save_appearance(appearance, filename):
     raise Exception(f"Can't save appearance {filename}")
 
 
-def get_morphnames(morphlist):
+def get_morph_names(morph_list):
     """ returns a list with all morph names found in the list of morphs """
-    morphnames = []
-    for morph in morphlist:
-        morphnames.append(morph['name'])
-    return morphnames
+    return [morph.name for morph in morph_list]
 
 
-def morphname_in_morphlist(morphname, morphlist):
-    """ return True if morph is in morphlist """
-    for m in morphlist:
-        if m['name'] == morphname:
+def is_morph_name_in_morph_list(morph_name, morph_list):
+    """ return True if morph is in morphlist
+    to do: should be easy to simplify"""
+    for morph in morph_list:
+        if morph.name == morph_name:
             return True
     return False
 
 
-def get_uid_from_morphname(morphname, morphlists, filenames=None):
-    """ look through list of morphlists for morphname and returns the first found corresponding uid """
-    for idx, morphlist in enumerate(morphlists):
-        for m in morphlist:
-            if m['name'] == morphname:
-                if 'uid' in m:
-                    return m['uid']
+def get_uid_from_morph_name(morph_name, morph_lists, file_names=None):
+    """ look through list of morph_lists for morph_name and returns the first found corresponding uid
+    to do: refactor after having understood what really could go wrong below"""
+    for idx, morph_list in enumerate(morph_lists):
+        for morph in morph_list:
+            if morph.name == morph_name:
+                if morph.uid != '':
+                    return morph.uid
                 else:
-                    if filenames is None:  # this is the case when called from fuse_characters()
+                    if file_names is None:  # this is the case when called from fuse_characters()
                         raise KeyError("Could not find a morph with key 'uid'")
                     else:
-                        raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
+                        raise KeyError(f"Could not find a morph with key 'uid' in file: {file_names[idx]}")
     return False
 
 
@@ -193,8 +200,8 @@ def pad_morph_names_to_morph_lists(morph_lists, morph_names, file_names=None):
     for morph_list in morph_lists:
         morphs_to_add = list()
         for morph_name in morph_names:
-            if not morphname_in_morphlist(morph_name, morph_list):
-                new_morph = Morph(morph_name, get_uid_from_morphname(morph_name, morph_lists, file_names))
+            if not is_morph_name_in_morph_list(morph_name, morph_list):
+                new_morph = Morph(morph_name, get_uid_from_morph_name(morph_name, morph_lists, file_names))
                 morphs_to_add.append(new_morph)
         morph_list.extend(morphs_to_add)
     return morph_lists
@@ -209,15 +216,13 @@ def intuitive_crossover(morph_list1, morph_list2):
     return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
 
-def non_uniform_mutation(morphlist):
+def non_uniform_mutation(morph_list):
     """ select a random gene, and apply non_uniform mutation to it """
     # reference: https://www.geeksforgeeks.org/mutation-algorithms-for-real-valued-parameters-ga/
-    morphlist = copy.deepcopy(morphlist)
-
-    index = random.choice(range(len(morphlist)))
-    value = morphlist[index]['value']
-    morphlist[index]['value'] = str(calculate_single_mutation(value))
-    return morphlist
+    morph_list = copy.deepcopy(morph_list)
+    random_morph = random.choice(morph_list)
+    random_morph.value = calculate_single_mutation(random_morph.value)
+    return morph_list
 
 
 def calculate_single_mutation(value, b=0.5):
@@ -231,18 +236,18 @@ def calculate_single_mutation(value, b=0.5):
         return (0.0 + float(value)) * r2 * b
 
 
-def get_morphlist_from_appearance(appearance):
+def get_morph_list_from_appearance(appearance):
     """ Based on gender, either returns the morphs or morphsOtherGender from the appearance json """
     gender = get_appearance_gender(appearance)
     if gender == "Futa":
-        targetmorphs = "morphsOtherGender"
+        target_morphs = "morphsOtherGender"
     else:
-        targetmorphs = "morphs"
-    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
-    return appearance['storables'][charindex][targetmorphs]
+        target_morphs = "morphs"
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    return appearance['storables'][char_index][target_morphs]
 
 
-def get_morph_index_with_characterinfo_from_appearance(appearance):
+def get_morph_index_with_character_info_from_appearance(appearance):
     """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
     character_key_found = False
     for dictionary in appearance['storables']:
@@ -276,24 +281,22 @@ def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replace
 def get_appearance_gender(appearance):
     """ Return the gender of the appearance, or False if it could not be determined """
     # determine futa
-    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
-    morphlist = appearance['storables'][charindex]["morphs"]
-    morphnames = []
-    for morph in morphlist:
-        morphnames.append(morph['name'])
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    morph_list = appearance['storables'][char_index]["morphs"]
+    morph_names = [morph.name for morph in morph_list]
 
-    if "MVR_G2Female" in morphnames and appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "true":
+    if "MVR_G2Female" in morph_names and appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "true":
         return 'Futa'
 
     # determine female
     if get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomyAlt', 'enabled') == "true" or \
             get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomy', 'enabled') == "true" or \
-            'Female' in appearance['storables'][charindex]['character']:
+            'Female' in appearance['storables'][char_index]['character']:
         return 'Female'
 
     # determine male
-    if appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "false" and \
-            ('Male' in appearance['storables'][charindex]['character'] or
+    if appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "false" and \
+            ('Male' in appearance['storables'][char_index]['character'] or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomy', 'enabled') == "true" or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomyAlt', 'enabled') == "true"):
         return 'Male'
@@ -324,8 +327,8 @@ def remove_clothing_from_appearance(appearance):
 
     indexes_to_delete = []
     for idx, dictionary in enumerate(appearance['storables']):
-        for id in ids_to_delete:
-            if id in dictionary['id']:
+        for some_id in ids_to_delete:
+            if some_id in dictionary['id']:
                 indexes_to_delete.append(idx)
     indexes_to_delete = list(set(indexes_to_delete))
     for index in sorted(indexes_to_delete, reverse=True):
@@ -333,65 +336,59 @@ def remove_clothing_from_appearance(appearance):
     return appearance
 
 
-def save_morph_to_appearance(morphlist, appearance):
-    """ Depending on gender, replace the corresponding morph with the morphlist """
+def save_morph_to_appearance(morph_list, appearance):
+    """ Depending on gender, replace the corresponding morph with the morph_list """
     appearance = copy.deepcopy(appearance)
     gender = get_appearance_gender(appearance)
     if gender == "Futa":
-        targetmorphs = "morphsOtherGender"
+        target_morphs = "morphsOtherGender"
     else:
-        targetmorphs = "morphs"
+        target_morphs = "morphs"
 
-    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
-    appearance['storables'][charindex][targetmorphs] = morphlist
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    appearance['storables'][char_index][target_morphs] = morph_list
     return appearance
 
 
-def dedupe_morphs(morphlists):
-    """ removes duplicate morphs from each morphlist in morphlists """
-    new_morphlists = []
-    for morphlist in morphlists:
-        new_morph = []
-        found = []
-        found_morphs = {}
-        for morph in morphlist:
-            if morph['name'] not in found:
-                found.append(morph['name'])
-                found_morphs[morph['name']] = morph
-                new_morph.append(morph)
-        new_morphlists.append(new_morph)
-    return new_morphlists
+def dedupe_morphs(morph_lists):
+    """ removes duplicate morphs from each morph_list in morph_lists """
+    new_morph_lists = []
+    for morph_list in morph_lists:
+        new_morphs = []
+        found = set()
+        for morph in morph_list:
+            if morph.name not in found:
+                found.add(morph.name)
+                # to do: is it important to keep order here? otherwise a set would be sufficient
+                new_morphs.append(morph)
+        new_morph_lists.append(new_morphs)
+    return new_morph_lists
 
 
-def count_morphvalues_below_threshold(morphlist, threshold):
-    """ checks for each morph in morphlist if the absolut value is below the threshold and returns a count and
+def count_morph_values_below_threshold(morph_list, threshold):
+    """ checks for each morph in morph_list if the absolut value is below the threshold and returns a count and
         percentage """
     count = 0
-    for morph in morphlist:
-        if abs(float(morph['value'])) < threshold:
+    for morph in morph_list:
+        if abs(morph.value) < threshold:
             count += 1
-    percentage = count / len(morphlist)
+    percentage = count / len(morph_list)
     return count, percentage
 
 
-def filter_morphs_below_threshold(morphlist, threshold):
-    """ goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above
+def filter_morphs_below_threshold(morph_list, threshold):
+    """ goes through each morph in each morph_list in the list of morph_lists and only keeps morphs with values above
         threshold """
-    new_morphlist = []
-    for morph in morphlist:
-        if "value" in morph:
-            if abs(float(morph['value'])) >= threshold:
-                new_morphlist.append(morph)
-    return new_morphlist
+    return [morph for morph in morph_list if abs(morph.value) >= threshold]
 
 
-def get_all_morphnames_in_morphlists(morphlists):
-    """ returns a list of alle morphnames found in the morphlists """
-    morphnames = []
-    for morphlist in morphlists:
-        morphnames.extend(get_morphnames(morphlist))
-    morphnames = list(dict.fromkeys(morphnames))  # remove duplicates but keep the same order
-    return morphnames
+def get_all_morph_names_in_morph_lists(morph_lists):
+    """ returns a list of alle morph_names found in the morph_lists """
+    morph_names = []
+    for morph_list in morph_lists:
+        morph_names.extend(get_morph_names(morph_list))
+    morph_names = list(dict.fromkeys(morph_names))  # remove duplicates but keep the same order
+    return morph_names
 
 
 def fuse_characters(filename1, filename2, settings):
@@ -399,30 +396,30 @@ def fuse_characters(filename1, filename2, settings):
         non_uniform_mutation. Returns the child created by these procedures. """
     threshold = settings['morph threshold']
     files = [filename1, filename2]
-    morphlists = []
-    for i, f in enumerate(files):
+    morph_lists = []
+    for f in files:
         print("Reading appearance:", f)
         appearance = load_appearance(f)
-        morphlist = get_morphlist_from_appearance(appearance)
-        morphlist = filter_morphs_below_threshold(morphlist, threshold)
-        morphlists.append(morphlist)
-    morphlists = dedupe_morphs(morphlists)
+        morph_list = get_morph_list_from_appearance(appearance)
+        morph_list = filter_morphs_below_threshold(morph_list, threshold)
+        morph_lists.append(morph_list)
+    morph_lists = dedupe_morphs(morph_lists)
 
-    morphnames = get_all_morphnames_in_morphlists(morphlists)
-    morphlists = pad_morph_names_to_morph_lists(morphlists, morphnames)
+    morph_names = get_all_morph_names_in_morph_lists(morph_lists)
+    morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names)
 
-    sortedmorphlists = []
-    for morphlist in morphlists:
-        sortedmorphlists.append(sorted(morphlist, key=lambda d: d['name']))
+    sorted_morph_lists = []
+    for morph_list in morph_lists:
+        sorted_morph_lists.append(sorted(morph_list, key=lambda morph: morph.name))
 
-    child_morphlist = intuitive_crossover(sortedmorphlists[0], sortedmorphlists[1])
-    child_morphlist = non_uniform_mutation(child_morphlist)
+    child_morph_list = intuitive_crossover(sorted_morph_lists[0], sorted_morph_lists[1])
+    child_morph_list = non_uniform_mutation(child_morph_list)
 
     # select child template
-    templatefile = settings['child template']
-    child_appearance = load_appearance(templatefile)
-    print("Using as appearance template:", templatefile)
-    child_appearance = save_morph_to_appearance(child_morphlist, child_appearance)
+    template_file = settings['child template']
+    child_appearance = load_appearance(template_file)
+    print("Using as appearance template:", template_file)
+    child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
     return child_appearance
 
 

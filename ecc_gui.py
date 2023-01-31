@@ -940,7 +940,7 @@ class AppWindow(tk.Frame):
                 appearance_templates.append(appearance)
 
         for i in range(1, POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
@@ -951,7 +951,7 @@ class AppWindow(tk.Frame):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
         for i in range(1, POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, template_appearance)
             ecc_logic.save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
 
@@ -1040,7 +1040,7 @@ class AppWindow(tk.Frame):
         filtered = []
         for f in filenames:
             appearance = self.generator.appearances[f]
-            morphlist = ecc_logic.get_morphlist_from_appearance(appearance)
+            morphlist = ecc_logic.get_morph_list_from_appearance(appearance)
             morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
             if len(morphlist) > self.settings['min morph threshold']:
                 filtered.append(f)
@@ -1155,7 +1155,7 @@ class AppWindow(tk.Frame):
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
 
-            morphlist_tmp = copy.deepcopy(ecc_logic.get_morphlist_from_appearance(self.chromosome[str(number)]['appearance']))
+            morphlist_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(self.chromosome[str(number)]['appearance']))
             morphlist_tmp = ecc_logic.filter_morphs_below_threshold(morphlist_tmp, threshold)
             nmorphs = str(len(morphlist_tmp))
             if int(nmorphs) < self.settings['min morph threshold']:
@@ -1230,7 +1230,7 @@ class AppWindow(tk.Frame):
         elites = self.get_elites_from_population()
 
         # Save elite appearances over child template (we do this, because the user might have changed the template file)
-        elite_morph_lists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in elites]
+        elite_morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in elites]
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
         new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in
                           elite_morph_lists]
@@ -1553,8 +1553,8 @@ class AppWindow(tk.Frame):
 
         print(f"Source files: {source_files} ({len(appearances)} Files)")
 
-        morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
-        morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
+        morphlists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
+        morphnames = ecc_logic.get_all_morph_names_in_morph_lists(morphlists)
         morphlists = ecc_logic.pad_morph_names_to_morph_lists(morphlists, morphnames, filenames)
         morphlists = ecc_logic.dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
