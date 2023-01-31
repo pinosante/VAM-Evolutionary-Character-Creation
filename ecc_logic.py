@@ -187,24 +187,18 @@ def get_uid_from_morphname(morphname, morphlists, filenames=None):
     return False
 
 
-def pad_morphnames_to_morphlists(morphlists, morphnames, filenames=None):
-    """ adds uid keys to each morphlist in morphlists and sets the values to 0 if uid key doesn't exist """
-    morphlists = copy.deepcopy(morphlists)
+def pad_morph_names_to_morph_lists(morph_lists, morph_names, file_names=None):
+    """ adds uid keys to each morph_list in morph_lists and sets the values to 0 if uid key doesn't exist """
+    morph_lists = copy.deepcopy(morph_lists)
 
-    for morphlist in morphlists:
-        morphs_to_add = []
-        for morphname in morphnames:
-            if morphname_in_morphlist(morphname, morphlist):
-                continue
-            else:
-                new_morph = {
-                    'uid': get_uid_from_morphname(morphname, morphlists, filenames),
-                    'name': morphname,
-                    'value': '0.0'
-                }
+    for morph_list in morph_lists:
+        morphs_to_add = list()
+        for morph_name in morph_names:
+            if not morphname_in_morphlist(morph_name, morph_list):
+                new_morph = Morph(morph_name, get_uid_from_morphname(morph_name, morph_lists, file_names))
                 morphs_to_add.append(new_morph)
-        morphlist.extend(morphs_to_add)
-    return morphlists
+        morph_list.extend(morphs_to_add)
+    return morph_lists
 
 
 def intuitive_crossover(morphlist1, morphlist2):
@@ -421,7 +415,7 @@ def fuse_characters(filename1, filename2, settings):
     morphlists = dedupe_morphs(morphlists)
 
     morphnames = get_all_morphnames_in_morphlists(morphlists)
-    morphlists = pad_morphnames_to_morphlists(morphlists, morphnames)
+    morphlists = pad_morph_names_to_morph_lists(morphlists, morphnames)
 
     sortedmorphlists = []
     for morphlist in morphlists:

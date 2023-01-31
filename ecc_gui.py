@@ -1555,7 +1555,7 @@ class AppWindow(tk.Frame):
 
         morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
         morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
-        morphlists = ecc_logic.pad_morphnames_to_morphlists(morphlists, morphnames, filenames)
+        morphlists = ecc_logic.pad_morph_names_to_morph_lists(morphlists, morphnames, filenames)
         morphlists = ecc_logic.dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
