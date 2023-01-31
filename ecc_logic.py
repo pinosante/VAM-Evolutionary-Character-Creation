@@ -190,7 +190,6 @@ def get_uid_from_morphname(morphname, morphlists, filenames=None):
 def pad_morph_names_to_morph_lists(morph_lists, morph_names, file_names=None):
     """ adds uid keys to each morph_list in morph_lists and sets the values to 0 if uid key doesn't exist """
     morph_lists = copy.deepcopy(morph_lists)
-
     for morph_list in morph_lists:
         morphs_to_add = list()
         for morph_name in morph_names:
@@ -201,18 +200,13 @@ def pad_morph_names_to_morph_lists(morph_lists, morph_names, file_names=None):
     return morph_lists
 
 
-def intuitive_crossover(morphlist1, morphlist2):
+def intuitive_crossover(morph_list1, morph_list2):
     """ returns a new morph which is the combined morph of morphlist1 and morphlist2 where each gene has 0.5 chance to
         be selected
         reference: https://towardsdatascience.com/unit-3-genetic-algorithms-part-1-986e3b4666d7
         """
-    new_morphlist = []
-    for i in range(len(morphlist1)):
-        if random.randint(0, 1):
-            new_morphlist.append(morphlist1[i])
-        else:
-            new_morphlist.append(morphlist2[i])
-    return new_morphlist
+    zipped_morphs = zip(morph_list1, morph_list2)
+    return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
 
 def non_uniform_mutation(morphlist):
