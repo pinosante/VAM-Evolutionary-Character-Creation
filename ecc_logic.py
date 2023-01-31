@@ -51,9 +51,9 @@ class Morph:
         """ init a Morph object with values
             look, default parameters! :)
         """
-        self.name = name if name else ''
-        self.uid = uid if uid else ''
-        self.value = value if value else 0.0
+        self.name = name
+        self.uid = uid
+        self.value = value
 
 # sketch
 
