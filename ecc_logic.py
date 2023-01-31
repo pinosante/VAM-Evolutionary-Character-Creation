@@ -64,14 +64,14 @@ class Generator:
             appearance = load_appearance(f)
             if get_morph_index_with_characterinfo_from_appearance(appearance) is None:
                 # just calling this function since it looks for morphs
-                print("File {} is not a valid Appearance file, skipping.".format(f))
+                print(f"File {f} is not a valid Appearance file, skipping.")
             else:
                 f_fav = f + '.fav'
                 appearance['is_fav'] = os.path.isfile(f_fav)
                 if appearance['is_fav']:
                     print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
                 self.appearances[f] = appearance
-                print("Loading file {} into database.".format(f))
+                print(f"Loading file {f} into database.")
                 self.thumbnails[f] = self.get_thumbnail_for_filename(f)
                 self.gender[f] = get_appearance_gender(self.appearances[f])
 
@@ -131,9 +131,9 @@ def save_appearance(appearance, filename):
             return True
         except Exception as exception:
             print(f'{exception=}')
-            print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
+            print(f"Error while trying to save {filename}, trying again in 2 seconds.")
             time.sleep(2)
-    raise Exception("Can't save appearance {}".format(filename))
+    raise Exception(f"Can't save appearance {filename}")
 
 
 def get_morphnames(morphlist):

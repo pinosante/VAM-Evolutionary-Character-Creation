@@ -703,7 +703,8 @@ class AppWindow(tk.Frame):
         else:
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
             self.appearancedirlabel.configure(
-                text=ecc_utility.strip_dir_string_to_max_length(self.settings['appearance dir'], MAX_APPEARANCEDIR_STRING_LENGTH))
+                text=ecc_utility.strip_dir_string_to_max_length(self.settings['appearance dir'],
+                                                                MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearancedirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
@@ -1550,7 +1551,7 @@ class AppWindow(tk.Frame):
 
         appearances = [self.generator.appearances[f] for f in filenames]
 
-        print("Source files: {} ({} Files)".format(source_files, len(appearances)))
+        print(f"Source files: {source_files} ({len(appearances)} Files)")
 
         morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
         morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
