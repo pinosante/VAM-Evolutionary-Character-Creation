@@ -30,6 +30,26 @@ DEFAULT_MAX_KEPT_ELITES = 1
 MAX_VAMDIR_STRING_LENGTH = 42
 MAX_APPEARANCEDIR_STRING_LENGTH = 45
 
+class Morph:
+    """ replaces the dict based morph data structure.
+        What properties has a morph?
+        - name
+        - uid
+        - value
+        later (blacklist):
+        - is_allowed
+        - min_value
+        - max_value
+    """
+
+    def __init__(self, name='', uid='', value=0.0):
+        """ init a Morph object with values
+            look, default parameters! :)
+        """
+        self.name = name if name else ''
+        self.uid = uid if uid else ''
+        self.value = value if value else 0.0
+
 
 class Generator:
     def __init__(self, settings):
