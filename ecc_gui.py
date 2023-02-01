@@ -1,8 +1,8 @@
-'''
-GUI for VAM Evolutionary Character Creation 
+"""
+GUI for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
-'''
+"""
 import copy
 import json
 import os

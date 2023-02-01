@@ -1,10 +1,10 @@
-'''
+"""
 
 By Pino Sante
 
 Please credit me if you change, use or adapt this file.
 
-'''
+"""
 
 import os
 import tkinter as tk
@@ -18,9 +18,9 @@ ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 
 
 def main():
-    '''
+    """
     create the business logic and the main window and launch them
-    '''
+    """
     settings = ecc_utility.load_settings()
 
     # todo: convert Logic into class later
