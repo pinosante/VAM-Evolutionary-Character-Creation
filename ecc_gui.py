@@ -740,8 +740,7 @@ class AppWindow(tk.Frame):
                                          width=52, height=6,
                                          activebackground="#D0D0D0",
                                          text=txt,
-                                         state='disabled',
-                                         command=None)
+                                         state='disabled')
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
@@ -908,11 +907,13 @@ class AppWindow(tk.Frame):
         """ Updates the overview window with generation, template and last five commands information """
         self.generationnumberlabel.config(text=self.generator.gencounter)
         self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commandslabel.config(text=self.lastgivecommands_to_string(self.generator.lastfivecommands))
+        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.lastfivecommands))
 
-    def lastgivecommands_to_string(self, list_of_commands):
+    @staticmethod
+    def last_given_commands_to_string(list_of_commands):
         """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
-            to a string with \n for line separation """
+            to a string with \n for line separation
+            to do: simplify this"""
         string = ""
         for command_dict in list_of_commands:
             line = command_dict['time'] + ": " + command_dict['command'] + "\n"
@@ -1281,6 +1282,7 @@ class AppWindow(tk.Frame):
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         for i in range(1, POP_SIZE + 1):
             filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i) + ".vap")
+            c = self.chromosome[str(i)]
             self.chromosome[str(i)]['filename'] = filename
             self.chromosome[str(i)]['appearance'] = ecc_logic.load_appearance(filename)
         self.change_parent_to_generation_display()
@@ -1413,7 +1415,8 @@ class AppWindow(tk.Frame):
             return False
         self.write_value_to_VAM_file(path, "Text", "text", text)
 
-    def write_value_to_VAM_file(self, path, id_string, needed_key, replacement_string):
+    @staticmethod
+    def write_value_to_VAM_file(path, id_string, needed_key, replacement_string):
         """ Updates the VAM file with path, by loading the storables array inside, and looking for the dictionary with
             ("id", "id_string") as (key, value) pair. Then, within this dictionary, it will overwrite the (key, value)
             pair with ("needed_key", "replacement_string"). Then it will overwrite the VAM file. """
@@ -1560,7 +1563,7 @@ class AppWindow(tk.Frame):
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
 
-        covariances = self.get_cov_from_morphlists(morphlists)
+        covariances = self.get_cov_from_morph_lists(morphlists)
         new_population = []
         templatefile = self.settings['child template']
         threshold = self.settings['morph threshold']
@@ -1592,27 +1595,29 @@ class AppWindow(tk.Frame):
         return
 
 
-    def get_means_from_morphlists(self, morphlists):
+    @staticmethod
+    def get_means_from_morphlists(morph_lists):
         """ returns a dictionary of morph means for each morph found in the morphlists """
         means = defaultdict(lambda: 0.0)
-        for morphlist in morphlists:
-            for morph in morphlist:
+        for morph_list in morph_lists:
+            for morph in morph_list:
                 if 'value' in morph:
-                    means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morphlists)
+                    means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
                 else:
-                    means[morph['name']] += 0 / len(morphlists)  # just assume missing values to be 0
+                    means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
         return means
 
-    def get_cov_from_morphlists(self, morphlists):
+    @staticmethod
+    def get_cov_from_morph_lists(morphlists):
         """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
         values = defaultdict(lambda: [])
-        for morphlist in morphlists:
-            for morph in morphlist:
+        for morph_list in morphlists:
+            for morph in morph_list:
                 values[morph['name']].append(np.nan_to_num(float(morph['value'])))
-        listofvalues = []
+        list_of_values = []
         for key, value in values.items():
-            listofvalues.append(value)
-        covariances = np.array(listofvalues)
+            list_of_values.append(value)
+        covariances = np.array(list_of_values)
         return np.cov(covariances)
 
     def save_population(self, population):
