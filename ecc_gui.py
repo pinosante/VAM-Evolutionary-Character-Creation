@@ -1321,7 +1321,7 @@ class AppWindow(tk.Frame):
                 if command != lastcommand:
                     self.broadcast_last_command_to_VAM(command)
                     self.execute_VAM_command(command)
-                    print("We have a new command: {}".format(command))
+                    print(f"We have a new command: {command}")
         except IOError as e:
             print(e)
             self.master.after(25, lambda lastcommand=lastcommand: self.scan_vam_for_command_updates(lastcommand))
@@ -1522,7 +1522,7 @@ class AppWindow(tk.Frame):
         # select source files
         parent_filenames = self.select_appearances_strategies[source_files]()
 
-        print("Source files: {} ({} Files)".format(source_files, len(parent_filenames)))
+        print(f"Source files: {source_files} ({len(parent_filenames)} Files)")
 
         new_population = []
         for i in range(1, POP_SIZE + 1):
