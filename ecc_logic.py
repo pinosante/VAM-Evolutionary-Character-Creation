@@ -316,8 +316,8 @@ def remove_clothing_from_appearance(appearance):
 
     indexes_to_delete = []
     for idx, dictionary in enumerate(appearance['storables']):
-        for id in ids_to_delete:
-            if id in dictionary['id']:
+        for id2 in ids_to_delete:
+            if id2 in dictionary['id']:
                 indexes_to_delete.append(idx)
     indexes_to_delete = list(set(indexes_to_delete))
     for index in sorted(indexes_to_delete, reverse=True):
