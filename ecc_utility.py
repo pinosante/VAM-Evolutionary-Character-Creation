@@ -1,4 +1,4 @@
-'''stuff'''
+"""some helpers"""
 
 import os
 import sys
@@ -10,6 +10,7 @@ SETTINGS_FILENAME = "settings.json"
 
 def save_settings(settings):
     """ Saves the settings as a json file to DATA_PATH/SETTINGS_FILENAME """
+    dir_path = ''
     if getattr(sys, 'frozen', False):
         dir_path = os.path.dirname(sys.executable)
     elif __file__:
@@ -22,6 +23,7 @@ def save_settings(settings):
 
 def load_settings():
     """ Fills settings with the settings in the DATA_PATH/SETTINGS_FILENAME json_file """
+    dir_path = ''
     settings = {}
     if getattr(sys, 'frozen', False):
         dir_path = os.path.dirname(sys.executable)
@@ -35,7 +37,7 @@ def load_settings():
     return settings
 
 
-def strip_dir_string_to_max_length(dirstring, length):
+def strip_dir_string_to_max_length(dir_string, length):
     """ Takes a string directory, and cuts it at the '/' in the string such that the
         length of the stripped string is as large as possible but stays smaller than
         the total 'length'. A '(…)/' is added if the string had to be cut.
@@ -48,9 +50,9 @@ def strip_dir_string_to_max_length(dirstring, length):
         strip_dir_string_to_max_length("C:/456/890/234.txt", 14)
         >(…)/234.txt
         """
-    if len(dirstring) <= length:
-        return dirstring
-    parts = dirstring.split("\\")
+    if len(dir_string) <= length:
+        return dir_string
+    parts = dir_string.split("\\")
     stripped_string = ""
     index = len(parts) - 1
     while (len(parts[index]) + 1) <= ((length - 4) - (len(stripped_string) - 1)):
@@ -61,15 +63,16 @@ def strip_dir_string_to_max_length(dirstring, length):
     stripped_string = stripped_string[:-1]  # remove trailing "\"
     return "(…)\\" + stripped_string
 
-def is_favourite(appearance):
+
+def is_favorite(appearance):
     return appearance['is_fav']
 
 
 def generate_list_element(lst):
-    """ Returns one element of the list, starts again, if list is depleted """
+    """ Returns one element of the list, starts again if list is depleted """
     while True:
-        for elem in lst:
-            yield elem
+        for element in lst:
+            yield element
 
 
 if __name__ == '__main__':

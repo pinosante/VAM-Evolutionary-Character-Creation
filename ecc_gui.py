@@ -1,31 +1,25 @@
-'''
-GUI for VAM Evolutionary Character Creation 
+"""
+GUI for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
-'''
+"""
+import copy
 import json
 import os
-import sys
-import copy
+import pathlib
 import random
 import tkinter as tk
-from fnmatch import fnmatch
-from tkinter import ttk
-from tkinter import messagebox
-from datetime import datetime
-import pathlib
-import shutil
-import numpy as np
-import glob
-import time
 from collections import defaultdict
+from datetime import datetime
+from fnmatch import fnmatch
 from tkinter import filedialog
-from PIL import ImageTk, Image
+from tkinter import messagebox
+from tkinter import ttk
 
+import numpy as np
 
 import ecc_logic
 import ecc_utility
-
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
@@ -60,6 +54,10 @@ RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
 RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
 
+# selection of appearances method texts
+CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
+CHOOSE_ALL_TEXT = "Choose All Appearances"
+CHOOSE_FILES_TEXT = "Choose Files"
 
 ###
 ### Below are the settings for a dark theme
@@ -85,9 +83,17 @@ class AppWindow(tk.Frame):
         super().__init__()
         self.settings = settings
         self.generator = generator
-        self.initUI()
 
-    def initUI(self):
+        # create a dictionary to select appearances
+        self.select_appearances_strategies = {
+            CHOOSE_ALL_FAVORITES_TEXT: lambda: self.get_fav_appearance_filenames(),
+            CHOOSE_ALL_TEXT: lambda: self.get_all_appearance_filenames(),
+            CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
+        }
+
+        self.init_ui()
+
+    def init_ui(self):
         self.master.title(APP_TITLE)
 
         subtitlefont = (DEFAULT_FONT, 11, "bold")
@@ -150,6 +156,7 @@ class AppWindow(tk.Frame):
                             text="Step 3: Select Child Template Appearance", font=subtitlefont,
                             bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
+
         self.childtemplatebutton = {}
         self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female",
                             bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
@@ -166,7 +173,7 @@ class AppWindow(tk.Frame):
                             command=lambda: self.select_template_file(["Futa"],
                             "Please Select Parent Template"))
         self.childtemplatebutton['Futa'].grid(row=1, column=2, sticky=tk.W, padx=0)
-        self.childtemplate = {}
+        self.childtemplate = dict()
         self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
                             font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplate['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
@@ -187,7 +194,7 @@ class AppWindow(tk.Frame):
                                             fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                             command=lambda: self.choose_all_favorites())
         self.allfavoritesbutton.grid(row=1, column=1, sticky=tk.W)
-        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text="Choose Files", bg=BUTTON_BG_COLOR,
+        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
                                            fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                            command=lambda: self.choose_files())
         self.choosefilesbutton.grid(row=1, column=2, sticky=tk.W)
@@ -201,7 +208,7 @@ class AppWindow(tk.Frame):
                                         font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.chromosomelabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
 
-        self.columninfo = {}
+        self.columninfo = dict()
         self.columninfo['1'] = tk.Label(self.parentselectionframe, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
         self.columninfo['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
         self.columninfo['2'] = tk.Label(self.parentselectionframe, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
@@ -209,22 +216,24 @@ class AppWindow(tk.Frame):
         self.columninfo['3'] = tk.Label(self.parentselectionframe, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
         self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
 
-        self.chromosome = {}
+        self.chromosome = dict()
         for i in range(1, POP_SIZE + 1):
-            self.chromosome[str(i)] = {}
-            self.chromosome[str(i)]['filebutton'] = tk.Button(self.parentselectionframe, text="Parent " + str(i),
+            new_chromosome = dict()
+            new_chromosome['filebutton'] = tk.Button(self.parentselectionframe, text="Parent " + str(i),
                                                               bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                                                               activebackground=BUTTON_ACTIVE_COLOR,
                                                               command=lambda i=i: self.select_file(i), width=10)
-            self.chromosome[str(i)]['filebutton'].grid(row=i + 1, column=0, sticky=tk.W)
-            self.chromosome[str(i)]['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT,
+            new_chromosome['filebutton'].grid(row=i + 1, column=0, sticky=tk.W)
+            new_chromosome['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT,
                                                                   font=FILENAME_FONT, width=28, anchor="w", bg=BG_COLOR,
                                                                   fg=FG_COLOR)
-            self.chromosome[str(i)]['filenamedisplay'].grid(row=i + 1, column=1, sticky=tk.W)
-            self.chromosome[str(i)]['nmorphdisplay'] = tk.Label(self.parentselectionframe, text="N/A", bg=BG_COLOR,
+            new_chromosome['filenamedisplay'].grid(row=i + 1, column=1, sticky=tk.W)
+            new_chromosome['nmorphdisplay'] = tk.Label(self.parentselectionframe, text="N/A", bg=BG_COLOR,
                                                                 fg=FG_COLOR)
-            self.chromosome[str(i)]['nmorphdisplay'].grid(row=i + 1, column=2, sticky=tk.W)
-            self.chromosome[str(i)]['can load'] = False
+            new_chromosome['nmorphdisplay'].grid(row=i + 1, column=2, sticky=tk.W)
+            new_chromosome['can load'] = False
+
+            self.chromosome[str(i)] = new_chromosome
 
         ###
         ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
@@ -403,15 +412,15 @@ class AppWindow(tk.Frame):
             if 'file ' + str(i) in self.settings:
                 if len(self.settings['file ' + str(i)]) > 0:
                     filename = self.settings['file ' + str(i)]
-                    self.update_GUI_file(i, filename)
+                    self.update_gui_file(i, filename)
                     self.update_morph_info(i)
 
         if 'source files' in self.settings:
-            if self.settings['source files'] == "Choose Files":
+            if self.settings['source files'] == CHOOSE_FILES_TEXT:
                 self.choose_files()
-            elif self.settings['source files'] == "Choose All Favorites":
+            elif self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
                 self.choose_all_favorites()
-            elif self.settings['source files'] == "Choose All Appearances":
+            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 self.choose_all_appearances()
 
         if 'method' in self.settings:
@@ -429,7 +438,7 @@ class AppWindow(tk.Frame):
             answer = messagebox.askquestion("Continue last session?",
                                             f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
-                self.gencounter = self.settings['generation counter']
+                self.generator.gencounter = self.settings['generation counter']
                 self.continue_last_session()
                 return
             else:
@@ -540,14 +549,14 @@ class AppWindow(tk.Frame):
     def update_found_labels(self):
         """ Depending on the choice for the source files, updates the GUI """
         if 'source files' in self.settings:
-            if self.settings['source files'] == "Choose All Favorites":
+            if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
                 self.update_favorites_found_label()
-            elif self.settings['source files'] == "Choose All Appearances":
+            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 self.update_all_appearances_found_label()
 
     def update_all_appearances_found_label(self):
         """ Counts the amount of appearance available in the default VAM directory and updates the GUI """
-        filenames = self.get_appearance_files(get_only_favourites=False)
+        filenames = self.get_all_appearance_filenames()
         txt = str(len(filenames)) + " appearances found"
         self.favoritesinfo.configure(text=txt)
         self.update_initialize_population_button()
@@ -556,7 +565,7 @@ class AppWindow(tk.Frame):
     def update_favorites_found_label(self):
         """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
         #filenames = self.get_favorited_appearance_files()
-        filenames = self.get_appearance_files(get_only_favourites=True)
+        filenames = self.get_fav_appearance_filenames()
         txt = str(len(filenames)) + " favorite appearances found"
         self.favoritesinfo.configure(text=txt)
         self.favoriteslabel.configure(text="Step 5: All Favorited Appearances Chosen")
@@ -570,7 +579,7 @@ class AppWindow(tk.Frame):
         self.allappearancesbutton.configure(relief=tk.SUNKEN)
         self.allfavoritesbutton.configure(relief=tk.RAISED)
         self.choosefilesbutton.configure(relief=tk.RAISED)
-        self.settings['source files'] = "Choose All Appearances"
+        self.settings['source files'] = CHOOSE_ALL_TEXT
         self.update_found_labels()
 
     def choose_all_favorites(self):
@@ -581,7 +590,7 @@ class AppWindow(tk.Frame):
         self.allappearancesbutton.configure(relief=tk.RAISED)
         self.allfavoritesbutton.configure(relief=tk.SUNKEN)
         self.choosefilesbutton.configure(relief=tk.RAISED)
-        self.settings['source files'] = "Choose All Favorites"
+        self.settings['source files'] = CHOOSE_ALL_FAVORITES_TEXT
         self.update_found_labels()
 
     def choose_files(self):
@@ -592,7 +601,7 @@ class AppWindow(tk.Frame):
         self.allappearancesbutton.configure(relief=tk.RAISED)
         self.allfavoritesbutton.configure(relief=tk.RAISED)
         self.choosefilesbutton.configure(relief=tk.SUNKEN)
-        self.settings['source files'] = "Choose Files"
+        self.settings['source files'] = CHOOSE_FILES_TEXT
         self.update_initialize_population_button()
 
     def choose_gaussian_samples(self):
@@ -624,18 +633,18 @@ class AppWindow(tk.Frame):
         filename = self.file_selection_with_thumbnails(match, "Please select a parent Appearance")
 
         if filename == "":  # user did not select files
-            self.remove_parentfile_from_GUI(number)
+            self.remove_parent_file_from_gui(number)
             return
 
         # user did select a file, which we are now parsing
         self.settings['file ' + str(number)] = filename
-        self.update_GUI_file(number, filename)
+        self.update_gui_file(number, filename)
 
         # stop hiding the apply changes button if we have at least two appearance files available
         self.update_initialize_population_button()
         self.update_morph_info(number)
 
-    def remove_parentfile_from_GUI(self, number):
+    def remove_parent_file_from_gui(self, number):
         """ Removes all internal information for a specific parent file for the chosen parent number. Called when
             loading an appearance file for that parent number is cancelled or invalid """
         keylist = ['shortfilename', 'appearance', 'filename']
@@ -694,7 +703,8 @@ class AppWindow(tk.Frame):
         else:
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
             self.appearancedirlabel.configure(
-                text=ecc_utility.strip_dir_string_to_max_length(self.settings['appearance dir'], MAX_APPEARANCEDIR_STRING_LENGTH))
+                text=ecc_utility.strip_dir_string_to_max_length(self.settings['appearance dir'],
+                                                                MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearancedirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
@@ -721,6 +731,7 @@ class AppWindow(tk.Frame):
             self.generatechild.configure(relief="raised",
                                          bg="lightgreen", font=(DEFAULT_FONT, 12, "bold"), text="Initialize Population",
                                          width=52, height=6,
+                                         state='normal',
                                          command=lambda: self.generate_next_population(self.settings['method']))
         else:
             txt = ("Cannot Initialize Population:\n" + missing).rstrip()
@@ -729,11 +740,7 @@ class AppWindow(tk.Frame):
                                          width=52, height=6,
                                          activebackground="#D0D0D0",
                                          text=txt,
-                                         command=lambda: self.do_nothing())
-
-    def do_nothing(self):
-        """ Called by the Initialize Population Button to do nothing if criteria are not met. """
-        pass
+                                         state='disabled')
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
@@ -760,11 +767,11 @@ class AppWindow(tk.Frame):
             missing += "· Please select a child template appearance\n"
 
         if 'source files' in self.settings:
-            if self.settings['source files'] == "Choose All Favorites":
-                source_files = self.get_appearance_files(get_only_favourites=True)
-            elif self.settings['source files'] == "Choose All Appearances":
-                source_files = self.get_appearance_files(get_only_favourites=False)
-            elif self.settings['source files'] == "Choose Files":
+            if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
+                source_files = self.get_fav_appearance_filenames()
+            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
+                source_files = self.get_all_appearance_filenames()
+            elif self.settings['source files'] == CHOOSE_FILES_TEXT:
                 source_files = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
                                 self.chromosome[str(i)]['can load']]
             else:
@@ -787,15 +794,16 @@ class AppWindow(tk.Frame):
         else:
             return False, missing
 
-    def update_GUI_file(self, number, filename):
+    def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
-        if filename not in self.generator.data['appearances']:
+        if filename not in self.generator.appearances:
             return
-        self.chromosome[str(number)]['filename'] = filename
-        self.chromosome[str(number)]['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
-        self.chromosome[str(number)]['filenamedisplay'].configure(text=self.chromosome[str(number)]['shortfilename'])
-        self.chromosome[str(number)]['appearance'] = self.generator.data['appearances'][filename]
-        self.chromosome[str(number)]['can load'] = True
+        chromosome = self.chromosome[str(number)]
+        chromosome['filename'] = filename
+        chromosome['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
+        chromosome['filenamedisplay'].configure(text=chromosome['shortfilename'])
+        chromosome['appearance'] = self.generator.appearances[filename]
+        chromosome['can load'] = True
 
     def select_template_file(self, genderlist, title):
         """ Called by the Female, Male and Futa load template file buttons. Opens a file selection dialogue which
@@ -815,7 +823,7 @@ class AppWindow(tk.Frame):
             self.update_found_labels()
             return
         self.childtemplate['label'].configure(text=self.create_template_labeltext(filename))
-        self.childtemplate['gender'] = self.generator.data['gender'][filename]
+        self.childtemplate['gender'] = self.generator.gender[filename]
         self.press_childtemplate_button(self.childtemplate['gender'])
         self.settings['child template'] = filename
         for i in range(1, POP_SIZE + 1):
@@ -836,7 +844,7 @@ class AppWindow(tk.Frame):
     def change_template_file(self, filename):
         """ Called by either the GUI or as a VAM command. Checks if the gender of the chosen file matches the
             current template gender. Updates the GUI. """
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
@@ -846,18 +854,18 @@ class AppWindow(tk.Frame):
                 selectmsg = "Please select a Female or Futa as template."
             else:
                 selectmsg = "Please select a Male as template."
-            self.broadcast_message_to_VAM_rating_blocker("Failure: Gender does not match population.\n\n" + selectmsg)
+            self.broadcast_message_to_vam_rating_blocker("Failure: Gender does not match population.\n\n" + selectmsg)
             return
         self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
         self.update_population_with_new_template()
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def switch_layout_to_overview(self):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
             app. This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
-        self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+        self.broadcast_generation_number_to_vam(self.generator.gencounter)
         print("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
@@ -892,18 +900,20 @@ class AppWindow(tk.Frame):
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
-        self.broadcast_generation_number_to_VAM(self.generator.gencounter)
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_generation_number_to_vam(self.generator.gencounter)
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
         self.generationnumberlabel.config(text=self.generator.gencounter)
         self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commandslabel.config(text=self.lastgivecommands_to_string(self.generator.lastfivecommands))
+        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.lastfivecommands))
 
-    def lastgivecommands_to_string(self, list_of_commands):
+    @staticmethod
+    def last_given_commands_to_string(list_of_commands):
         """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
-            to a string with \n for line separation """
+            to a string with \n for line separation
+            to do: simplify this"""
         string = ""
         for command_dict in list_of_commands:
             line = command_dict['time'] + ": " + command_dict['command'] + "\n"
@@ -915,15 +925,16 @@ class AppWindow(tk.Frame):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
         print('variate_population_with_templates')
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
 
-        filenames = list(self.generator.data['appearances'].keys())
+        filenames = list(self.generator.appearances.keys())
         random.shuffle(filenames)
         filename_generator = ecc_utility.generate_list_element(filenames)    
 
-        appearance_templates = []
-        while len(appearance_templates) < POP_SIZE:
-            filename = next(filename_generator)
+        appearance_templates = list()
+        for filename in filename_generator:
+            if len(appearance_templates) >= POP_SIZE:
+                break
             appearance = ecc_logic.load_appearance(filename)
             gender = ecc_logic.get_appearance_gender(appearance)
             if gender == self.childtemplate['gender']:
@@ -935,7 +946,7 @@ class AppWindow(tk.Frame):
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
         
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
@@ -954,7 +965,7 @@ class AppWindow(tk.Frame):
 
         self.thumbnails_per_row = self.settings['thumbnails per row']
 
-        filenames = list(self.generator.data['appearances'].keys())
+        filenames = list(self.generator.appearances.keys())
         if filteronmorphcount:
             filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
         filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
@@ -1029,7 +1040,7 @@ class AppWindow(tk.Frame):
 
         filtered = []
         for f in filenames:
-            appearance = self.generator.data['appearances'][f]
+            appearance = self.generator.appearances[f]
             morphlist = ecc_logic.get_morphlist_from_appearance(appearance)
             morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
             if len(morphlist) > self.settings['min morph threshold']:
@@ -1040,7 +1051,7 @@ class AppWindow(tk.Frame):
         """ For a give list of filenames, filters on gender. """
         filtered = []
         for f in filenames:
-            gender = self.generator.data['gender'][f]
+            gender = self.generator.gender[f]
             if gender:
                 if gender in genderlist:
                     filtered.append(f)
@@ -1094,8 +1105,9 @@ class AppWindow(tk.Frame):
 
     def make_appearance_button(self, window, filename, row, column, fileindex):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        thumbnail = self.generator.data['thumbnails'][filename]
+        thumbnail = self.generator.thumbnails[filename]
         name = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
+
         self.appearancebutton[str(fileindex)] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR, command=lambda
                                                 filename=filename: self.end_file_selection_with_thumbnails(filename))
         self.appearancebutton[str(fileindex)].grid(row=row * 2, column=column, padx=0, pady=0)
@@ -1164,23 +1176,24 @@ class AppWindow(tk.Frame):
     def hide_parentfile_from_view(self, number):
         """ Replaces the filelable of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
-        self.chromosome[str(number)]['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
-        self.chromosome[str(number)]['nmorphdisplay'].configure(text="N/A")
-        self.chromosome[str(number)]['can load'] = False
+        chromosome = self.chromosome[str(number)]
+        chromosome['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
+        chromosome['nmorphdisplay'].configure(text="N/A")
+        chromosome['can load'] = False
 
     def restart_population(self, method):
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
             Generation counter is reset to 1. """
         print(f"Restarting, with {method}")
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
 
-        # If the user used "Choose Files" as the source, we have to reload them into the chromosomes
+        # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
         # since the chromosomes now contain the Evolutionary Children files at this stage. Only the
         # files which were saved to settings are loaded into the chromosomes. There is no need to
         # delete the other chromosomes (which contain the Evolutionary Child filenames), because
         # they all have a False flag for self.chromosome[str(i)]['can load'] which is used
         # later on in Gaussian and Crossover generation to skip loading them.
-        if self.settings['source files'] == "Choose Files":
+        if self.settings['source files'] == CHOOSE_FILES_TEXT:
             for i in range(1, POP_SIZE + 1):
                 if 'file ' + str(i) in self.settings:
                     if len(self.settings['file ' + str(i)]) > 0:
@@ -1193,7 +1206,7 @@ class AppWindow(tk.Frame):
         self.generator.gencounter = 1
         self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
         self.reset_ratings()
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def generate_next_population(self, method):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
@@ -1208,11 +1221,11 @@ class AppWindow(tk.Frame):
             self.change_parent_to_generation_display()
             self.switch_layout_to_rating()
             self.reset_ratings()
-            self.change_GUI_to_show_user_to_start_VAM()
+            self.change_gui_to_show_user_to_start_vam()
             self.scan_vam_for_command_updates("Initialize")
             return
 
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
 
         # Start the new population with the elites from the last generation (depending on settings)
         elites = self.get_elites_from_population()
@@ -1235,10 +1248,10 @@ class AppWindow(tk.Frame):
         self.settings['generation counter'] = self.generator.gencounter
         self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
         self.reset_ratings()
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
         ecc_utility.save_settings(self.settings)
 
-    def change_GUI_to_show_user_to_start_VAM(self):
+    def change_gui_to_show_user_to_start_vam(self):
         """ After initialization this method is called, to remove all the setup widgets and replace them with a window
             asking the user to load the VAM Companion Save. """
         for widget in self.master.winfo_children():
@@ -1269,16 +1282,17 @@ class AppWindow(tk.Frame):
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         for i in range(1, POP_SIZE + 1):
             filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i) + ".vap")
+            c = self.chromosome[str(i)]
             self.chromosome[str(i)]['filename'] = filename
             self.chromosome[str(i)]['appearance'] = ecc_logic.load_appearance(filename)
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
         self.generatechild.configure(text="Generate Next Population")
-        self.change_GUI_to_show_user_to_start_VAM()
+        self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
 
-    def get_VAM_path(self, pathstring):
+    def get_vam_path(self, pathstring):
         """ Returns the full path with VAM_BASE_PATH/pathstring and returns False if there was no VAM base dir. """
         if "VAM base dir" not in self.settings:
             return False
@@ -1291,7 +1305,7 @@ class AppWindow(tk.Frame):
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_VAM2PythonText.vap
             has a new command string. If so, try to execute that command by calling execut_VAM_command() """
         # try to open file
-        path = self.get_VAM_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
+        path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
         if not path:
             return
         try:
@@ -1307,16 +1321,16 @@ class AppWindow(tk.Frame):
                 if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
-                    self.broadcast_last_command_to_VAM(command)
-                    self.execute_VAM_command(command)
-                    print("We have a new command: {}".format(command))
+                    self.broadcast_last_command_to_vam(command)
+                    self.execute_vam_command(command)
+                    print(f"We have a new command: {command}")
         except IOError as e:
             print(e)
             self.master.after(25, lambda lastcommand=lastcommand: self.scan_vam_for_command_updates(lastcommand))
         else:
             self.master.after(25, lambda lastcommand=command: self.scan_vam_for_command_updates(lastcommand))
 
-    def execute_VAM_command(self, command):
+    def execute_vam_command(self, command):
         """ Tries to parse a command string to execute coming from scan_vam_for_command_updates. These
             command strings are generated by the VAM Evolutionary Character Creation Companion save file,
             and always have either the format:
@@ -1349,7 +1363,7 @@ class AppWindow(tk.Frame):
         # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
         # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
         elif "use template" in commands[0].lower():
-            filename = self.get_VAM_path(commands[1])
+            filename = self.get_vam_path(commands[1])
             filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
         elif "variate population" in commands[0].lower():
@@ -1360,48 +1374,49 @@ class AppWindow(tk.Frame):
             self.switch_layout_to_overview()
         elif "generate next population" in commands[0].lower():
             self.generate_next_population(self.settings['method'])
-            self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gencounter)
         elif "reset" in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(givewarning=False)
-            self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gencounter)
 
         if self.generator.connected_to_VAM:
             self.update_overview_window()
 
-    def broadcast_generation_number_to_VAM(self, number):
+    def broadcast_generation_number_to_vam(self, number):
         """ Updates the file
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMGeneration.vap
             with the generation number, so the Vam Evoluationary Character Creation Companion can display the
             proper generation number. """
         # try to save file
-        path = self.get_VAM_path(
+        path = self.get_vam_path(
             r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMGeneration.vap')
         if not path:
             return False
-        self.write_value_to_VAM_file(path, "Text", "text", "Generation " + str(number))
+        self.write_value_to_vam_file(path, "Text", "text", "Generation " + str(number))
 
-    def broadcast_last_command_to_VAM(self, command):
+    def broadcast_last_command_to_vam(self, command):
         """ Updates the file
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMText.vap
             with the last command, so the Vam Evoluationary Character Creation Companion save can check if the python
             script is still running properly, by comparing the command VAM sent to python, with this broadcast command
             from python back. """
-        path = self.get_VAM_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMText.vap')
+        path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMText.vap')
         if not path:
             return False
-        self.write_value_to_VAM_file(path, "Text", "text", command)
+        self.write_value_to_vam_file(path, "Text", "text", command)
 
-    def broadcast_message_to_VAM_rating_blocker(self, text):
-        path = self.get_VAM_path(
+    def broadcast_message_to_vam_rating_blocker(self, text):
+        path = self.get_vam_path(
             r'Custom\Atom\UIButton\VAM Evolutionary Character Creation\Preset_Python2VAMRatingBlocker.vap')
         if not path:
             return False
-        self.write_value_to_VAM_file(path, "Text", "text", text)
+        self.write_value_to_vam_file(path, "Text", "text", text)
 
-    def write_value_to_VAM_file(self, path, id_string, needed_key, replacement_string):
+    @staticmethod
+    def write_value_to_vam_file(path, id_string, needed_key, replacement_string):
         """ Updates the VAM file with path, by loading the storables array inside, and looking for the dictionary with
             ("id", "id_string") as (key, value) pair. Then, within this dictionary, it will overwrite the (key, value)
             pair with ("needed_key", "replacement_string"). Then it will overwrite the VAM file. """
@@ -1442,10 +1457,11 @@ class AppWindow(tk.Frame):
             pick = random.uniform(0, total_ratings)
             current = 0
             for i in range(1, POP_SIZE + 1):
-                current += self.chromosome[str(i)]['rating']
+                chromosome = self.chromosome[str(i)]
+                current += chromosome['rating']
                 if current > pick:
-                    if not self.chromosome[str(i)] in choices:
-                        choices.append(self.chromosome[str(i)])
+                    if not chromosome in choices:
+                        choices.append(chromosome)
                     break
         return choices
 
@@ -1470,14 +1486,14 @@ class AppWindow(tk.Frame):
         for i in range(1, POP_SIZE + 1):
             self.press_rating_button(i, INITIAL_RATING)
 
-    def get_appearance_files(self, get_only_favourites):
+    def get_appearance_filenames(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
             filters are applied. """
         filenames = list()
-        if (get_only_favourites):
-            filenames = [f for f, app in self.generator.data['appearances'].items() if ecc_utility.is_favourite(app)]
+        if get_only_favorites:
+            filenames = [f for f, app in self.generator.appearances.items() if ecc_utility.is_favorite(app)]
         else:
-            filenames = list(self.generator.data['appearances'].keys())
+            filenames = list(self.generator.appearances.keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
         if 'gender' in self.childtemplate:
@@ -1488,23 +1504,28 @@ class AppWindow(tk.Frame):
             filtered = []
         return filtered
 
+    def get_all_appearance_filenames(self):
+        return self.get_appearance_filenames(get_only_favorites=False)
+
+    def get_fav_appearance_filenames(self):
+        return self.get_appearance_filenames(get_only_favorites=True)
+
+    def get_selected_appearance_filenames(self):
+        filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
+                     self.chromosome[str(i)]['can load']]
+        self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+        return filenames
+
+
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print("Using random pairwise chromosome crossover for sample initialization.")
 
         # select source files
-        if source_files == "Choose All Favorites":
-            parent_filenames = self.get_aappearance_files(get_only_favourites=True)
-        elif source_files == "Choose All Appearances":
-            parent_filenames = self.get_appearance_files(get_only_favourites=False)
-        elif source_files == "Choose Files":
-            # use selected appearances
-            parent_filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
-                                self.chromosome[str(i)]['can load']]
-            parent_filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(parent_filenames)
+        parent_filenames = self.select_appearances_strategies[source_files]()
 
-        print("Source files: {} ({} Files)".format(source_files, len(parent_filenames)))
+        print(f"Source files: {source_files} ({len(parent_filenames)} Files)")
 
         new_population = []
         for i in range(1, POP_SIZE + 1):
@@ -1512,9 +1533,10 @@ class AppWindow(tk.Frame):
             child_appearance = ecc_logic.fuse_characters(random_parents[0], random_parents[1], self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
-        self.gencounter += 1
+        self.generator.gencounter += 1
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
+        # to do: why two lines?
         self.generatechild.configure(text="Generate Next Population")
         self.generatechild.update()
         return
@@ -1528,18 +1550,11 @@ class AppWindow(tk.Frame):
         self.generatechild.update()
 
         # select source files
-        if source_files == "Choose All Favorites":
-            filenames = self.get_appearance_files(get_only_favourites=True)
-        elif source_files == "Choose All Appearances":
-            filenames = self.get_appearance_files(get_only_favourites=False)
-        elif source_files == "Choose Files":
-            filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
-                         self.chromosome[str(i)]['can load']]
-            self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+        filenames = self.select_appearances_strategies[source_files]()
 
-        appearances = [self.generator.data['appearances'][f] for f in filenames]
+        appearances = [self.generator.appearances[f] for f in filenames]
 
-        print("Source files: {} ({} Files)".format(source_files, len(appearances)))
+        print(f"Source files: {source_files} ({len(appearances)} Files)")
 
         morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
         morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
@@ -1548,7 +1563,7 @@ class AppWindow(tk.Frame):
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
 
-        covariances = self.get_cov_from_morphlists(morphlists)
+        covariances = self.get_cov_from_morph_lists(morphlists)
         new_population = []
         templatefile = self.settings['child template']
         threshold = self.settings['morph threshold']
@@ -1557,7 +1572,7 @@ class AppWindow(tk.Frame):
             txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(POP_SIZE) + ")"
             self.generatechild.configure(text=txt, bg="red")
             self.generatechild.update()
-            self.broadcast_message_to_VAM_rating_blocker(txt)
+            self.broadcast_message_to_vam_rating_blocker(txt)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
             sample = [str(x) for x in sample]
@@ -1579,27 +1594,30 @@ class AppWindow(tk.Frame):
         self.generatechild.update()
         return
 
-    def get_means_from_morphlists(self, morphlists):
+
+    @staticmethod
+    def get_means_from_morphlists(morph_lists):
         """ returns a dictionary of morph means for each morph found in the morphlists """
         means = defaultdict(lambda: 0.0)
-        for morphlist in morphlists:
-            for morph in morphlist:
+        for morph_list in morph_lists:
+            for morph in morph_list:
                 if 'value' in morph:
-                    means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morphlists)
+                    means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
                 else:
-                    means[morph['name']] += 0 / len(morphlists)  # just assume missing values to be 0
+                    means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
         return means
 
-    def get_cov_from_morphlists(self, morphlists):
+    @staticmethod
+    def get_cov_from_morph_lists(morphlists):
         """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
         values = defaultdict(lambda: [])
-        for morphlist in morphlists:
-            for morph in morphlist:
+        for morph_list in morphlists:
+            for morph in morph_list:
                 values[morph['name']].append(np.nan_to_num(float(morph['value'])))
-        listofvalues = []
+        list_of_values = []
         for key, value in values.items():
-            listofvalues.append(value)
-        covariances = np.array(listofvalues)
+            list_of_values.append(value)
+        covariances = np.array(list_of_values)
         return np.cov(covariances)
 
     def save_population(self, population):
@@ -1651,21 +1669,23 @@ class AppWindow(tk.Frame):
         self.generatechild.configure(width=27, height=6)
 
         for i in range(1, POP_SIZE + 1):
-            self.chromosome[str(i)]['filebutton'].destroy()
-            self.chromosome[str(i)]['filenamedisplay'].destroy()
-            self.chromosome[str(i)]['nmorphdisplay'].destroy()
-            del self.chromosome[str(i)]['filebutton']
-            del self.chromosome[str(i)]['filenamedisplay']
-            del self.chromosome[str(i)]['nmorphdisplay']
+            chromosome = self.chromosome[str(i)]
+            chromosome['filebutton'].destroy()
+            chromosome['filenamedisplay'].destroy()
+            chromosome['nmorphdisplay'].destroy()
+            del chromosome['filebutton']
+            del chromosome['filenamedisplay']
+            del chromosome['nmorphdisplay']
 
         for i in range(1, POP_SIZE + 1):
-            self.chromosome[str(i)]['childlabel'] = tk.Label(self.parentselectionframe, text="Child " + str(i),
-                                                             font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
-                                                             bg=BG_COLOR, fg=FG_COLOR)
-            self.chromosome[str(i)]['childlabel'].grid(row=i + 1, column=0, sticky=tk.W)
-            self.chromosome[str(i)]['rating'] = INITIAL_RATING
+            chromosome = self.chromosome[str(i)]
+            chromosome['childlabel'] = tk.Label(self.parentselectionframe, text="Child " + str(i),
+                                        font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
+                                        bg=BG_COLOR, fg=FG_COLOR)
+            chromosome['childlabel'].grid(row=i + 1, column=0, sticky=tk.W)
+            chromosome['rating'] = INITIAL_RATING
             for j in range(1, 6):
-                self.chromosome[str(i)]['rating button ' + str(j)] = \
+                chromosome['rating button ' + str(j)] = \
                     tk.Button(self.parentselectionframe, width=2,
                               font=(
                                   DEFAULT_FONT, rating_font_size,
@@ -1675,12 +1695,12 @@ class AppWindow(tk.Frame):
                               activebackground=RATING_ACTIVE_BG_COLOR,
                               activeforeground=RATING_ACTIVE_FG_COLOR,
                               text=str(j), command=lambda i=i, j=j: self.press_rating_button(i, j))
-                self.chromosome[str(i)]['rating button ' + str(j)].grid(row=i + 1, column=j)
-                self.chromosome[str(i)]['rating button ' + str(j)].bind("<Enter>",
-                                                                        lambda e, i=i, j=j: self.on_enter_rating_button(
+                chromosome['rating button ' + str(j)].grid(row=i + 1, column=j)
+                chromosome['rating button ' + str(j)].bind("<Enter>",
+                                                   lambda e, i=i, j=j: self.on_enter_rating_button(
                                                                             i, j, event=e))
-                self.chromosome[str(i)]['rating button ' + str(j)].bind("<Leave>",
-                                                                        lambda e, i=i, j=j: self.on_leave_rating_button(
+                chromosome['rating button ' + str(j)].bind("<Leave>",
+                                                   lambda e, i=i, j=j: self.on_leave_rating_button(
                                                                             i, j, event=e))
 
     def press_restart_button(self, givewarning=True):
@@ -1697,31 +1717,34 @@ class AppWindow(tk.Frame):
 
     def on_enter_rating_button(self, child, rating, event=None):
         """ Show hover effect when entering mouse over a rating button. """
-        if rating == self.chromosome[str(child)]['rating']:
+        chromosome = self.chromosome[str(child)]
+        if rating == chromosome['rating']:
             return
-        self.chromosome[str(child)]['rating button ' + str(rating)]['background'] = RATING_HOVER_BG_COLOR
-        self.chromosome[str(child)]['rating button ' + str(rating)]['foreground'] = RATING_HOVER_FG_COLOR
+        chromosome['rating button ' + str(rating)]['background'] = RATING_HOVER_BG_COLOR
+        chromosome['rating button ' + str(rating)]['foreground'] = RATING_HOVER_FG_COLOR
 
     def on_leave_rating_button(self, child, rating, event=None):
         """ Show hover effect when exiting mouse over a rating button. """
-        if rating == self.chromosome[str(child)]['rating']:
+        chromosome = self.chromosome[str(child)]
+        if rating == chromosome['rating']:
             return
-        self.chromosome[str(child)]['rating button ' + str(rating)]['background'] = RATING_RAISED_BG_COLOR
-        self.chromosome[str(child)]['rating button ' + str(rating)]['foreground'] = RATING_RAISED_FG_COLOR
+        chromosome['rating button ' + str(rating)]['background'] = RATING_RAISED_BG_COLOR
+        chromosome['rating button ' + str(rating)]['foreground'] = RATING_RAISED_FG_COLOR
 
     def press_rating_button(self, child, rating):
         """ Presses the rating button. """
-        self.chromosome[str(child)]['rating button ' + str(rating)].configure(relief=tk.SUNKEN,
-                                                                              bg=RATING_SUNKEN_BG_COLOR,
-                                                                              fg=RATING_SUNKEN_FG_COLOR)
-        self.chromosome[str(child)]['rating'] = rating
+        chromosome = self.chromosome[str(child)]
+        chromosome['rating button ' + str(rating)].configure(relief=tk.SUNKEN,
+                                                         bg=RATING_SUNKEN_BG_COLOR,
+                                                         fg=RATING_SUNKEN_FG_COLOR)
+        chromosome['rating'] = rating
 
         # reset unchosen buttons
         rest = [x for x in range(1, 6) if x != rating]
         for n in rest:
-            self.chromosome[str(child)]['rating button ' + str(n)].configure(relief=tk.RAISED,
-                                                                             bg=RATING_RAISED_BG_COLOR,
-                                                                             fg=RATING_RAISED_FG_COLOR)
+            chromosome['rating button ' + str(n)].configure(relief=tk.RAISED,
+                                                        bg=RATING_RAISED_BG_COLOR,
+                                                        fg=RATING_RAISED_FG_COLOR)
 
 
 if __name__ == '__main__':

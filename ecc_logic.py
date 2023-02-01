@@ -1,33 +1,23 @@
-'''
-Business logic for VAM Evolutionary Character Creation 
+"""
+Business logic for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
-'''
+"""
 
+import copy
+import glob
 import json
 import os
-import sys
-import copy
-import random
-import tkinter as tk
-from fnmatch import fnmatch
-from tkinter import ttk
-from tkinter import messagebox
-from datetime import datetime
 import pathlib
+import random
 import shutil
-import numpy as np
-import glob
 import time
-from collections import defaultdict
-from tkinter import filedialog
+
 from PIL import ImageTk, Image, UnidentifiedImageError
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
-ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
-APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
 NO_FILE_SELECTED_TEXT = "…"
 SETTINGS_FILENAME = "settings.json"
 DATA_PATH = "data"
@@ -37,54 +27,33 @@ POP_SIZE = 20
 MINIMAL_RATING_FOR_KEEP_ELITES = 2
 INITIAL_RATING = 3
 DEFAULT_MAX_KEPT_ELITES = 1
-DEFAULT_FONT = "Calibri"
-FILENAME_FONT = ("Courier", 9)
-BG_COLOR = "#F9F9F9"
-FG_COLOR = "black"
-BUTTON_BG_COLOR = "#ffbeed"
-BUTTON_FG_COLOR = "black"
-BUTTON_ACTIVE_COLOR = BUTTON_BG_COLOR
-HOVER_COLOR = "#f900ff"
 MAX_VAMDIR_STRING_LENGTH = 42
 MAX_APPEARANCEDIR_STRING_LENGTH = 45
-RATING_SUNKEN_BG_COLOR = BUTTON_BG_COLOR
-RATING_SUNKEN_FG_COLOR = BUTTON_FG_COLOR
-RATING_RAISED_BG_COLOR = BG_COLOR
-RATING_RAISED_FG_COLOR = FG_COLOR
-RATING_HOVER_BG_COLOR = BUTTON_BG_COLOR
-RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
-RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
-RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
-
-settings = {}
 
 
 class Generator:
     def __init__(self, settings):
         self.settings = settings
-
-        # some (data) variables
         self.gencounter = 0
-        self.data = {}
-        self.data['appearances'] = {}
-        self.data['thumbnails'] = {}
-        self.data['gender'] = {}
-        self.lastfivecommands = []
+        self.appearances = dict()
+        self.gender = dict()
+        self.thumbnails = dict()
+        self.lastfivecommands = list()
         self.connected_to_VAM = False
 
     def clear_data_with_all_appearances(self):
         """ Clears the data stored in the data dictionaries. This is called when loading the VAM
             directory fails, to delete old data. """
-        self.data['appearances'].clear()
-        self.data['thumbnails'].clear()
-        self.data['gender'].clear()
+        self.appearances.clear()
+        self.thumbnails.clear()
+        self.gender.clear()
 
     def fill_data_with_all_appearances(self):
         """ Loads all available presets found in the default VAM directory into dictionaries
             to save loading-times when using the app """
         # path = self.get_vam_default_appearance_path()
         path = self.settings['appearance dir']
-        
+
         if self.settings['recursive directory search']:
             filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
         else:
@@ -93,30 +62,30 @@ class Generator:
         for f in filenames:
             f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(appearance) is None: 
+            if get_morph_index_with_characterinfo_from_appearance(appearance) is None:
                 # just calling this function since it looks for morphs
-                print("File {} is not a valid Appearance file, skipping.".format(f))
+                print(f"File {f} is not a valid Appearance file, skipping.")
             else:
                 f_fav = f + '.fav'
-                appearance['is_fav'] = os.path.isfile(f_fav);    
+                appearance['is_fav'] = os.path.isfile(f_fav)
                 if appearance['is_fav']:
                     print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
-                self.data['appearances'][f] = appearance
-                print("Loading file {} into database.".format(f))
-                self.data['thumbnails'][f] = self.get_thumbnail_for_filename(f)
-                self.data['gender'][f] = get_appearance_gender(self.data['appearances'][f])
+                self.appearances[f] = appearance
+                print(f"Loading file {f} into database.")
+                self.thumbnails[f] = self.get_thumbnail_for_filename(f)
+                self.gender[f] = get_appearance_gender(self.appearances[f])
 
-
-    # to do: does this belong into GUI?        
-    def get_thumbnail_for_filename(self, filename):
+    # to do: does this belong into GUI?
+    @staticmethod
+    def get_thumbnail_for_filename(filename):
         """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
         thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
         if not os.path.exists(thumbnailpath):
             thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
 
-        inage = None
-        jpg_loaded = False    
+        image = None
+        jpg_loaded = False
         try:
             image = Image.open(thumbnailpath)
             jpg_loaded = True
@@ -124,13 +93,13 @@ class Generator:
             print(f'*** Warning! {e}')
             print(f'*** The thumbnail file cannot be read, using dummy image instead.')
 
-        if not jpg_loaded:    
+        if not jpg_loaded:
             try:
                 thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
                 image = Image.open(thumbnailpath)
             except Exception as e:
                 print(f'*** Error! {e}')
-           
+
         image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
         thumbnail = ImageTk.PhotoImage(image)
         return thumbnail
@@ -162,9 +131,9 @@ def save_appearance(appearance, filename):
             return True
         except Exception as exception:
             print(f'{exception=}')
-            print("Error while trying to save {}, trying again in 2 seconds.".format(filename))
+            print(f"Error while trying to save {filename}, trying again in 2 seconds.")
             time.sleep(2)
-    raise Exception("Can't save appearance {}".format(filename))
+    raise Exception(f"Can't save appearance {filename}")
 
 
 def get_morphnames(morphlist):
@@ -268,7 +237,7 @@ def get_morphlist_from_appearance(appearance):
 def get_morph_index_with_characterinfo_from_appearance(appearance):
     """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
     character_key_found = False
-    for index, dictionary in enumerate(appearance['storables']):
+    for dictionary in appearance['storables']:
         if "character" in dictionary:
             character_key_found = True
     if not character_key_found:
@@ -336,18 +305,19 @@ def get_value_for_key_and_id_in_appearance(appearance, idx, key):
 
 def remove_clothing_from_appearance(appearance):
     """ Removes the clothing and references to the clothing from the appearance. """
+    clothing = list()
     for dictionary in appearance['storables']:
         if dictionary['id'] == 'geometry':
             clothing = dictionary['clothing']
-            dictionary['clothing'] = []
+            dictionary['clothing'] = list()
     if len(clothing) == 0:
         return appearance
     ids_to_delete = [item['internalId'] for item in clothing if 'internalId' in item]
 
     indexes_to_delete = []
     for idx, dictionary in enumerate(appearance['storables']):
-        for id in ids_to_delete:
-            if id in dictionary['id']:
+        for id2 in ids_to_delete:
+            if id2 in dictionary['id']:
                 indexes_to_delete.append(idx)
     indexes_to_delete = list(set(indexes_to_delete))
     for index in sorted(indexes_to_delete, reverse=True):
@@ -377,9 +347,7 @@ def dedupe_morphs(morphlists):
         found = []
         found_morphs = {}
         for morph in morphlist:
-            if morph['name'] in found:
-                continue
-            else:
+            if morph['name'] not in found:
                 found.append(morph['name'])
                 found_morphs[morph['name']] = morph
                 new_morph.append(morph)
@@ -391,7 +359,6 @@ def count_morphvalues_below_threshold(morphlist, threshold):
     """ checks for each morph in morphlist if the absolut value is below the threshold and returns a count and
         percentage """
     count = 0
-
     for morph in morphlist:
         if abs(float(morph['value'])) < threshold:
             count += 1
@@ -405,9 +372,7 @@ def filter_morphs_below_threshold(morphlist, threshold):
     new_morphlist = []
     for morph in morphlist:
         if "value" in morph:
-            if abs(float(morph['value'])) < threshold:
-                continue
-            else:
+            if abs(float(morph['value'])) >= threshold:
                 new_morphlist.append(morph)
     return new_morphlist
 
@@ -422,13 +387,10 @@ def get_all_morphnames_in_morphlists(morphlists):
 
 
 def fuse_characters(filename1, filename2, settings):
-    """ Load both filename1 and filename2, and do a intuitive crossover between the two, and finally a
+    """ Load both filename1 and filename2, and do an intuitive crossover between the two, and finally a
         non_uniform_mutation. Returns the child created by these procedures. """
     threshold = settings['morph threshold']
-    files = []
-    files.append(filename1)
-    files.append(filename2)
-
+    files = [filename1, filename2]
     morphlists = []
     for i, f in enumerate(files):
         print("Reading appearance:", f)
@@ -458,13 +420,11 @@ def fuse_characters(filename1, filename2, settings):
 
 def matching_genders(gender):
     """ returns list of matching genders for a given gender (Female, Male, Futa) """
-    if gender == "Futa" or gender == "Female":
-        match = ["Female", "Futa"]
-    elif gender == "Male":
-        match = ["Male"]
-    else:
-        match = []
-    return match
+    gender_names = [['Male'], ['Female', 'Futa']]
+    for gn in gender_names:
+        if gender in gn:
+            return gn
+    return list()
 
 
 def can_match_genders(gender1, gender2):
