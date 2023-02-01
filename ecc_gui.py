@@ -91,9 +91,9 @@ class AppWindow(tk.Frame):
             CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
         }
 
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
+    def init_ui(self):
         self.master.title(APP_TITLE)
 
         subtitlefont = (DEFAULT_FONT, 11, "bold")
@@ -412,7 +412,7 @@ class AppWindow(tk.Frame):
             if 'file ' + str(i) in self.settings:
                 if len(self.settings['file ' + str(i)]) > 0:
                     filename = self.settings['file ' + str(i)]
-                    self.update_GUI_file(i, filename)
+                    self.update_gui_file(i, filename)
                     self.update_morph_info(i)
 
         if 'source files' in self.settings:
@@ -633,18 +633,18 @@ class AppWindow(tk.Frame):
         filename = self.file_selection_with_thumbnails(match, "Please select a parent Appearance")
 
         if filename == "":  # user did not select files
-            self.remove_parentfile_from_GUI(number)
+            self.remove_parent_file_from_gui(number)
             return
 
         # user did select a file, which we are now parsing
         self.settings['file ' + str(number)] = filename
-        self.update_GUI_file(number, filename)
+        self.update_gui_file(number, filename)
 
         # stop hiding the apply changes button if we have at least two appearance files available
         self.update_initialize_population_button()
         self.update_morph_info(number)
 
-    def remove_parentfile_from_GUI(self, number):
+    def remove_parent_file_from_gui(self, number):
         """ Removes all internal information for a specific parent file for the chosen parent number. Called when
             loading an appearance file for that parent number is cancelled or invalid """
         keylist = ['shortfilename', 'appearance', 'filename']
@@ -794,7 +794,7 @@ class AppWindow(tk.Frame):
         else:
             return False, missing
 
-    def update_GUI_file(self, number, filename):
+    def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
         if filename not in self.generator.appearances:
             return
@@ -844,7 +844,7 @@ class AppWindow(tk.Frame):
     def change_template_file(self, filename):
         """ Called by either the GUI or as a VAM command. Checks if the gender of the chosen file matches the
             current template gender. Updates the GUI. """
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
@@ -854,18 +854,18 @@ class AppWindow(tk.Frame):
                 selectmsg = "Please select a Female or Futa as template."
             else:
                 selectmsg = "Please select a Male as template."
-            self.broadcast_message_to_VAM_rating_blocker("Failure: Gender does not match population.\n\n" + selectmsg)
+            self.broadcast_message_to_vam_rating_blocker("Failure: Gender does not match population.\n\n" + selectmsg)
             return
         self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
         self.update_population_with_new_template()
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def switch_layout_to_overview(self):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
             app. This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
-        self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+        self.broadcast_generation_number_to_vam(self.generator.gencounter)
         print("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
@@ -900,8 +900,8 @@ class AppWindow(tk.Frame):
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
-        self.broadcast_generation_number_to_VAM(self.generator.gencounter)
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_generation_number_to_vam(self.generator.gencounter)
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
@@ -925,7 +925,7 @@ class AppWindow(tk.Frame):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
         print('variate_population_with_templates')
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
 
         filenames = list(self.generator.appearances.keys())
         random.shuffle(filenames)
@@ -946,7 +946,7 @@ class AppWindow(tk.Frame):
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
         
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
@@ -1185,7 +1185,7 @@ class AppWindow(tk.Frame):
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
             Generation counter is reset to 1. """
         print(f"Restarting, with {method}")
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
 
         # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
         # since the chromosomes now contain the Evolutionary Children files at this stage. Only the
@@ -1206,7 +1206,7 @@ class AppWindow(tk.Frame):
         self.generator.gencounter = 1
         self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
         self.reset_ratings()
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
 
     def generate_next_population(self, method):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
@@ -1221,11 +1221,11 @@ class AppWindow(tk.Frame):
             self.change_parent_to_generation_display()
             self.switch_layout_to_rating()
             self.reset_ratings()
-            self.change_GUI_to_show_user_to_start_VAM()
+            self.change_gui_to_show_user_to_start_vam()
             self.scan_vam_for_command_updates("Initialize")
             return
 
-        self.broadcast_message_to_VAM_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
 
         # Start the new population with the elites from the last generation (depending on settings)
         elites = self.get_elites_from_population()
@@ -1248,10 +1248,10 @@ class AppWindow(tk.Frame):
         self.settings['generation counter'] = self.generator.gencounter
         self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
         self.reset_ratings()
-        self.broadcast_message_to_VAM_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker("")
         ecc_utility.save_settings(self.settings)
 
-    def change_GUI_to_show_user_to_start_VAM(self):
+    def change_gui_to_show_user_to_start_vam(self):
         """ After initialization this method is called, to remove all the setup widgets and replace them with a window
             asking the user to load the VAM Companion Save. """
         for widget in self.master.winfo_children():
@@ -1289,10 +1289,10 @@ class AppWindow(tk.Frame):
         self.switch_layout_to_rating()
         self.reset_ratings()
         self.generatechild.configure(text="Generate Next Population")
-        self.change_GUI_to_show_user_to_start_VAM()
+        self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
 
-    def get_VAM_path(self, pathstring):
+    def get_vam_path(self, pathstring):
         """ Returns the full path with VAM_BASE_PATH/pathstring and returns False if there was no VAM base dir. """
         if "VAM base dir" not in self.settings:
             return False
@@ -1305,7 +1305,7 @@ class AppWindow(tk.Frame):
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_VAM2PythonText.vap
             has a new command string. If so, try to execute that command by calling execut_VAM_command() """
         # try to open file
-        path = self.get_VAM_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
+        path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
         if not path:
             return
         try:
@@ -1321,8 +1321,8 @@ class AppWindow(tk.Frame):
                 if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
-                    self.broadcast_last_command_to_VAM(command)
-                    self.execute_VAM_command(command)
+                    self.broadcast_last_command_to_vam(command)
+                    self.execute_vam_command(command)
                     print(f"We have a new command: {command}")
         except IOError as e:
             print(e)
@@ -1330,7 +1330,7 @@ class AppWindow(tk.Frame):
         else:
             self.master.after(25, lambda lastcommand=command: self.scan_vam_for_command_updates(lastcommand))
 
-    def execute_VAM_command(self, command):
+    def execute_vam_command(self, command):
         """ Tries to parse a command string to execute coming from scan_vam_for_command_updates. These
             command strings are generated by the VAM Evolutionary Character Creation Companion save file,
             and always have either the format:
@@ -1363,7 +1363,7 @@ class AppWindow(tk.Frame):
         # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
         # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
         elif "use template" in commands[0].lower():
-            filename = self.get_VAM_path(commands[1])
+            filename = self.get_vam_path(commands[1])
             filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
         elif "variate population" in commands[0].lower():
@@ -1374,49 +1374,49 @@ class AppWindow(tk.Frame):
             self.switch_layout_to_overview()
         elif "generate next population" in commands[0].lower():
             self.generate_next_population(self.settings['method'])
-            self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gencounter)
         elif "reset" in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(givewarning=False)
-            self.broadcast_generation_number_to_VAM(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gencounter)
 
         if self.generator.connected_to_VAM:
             self.update_overview_window()
 
-    def broadcast_generation_number_to_VAM(self, number):
+    def broadcast_generation_number_to_vam(self, number):
         """ Updates the file
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMGeneration.vap
             with the generation number, so the Vam Evoluationary Character Creation Companion can display the
             proper generation number. """
         # try to save file
-        path = self.get_VAM_path(
+        path = self.get_vam_path(
             r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMGeneration.vap')
         if not path:
             return False
-        self.write_value_to_VAM_file(path, "Text", "text", "Generation " + str(number))
+        self.write_value_to_vam_file(path, "Text", "text", "Generation " + str(number))
 
-    def broadcast_last_command_to_VAM(self, command):
+    def broadcast_last_command_to_vam(self, command):
         """ Updates the file
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMText.vap
             with the last command, so the Vam Evoluationary Character Creation Companion save can check if the python
             script is still running properly, by comparing the command VAM sent to python, with this broadcast command
             from python back. """
-        path = self.get_VAM_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMText.vap')
+        path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMText.vap')
         if not path:
             return False
-        self.write_value_to_VAM_file(path, "Text", "text", command)
+        self.write_value_to_vam_file(path, "Text", "text", command)
 
-    def broadcast_message_to_VAM_rating_blocker(self, text):
-        path = self.get_VAM_path(
+    def broadcast_message_to_vam_rating_blocker(self, text):
+        path = self.get_vam_path(
             r'Custom\Atom\UIButton\VAM Evolutionary Character Creation\Preset_Python2VAMRatingBlocker.vap')
         if not path:
             return False
-        self.write_value_to_VAM_file(path, "Text", "text", text)
+        self.write_value_to_vam_file(path, "Text", "text", text)
 
     @staticmethod
-    def write_value_to_VAM_file(path, id_string, needed_key, replacement_string):
+    def write_value_to_vam_file(path, id_string, needed_key, replacement_string):
         """ Updates the VAM file with path, by loading the storables array inside, and looking for the dictionary with
             ("id", "id_string") as (key, value) pair. Then, within this dictionary, it will overwrite the (key, value)
             pair with ("needed_key", "replacement_string"). Then it will overwrite the VAM file. """
@@ -1572,7 +1572,7 @@ class AppWindow(tk.Frame):
             txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(POP_SIZE) + ")"
             self.generatechild.configure(text=txt, bg="red")
             self.generatechild.update()
-            self.broadcast_message_to_VAM_rating_blocker(txt)
+            self.broadcast_message_to_vam_rating_blocker(txt)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
             sample = [str(x) for x in sample]
