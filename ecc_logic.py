@@ -388,6 +388,11 @@ def filter_morphs_below_threshold(morphlist, threshold):
 
 def get_all_morphnames_in_morphlists(morphlists):
     """ returns a list of alle morphnames found in the morphlists """
+
+    # suggestion ChatGPT, also rename to get_unique_morph_names
+    # morphnames = list(set(name for morphlist in morphlists for name in get_morph_names(morphlist)))
+    # return morphnames
+
     morphnames = []
     for morphlist in morphlists:
         morphnames.extend(get_morph_names(morphlist))
