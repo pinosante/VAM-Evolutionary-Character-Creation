@@ -140,12 +140,9 @@ def save_appearance(appearance, filename):
     raise Exception(f"Can't save appearance {filename}")
 
 
-def get_morphnames(morphlist):
+def get_morph_names(morph_list):
     """ returns a list with all morph names found in the list of morphs """
-    morphnames = []
-    for morph in morphlist:
-        morphnames.append(morph['name'])
-    return morphnames
+    return [morph['name'] for morph in morph_list]
 
 
 def morphname_in_morphlist(morphname, morphlist):
@@ -379,7 +376,7 @@ def get_all_morphnames_in_morphlists(morphlists):
     """ returns a list of alle morphnames found in the morphlists """
     morphnames = []
     for morphlist in morphlists:
-        morphnames.extend(get_morphnames(morphlist))
+        morphnames.extend(get_morph_names(morphlist))
     morphnames = list(dict.fromkeys(morphnames))  # remove duplicates but keep the same order
     return morphnames
 
