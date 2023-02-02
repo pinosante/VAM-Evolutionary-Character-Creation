@@ -339,6 +339,13 @@ def save_morph_to_appearance(morph_list, appearance):
 
 def dedupe_morphs(morphlists):
     """ removes duplicate morphs from each morphlist in morphlists """
+
+    #suggestion from ChatGPT -- do not understand yet. :)
+    # return [
+    #     [morph for i, morph in enumerate(morphlist) if morph['name'] not in morphlist[:i]]
+    #     for morphlist in morphlists
+    # ]
+
     new_morphlists = []
     for morphlist in morphlists:
         new_morph = []
