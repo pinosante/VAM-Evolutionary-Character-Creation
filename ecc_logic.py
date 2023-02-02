@@ -223,7 +223,7 @@ def calculate_single_mutation(value, b=0.5):
 def get_morphlist_from_appearance(appearance):
     """ Based on gender, either returns the morphs or morphsOtherGender from the appearance json """
     gender = get_appearance_gender(appearance)
-    if gender == "Futa":
+    if gender == FUTA:
         targetmorphs = "morphsOtherGender"
     else:
         targetmorphs = "morphs"
@@ -291,7 +291,12 @@ def get_appearance_gender(appearance):
 
 def get_value_for_key_and_id_in_appearance(appearance, idx, key):
     """ Loops through the appearance json to match a dictionary with id = idx and then returns the value of ['key'] """
+
     storables = appearance['storables']
+
+    # suggestion from ChatGTP, looks legit, but not so easy to read?
+    # return next((item[key] for item in storables if 'id' in item and item['id'] == idx and key in item), False)
+
     for item in storables:
         if 'id' in item:
             if item['id'] == idx:
