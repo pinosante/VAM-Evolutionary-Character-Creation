@@ -196,15 +196,14 @@ def intuitive_crossover(morph_list1, morph_list2):
     zipped_morphs = zip(morph_list1, morph_list2)
     return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
-def non_uniform_mutation(morphlist):
+
+def non_uniform_mutation(morph_list):
     """ select a random gene, and apply non_uniform mutation to it """
     # reference: https://www.geeksforgeeks.org/mutation-algorithms-for-real-valued-parameters-ga/
-    morphlist = copy.deepcopy(morphlist)
-
-    index = random.choice(range(len(morphlist)))
-    value = morphlist[index]['value']
-    morphlist[index]['value'] = str(calculate_single_mutation(value))
-    return morphlist
+    morph_list = copy.deepcopy(morph_list)
+    random_morph = random.choice(morph_list)
+    random_morph['value'] = calculate_single_mutation(random_morph['value'])
+    return morph_list
 
 
 def calculate_single_mutation(value, b=0.5):
