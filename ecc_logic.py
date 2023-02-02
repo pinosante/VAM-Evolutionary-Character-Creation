@@ -327,17 +327,13 @@ def remove_clothing_from_appearance(appearance):
     return appearance
 
 
-def save_morph_to_appearance(morphlist, appearance):
+def save_morph_to_appearance(morph_list, appearance):
     """ Depending on gender, replace the corresponding morph with the morphlist """
     appearance = copy.deepcopy(appearance)
     gender = get_appearance_gender(appearance)
-    if gender == "Futa":
-        targetmorphs = "morphsOtherGender"
-    else:
-        targetmorphs = "morphs"
-
-    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
-    appearance['storables'][charindex][targetmorphs] = morphlist
+    target_morphs = "morphsOtherGender" if gender == FUTA else "morphs"
+    char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
+    appearance['storables'][char_index][target_morphs] = morph_list
     return appearance
 
 
