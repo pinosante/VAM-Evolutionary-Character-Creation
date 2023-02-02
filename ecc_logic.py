@@ -374,6 +374,10 @@ def count_morphvalues_below_threshold(morphlist, threshold):
 def filter_morphs_below_threshold(morphlist, threshold):
     """ goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above
         threshold """
+
+    # suggestion ChatGPT:
+    # return [morph for morph in morphlist if "value" in morph and abs(float(morph['value'])) >= threshold]
+
     new_morphlist = []
     for morph in morphlist:
         if "value" in morph:
