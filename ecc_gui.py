@@ -848,7 +848,7 @@ class AppWindow(tk.Frame):
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
-        if not ecc_logic.can_match_genders(gender, self.childtemplate['gender']):
+        if not ecc_logic.is_compatible_gender(gender, self.childtemplate['gender']):
             matches = ecc_logic.matching_genders(self.childtemplate['gender'])
             if len(matches) > 1:  # Female and Futa
                 selectmsg = "Please select a Female or Futa as template."
@@ -1151,7 +1151,7 @@ class AppWindow(tk.Frame):
 
         if 'filename' in self.chromosome[str(number)]:
             gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(self.chromosome[str(number)]['filename']))
-            if not ecc_logic.can_match_genders(gender, template_gender):
+            if not ecc_logic.is_compatible_gender(gender, template_gender):
                 self.hide_parentfile_from_view(
                     number)  # hide, but don't delete, in case template later has matching gender
                 return

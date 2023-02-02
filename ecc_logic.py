@@ -441,8 +441,12 @@ def matching_genders(gender):
     return list()
 
 
-def can_match_genders(gender1, gender2):
+def is_compatible_gender(gender1, gender2):
     """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
+
+    #suggestion ChatGPT: (i think it looks fine, but unit test is required)
+    #return gender1 in [gender2, FEMALE, FUTA] or gender2 in [gender1, FEMALE, FUTA]
+
     if gender1 == gender2:
         return True
     if gender1 == FEMALE and gender2 == FUTA:

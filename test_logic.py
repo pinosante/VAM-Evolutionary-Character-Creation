@@ -24,7 +24,7 @@ class TestLogicMethods(unittest.TestCase):
             g1 = test_case[0]
             g2 = test_case[1]
             expected_result = test_case[2]
-            result = ecc_logic.can_match_genders(g1, g2)
+            result = ecc_logic.is_compatible_gender(g1, g2)
             self.assertTrue(expected_result == result, msg=test_case)
 
     def test_is_morph_name_in_morph_list(self):
