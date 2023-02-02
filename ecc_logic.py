@@ -145,12 +145,9 @@ def get_morph_names(morph_list):
     return [morph['name'] for morph in morph_list]
 
 
-def morphname_in_morphlist(morphname, morphlist):
-    """ return True if morph is in morphlist """
-    for m in morphlist:
-        if m['name'] == morphname:
-            return True
-    return False
+def is_morph_name_in_morph_list(morph_name, morph_list):
+    """ return True if morph is in morph_list """
+    return any(morph['name'] == morph_name for morph in morph_list)
 
 
 def get_uid_from_morphname(morphname, morphlists, filenames=None):
@@ -175,7 +172,7 @@ def pad_morphnames_to_morphlists(morphlists, morphnames, filenames=None):
     for morphlist in morphlists:
         morphs_to_add = []
         for morphname in morphnames:
-            if morphname_in_morphlist(morphname, morphlist):
+            if is_morph_name_in_morph_list(morphname, morphlist):
                 continue
             else:
                 new_morph = {

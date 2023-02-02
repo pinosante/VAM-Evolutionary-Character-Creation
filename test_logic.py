@@ -36,7 +36,7 @@ class TestLogicMethods(unittest.TestCase):
         for test_case in test_cases:
             morph_name = test_case[0]
             expected_result = test_case[1]
-            result = ecc_logic.morphname_in_morphlist(morph_name, morph_list)
+            result = ecc_logic.is_morph_name_in_morph_list(morph_name, morph_list)
             self.assertTrue(expected_result == result, msg=test_case)
 
 
