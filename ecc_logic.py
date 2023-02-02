@@ -187,19 +187,14 @@ def pad_morphnames_to_morphlists(morphlists, morphnames, filenames=None):
     return morphlists
 
 
-def intuitive_crossover(morphlist1, morphlist2):
+def intuitive_crossover(morph_list1, morph_list2):
     """ returns a new morph which is the combined morph of morphlist1 and morphlist2 where each gene has 0.5 chance to
         be selected
         reference: https://towardsdatascience.com/unit-3-genetic-algorithms-part-1-986e3b4666d7
+        for zip check this: https://www.programiz.com/python-programming/methods/built-in/zip
         """
-    new_morphlist = []
-    for i in range(len(morphlist1)):
-        if random.randint(0, 1):
-            new_morphlist.append(morphlist1[i])
-        else:
-            new_morphlist.append(morphlist2[i])
-    return new_morphlist
-
+    zipped_morphs = zip(morph_list1, morph_list2)
+    return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
 def non_uniform_mutation(morphlist):
     """ select a random gene, and apply non_uniform mutation to it """
