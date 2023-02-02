@@ -15,6 +15,10 @@ import time
 
 from PIL import ImageTk, Image, UnidentifiedImageError
 
+MALE = 'Male'
+FEMALE = 'Female'
+FUTA = 'Futa'
+
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
@@ -269,20 +273,20 @@ def get_appearance_gender(appearance):
         morphnames.append(morph['name'])
 
     if "MVR_G2Female" in morphnames and appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "true":
-        return 'Futa'
+        return FUTA
 
     # determine female
     if get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomyAlt', 'enabled') == "true" or \
             get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomy', 'enabled') == "true" or \
-            'Female' in appearance['storables'][charindex]['character']:
-        return 'Female'
+            FEMALE in appearance['storables'][charindex]['character']:
+        return FEMALE
 
     # determine male
     if appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "false" and \
-            ('Male' in appearance['storables'][charindex]['character'] or
+            (MALE in appearance['storables'][charindex]['character'] or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomy', 'enabled') == "true" or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomyAlt', 'enabled') == "true"):
-        return 'Male'
+        return MALE
     return False
 
 
@@ -414,7 +418,7 @@ def fuse_characters(filename1, filename2, settings):
 
 def matching_genders(gender):
     """ returns list of matching genders for a given gender (Female, Male, Futa) """
-    gender_names = [['Male'], ['Female', 'Futa']]
+    gender_names = [[MALE], [FEMALE, FUTA]]
     for gn in gender_names:
         if gender in gn:
             return gn
@@ -425,9 +429,9 @@ def can_match_genders(gender1, gender2):
     """ returns True if gender1 (Male, Female, Futa) is compatible with gender2 (Male, Female, Futa) """
     if gender1 == gender2:
         return True
-    if gender1 == 'Female' and gender2 == 'Futa':
+    if gender1 == FEMALE and gender2 == FUTA:
         return True
-    if gender1 == 'Futa' and gender2 == 'Female':
+    if gender1 == FUTA and gender2 == FEMALE:
         return True
     return False
 
