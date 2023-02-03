@@ -54,7 +54,7 @@ class Generator:
         for f in filenames:
             f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
             appearance = load_appearance(f)
-            if get_morph_index_with_characterinfo_from_appearance(appearance) is None:
+            if get_morph_index_with_character_info_from_appearance(appearance) is None:
                 # just calling this function since it looks for morphs
                 print(f"File {f} is not a valid Appearance file, skipping.")
             else:
@@ -138,8 +138,8 @@ def is_morph_name_in_morph_list(morph_name, morph_list):
     return any(morph['name'] == morph_name for morph in morph_list)
 
 
-def get_uid_from_morphname(morph_name, morph_lists, filenames=None):
-    """ look through list of morphlists for morphname and returns the first found corresponding uid """
+def get_uid_from_morph_name(morph_name, morph_lists, filenames=None):
+    """ look through list of morph_lists for morph_name and returns the first found corresponding uid """
     for idx, morph_list in enumerate(morph_lists):
         for m in morph_list:
             if m['name'] == morph_name:
@@ -154,7 +154,7 @@ def get_uid_from_morphname(morph_name, morph_lists, filenames=None):
 
 
 def pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames=None):
-    """ adds uid keys to each morphlist in morphlists and sets the values to 0 if uid key doesn't exist """
+    """ adds uid keys to each morph_list in morph_lists and sets the values to 0 if uid key doesn't exist """
     morph_lists = copy.deepcopy(morph_lists)
 
     for morph_list in morph_lists:
@@ -164,7 +164,7 @@ def pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames=None):
                 continue
             else:
                 new_morph = {
-                    'uid': get_uid_from_morphname(morph_name, morph_lists, filenames),
+                    'uid': get_uid_from_morph_name(morph_name, morph_lists, filenames),
                     'name': morph_name,
                     'value': '0.0'
                 }
@@ -174,7 +174,7 @@ def pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames=None):
 
 
 def intuitive_crossover(morph_list1, morph_list2):
-    """ returns a new morph which is the combined morph of morphlist1 and morphlist2 where each gene has 0.5 chance to
+    """ returns a new morph which is the combined morph of morph_list1 and morph_list2 where each gene has 0.5 chance to
         be selected
         reference: https://towardsdatascience.com/unit-3-genetic-algorithms-part-1-986e3b4666d7
         """
@@ -215,11 +215,11 @@ def get_morph_list_from_appearance(appearance):
         target_morphs = "morphsOtherGender"
     else:
         target_morphs = "morphs"
-    char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
     return appearance['storables'][char_index][target_morphs]
 
 
-def get_morph_index_with_characterinfo_from_appearance(appearance):
+def get_morph_index_with_character_info_from_appearance(appearance):
     """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
     character_key_found = False
     for dictionary in appearance['storables']:
@@ -254,7 +254,7 @@ def get_appearance_gender(appearance):
     """ Return the gender of the appearance, or False if it could not be determined """
 
     # determine futa
-    char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
     morph_list = appearance['storables'][char_index]["morphs"]
     morph_names = []
     for morph in morph_list:
@@ -321,7 +321,7 @@ def save_morph_to_appearance(morph_list, appearance):
     appearance = copy.deepcopy(appearance)
     gender = get_appearance_gender(appearance)
     target_morphs = "morphsOtherGender" if gender == FUTA else "morphs"
-    char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
     appearance['storables'][char_index][target_morphs] = morph_list
     return appearance
 
@@ -335,11 +335,11 @@ def dedupe_morphs(morph_lists):
     #     for morph_list in morph_lists
     # ]
 
-    new_morph_lists = []
+    new_morph_lists = list()
     for morph_list in morph_lists:
-        new_morph = []
-        found = []
-        found_morphs = {}
+        new_morph = list()
+        found = list()
+        found_morphs = dict()
         for morph in morph_list:
             if morph['name'] not in found:
                 found.append(morph['name'])
@@ -349,8 +349,8 @@ def dedupe_morphs(morph_lists):
     return new_morph_lists
 
 
-def count_morphvalues_below_threshold(morph_list, threshold):
-    """ checks for each morph in morphlist if the absolut value is below the threshold and returns a count and
+def count_morph_values_below_threshold(morph_list, threshold):
+    """ checks for each morph in morph_list if the absolut value is below the threshold and returns a count and
         percentage """
     count = 0
     for morph in morph_list:
@@ -361,7 +361,7 @@ def count_morphvalues_below_threshold(morph_list, threshold):
 
 
 def filter_morphs_below_threshold(morph_list, threshold):
-    """ goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above
+    """ goes through each morph in each morph_list in the list of morph_lists and only keeps morphs with values above
         threshold """
 
     # suggestion ChatGPT: todo test
@@ -375,18 +375,25 @@ def filter_morphs_below_threshold(morph_list, threshold):
     return new_morph_list
 
 
-def get_all_morphnames_in_morphlists(morphlists):
+def get_all_morph_names_in_morph_lists(morphlists):
     """ returns a list of alle morph_names found in the morphlists """
 
     # suggestion ChatGPT, also rename to get_unique_morph_names
-    # morph_names = list(set(name for morph_list in morphlists for name in get_morph_names(morph_list)))
+    # morph_names = list(set(name for morph_list in morph_lists for name in get_morph_names(morph_list)))
     # return morph_names
 
-    morph_names = []
+    morph_names = list()
     for morph_list in morphlists:
         morph_names.extend(get_morph_names(morph_list))
-    morph_names = list(dict.fromkeys(morph_names))  # remove duplicates but keep the same order
-    return morph_names
+    return list(dict.fromkeys(morph_names))  # remove duplicates but keep the same order
+
+
+def select_child_template(child_morph_list, settings):
+    template_file = settings['child template']
+    child_appearance = load_appearance(template_file)
+    print("Using as appearance template:", template_file)
+    child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
+    return child_appearance
 
 
 def fuse_characters(filename1, filename2, settings):
@@ -394,7 +401,7 @@ def fuse_characters(filename1, filename2, settings):
         non_uniform_mutation. Returns the child created by these procedures. """
     threshold = settings['morph threshold']
     files = [filename1, filename2]
-    morph_lists = []
+    morph_lists = list()
     for i, f in enumerate(files):
         print("Reading appearance:", f)
         appearance = load_appearance(f)
@@ -403,7 +410,7 @@ def fuse_characters(filename1, filename2, settings):
         morph_lists.append(morph_list)
     morph_lists = dedupe_morphs(morph_lists)
 
-    morph_names = get_all_morphnames_in_morphlists(morph_lists)
+    morph_names = get_all_morph_names_in_morph_lists(morph_lists)
     morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names)
 
     sorted_morph_lists = []
@@ -413,12 +420,7 @@ def fuse_characters(filename1, filename2, settings):
     child_morph_list = intuitive_crossover(sorted_morph_lists[0], sorted_morph_lists[1])
     child_morph_list = non_uniform_mutation(child_morph_list)
 
-    # select child template
-    template_file = settings['child template']
-    child_appearance = load_appearance(template_file)
-    print("Using as appearance template:", template_file)
-    child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
-    return child_appearance
+    return select_child_template(child_morph_list, settings)
 
 
 def matching_genders(gender):

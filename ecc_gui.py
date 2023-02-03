@@ -1551,7 +1551,7 @@ class AppWindow(tk.Frame):
         print(f"Source files: {source_files} ({len(appearances)} Files)")
 
         morphlists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
-        morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
+        morphnames = ecc_logic.get_all_morph_names_in_morph_lists(morphlists)
         morphlists = ecc_logic.pad_morph_names_to_morph_lists(morphlists, morphnames, filenames)
         morphlists = ecc_logic.dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
