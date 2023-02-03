@@ -7,6 +7,8 @@ import json
 DATA_PATH = "data"
 SETTINGS_FILENAME = "settings.json"
 
+POP_SIZE = 20
+
 
 def save_settings(settings):
     """ Saves the settings as a json file to DATA_PATH/SETTINGS_FILENAME """
