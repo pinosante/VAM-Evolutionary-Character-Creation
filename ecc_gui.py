@@ -85,9 +85,6 @@ class AppWindow(tk.Frame):
             CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
         }
 
-        self.init_ui()
-
-    def init_ui(self):
         self.master.title(APP_TITLE)
 
         subtitlefont = (DEFAULT_FONT, 11, "bold")
@@ -566,7 +563,7 @@ class AppWindow(tk.Frame):
         self.update_initialize_population_button()
 
     def choose_all_appearances(self):
-        """ Called when the choose all appearances button is pressed. Sinks the corresponding GUI button and raises
+        """ Called when the "choose all appearances" button is pressed. Sinks the corresponding GUI button and raises
             the other options. Updates GUI. Saves choice in settings. """
         self.parentselectionframe.grid_remove()
         self.favoritesframe.grid()
@@ -577,7 +574,7 @@ class AppWindow(tk.Frame):
         self.update_found_labels()
 
     def choose_all_favorites(self):
-        """ Called when the choose all favorite appearances button is pressed. Sinks the corresponding GUI button and
+        """ Called when the "choose all favorite" appearances button is pressed. Sinks the corresponding GUI button and
             raises the other options. Updates GUI. Saves choice in settings. """
         self.parentselectionframe.grid_remove()
         self.favoritesframe.grid()
@@ -857,7 +854,7 @@ class AppWindow(tk.Frame):
 
     def switch_layout_to_overview(self):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
-            app. This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
+            app). This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
         self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         print("VAM is ready, let's go.")
@@ -961,8 +958,8 @@ class AppWindow(tk.Frame):
 
         filenames = list(self.generator.appearances.keys())
         if filteronmorphcount:
-            filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
-        filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
+            filenames = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+        filenames = self.filter_filename_list_on_genders(filenames, genderlist)
 
         # create popup window
         self.file_selection_popup = tk.Toplevel()
@@ -1024,24 +1021,26 @@ class AppWindow(tk.Frame):
         self.my_canvas.unbind_all('<Escape>')
         return self._file_selection
 
-    def filter_filenamelist_on_morph_threshold_and_min_morphs(self, filenames):
+    def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
         """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
             Returns an empty list if neither of these settings are available. """
-        if 'morph threshold' not in self.settings:
-            return []
-        elif 'min morph threshold' not in self.settings:
-            return []
 
-        filtered = []
+        if 'morph threshold' not in self.settings:
+            return list()
+
+        if 'min morph threshold' not in self.settings:
+            return list()
+
+        filtered = list()
         for f in filenames:
             appearance = self.generator.appearances[f]
-            morphlist = ecc_logic.get_morph_list_from_appearance(appearance)
-            morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
-            if len(morphlist) > self.settings['min morph threshold']:
+            morph_list = ecc_logic.get_morph_list_from_appearance(appearance)
+            morph_list = ecc_logic.filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
+            if len(morph_list) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
 
-    def filter_filenamelist_on_genders(self, filenames, genderlist):
+    def filter_filename_list_on_genders(self, filenames, genderlist):
         """ For a give list of filenames, filters on gender. """
         filtered = []
         for f in filenames:
@@ -1168,7 +1167,7 @@ class AppWindow(tk.Frame):
             self.chromosome[str(number)]['nmorphdisplay'].configure(text=str(nmorphs))
 
     def hide_parentfile_from_view(self, number):
-        """ Replaces the filelable of the parent file #number with '...'  and 'N/A' but keeps the file info
+        """ Replaces the file label of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
         chromosome = self.chromosome[str(number)]
         chromosome['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
@@ -1491,9 +1490,9 @@ class AppWindow(tk.Frame):
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
         if 'gender' in self.childtemplate:
-            filenames = self.filter_filenamelist_on_genders(filenames,
-                                                            ecc_logic.matching_genders(self.childtemplate['gender']))
-            filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+            filenames = self.filter_filename_list_on_genders(filenames,
+                                                             ecc_logic.matching_genders(self.childtemplate['gender']))
+            filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
         return filtered
@@ -1507,7 +1506,7 @@ class AppWindow(tk.Frame):
     def get_selected_appearance_filenames(self):
         filenames = [self.chromosome[str(i)]['filename'] for i in range(1, ecc_utility.POP_SIZE + 1) if
                      self.chromosome[str(i)]['can load']]
-        self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+        self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
 
 
