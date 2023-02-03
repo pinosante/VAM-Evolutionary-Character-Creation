@@ -1742,4 +1742,4 @@ class AppWindow(tk.Frame):
 
 
 if __name__ == '__main__':
-    print('I am just a module, please launch the main script "VAM Evolutionary Character Creation.py".')
+    print(f'I am just a module, please launch the main script "{ecc_utility.MAIN_SCRIPT_NAME}".')
