@@ -27,11 +27,11 @@ CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
 class Generator:
     def __init__(self, settings):
         self.settings = settings
-        self.gencounter = 0
+        self.gen_counter = 0
         self.appearances = dict()
         self.gender = dict()
         self.thumbnails = dict()
-        self.lastfivecommands = list()
+        self.last_five_commands = list()
         self.connected_to_VAM = False
 
     def clear_data_with_all_appearances(self):
@@ -73,14 +73,14 @@ class Generator:
     def get_thumbnail_for_filename(filename):
         """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
-        thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
-        if not os.path.exists(thumbnailpath):
-            thumbnailpath = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
+        thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
+        if not os.path.exists(thumbnail_path):
+            thumbnail_path = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
 
         image = None
         jpg_loaded = False
         try:
-            image = Image.open(thumbnailpath)
+            image = Image.open(thumbnail_path)
             jpg_loaded = True
         except UnidentifiedImageError as e:
             print(f'*** Warning! {e}')
@@ -88,8 +88,8 @@ class Generator:
 
         if not jpg_loaded:
             try:
-                thumbnailpath = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
-                image = Image.open(thumbnailpath)
+                thumbnail_path = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
+                image = Image.open(thumbnail_path)
             except Exception as e:
                 print(f'*** Error! {e}')
 
@@ -119,8 +119,8 @@ def save_appearance(appearance, filename):
                 print("Writing appearance to:", filename)
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
-            thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
-            shutil.copyfile(os.path.join(ecc_utility.DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
+            thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
+            shutil.copyfile(os.path.join(ecc_utility.DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
             return True
         except Exception as exception:
             print(f'{exception=}')
@@ -139,11 +139,11 @@ def is_morph_name_in_morph_list(morph_name, morph_list):
     return any(morph['name'] == morph_name for morph in morph_list)
 
 
-def get_uid_from_morphname(morphname, morphlists, filenames=None):
+def get_uid_from_morphname(morph_name, morph_lists, filenames=None):
     """ look through list of morphlists for morphname and returns the first found corresponding uid """
-    for idx, morphlist in enumerate(morphlists):
-        for m in morphlist:
-            if m['name'] == morphname:
+    for idx, morph_list in enumerate(morph_lists):
+        for m in morph_list:
+            if m['name'] == morph_name:
                 if 'uid' in m:
                     return m['uid']
                 else:
@@ -154,24 +154,24 @@ def get_uid_from_morphname(morphname, morphlists, filenames=None):
     return False
 
 
-def pad_morphnames_to_morphlists(morphlists, morphnames, filenames=None):
+def pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames=None):
     """ adds uid keys to each morphlist in morphlists and sets the values to 0 if uid key doesn't exist """
-    morphlists = copy.deepcopy(morphlists)
+    morph_lists = copy.deepcopy(morph_lists)
 
-    for morphlist in morphlists:
+    for morph_list in morph_lists:
         morphs_to_add = []
-        for morphname in morphnames:
-            if is_morph_name_in_morph_list(morphname, morphlist):
+        for morph_name in morph_names:
+            if is_morph_name_in_morph_list(morph_name, morph_list):
                 continue
             else:
                 new_morph = {
-                    'uid': get_uid_from_morphname(morphname, morphlists, filenames),
-                    'name': morphname,
+                    'uid': get_uid_from_morphname(morph_name, morph_lists, filenames),
+                    'name': morph_name,
                     'value': '0.0'
                 }
                 morphs_to_add.append(new_morph)
-        morphlist.extend(morphs_to_add)
-    return morphlists
+        morph_list.extend(morphs_to_add)
+    return morph_lists
 
 
 def intuitive_crossover(morph_list1, morph_list2):
@@ -209,15 +209,15 @@ def calculate_single_mutation(value, b=0.5):
     # return ((1.0 - 2 * (random.random() >= 0.5)) * float(value) + (1.0 - float(value))) * r2 * b
 
 
-def get_morphlist_from_appearance(appearance):
+def get_morph_list_from_appearance(appearance):
     """ Based on gender, either returns the morphs or morphsOtherGender from the appearance json """
     gender = get_appearance_gender(appearance)
     if gender == FUTA:
-        targetmorphs = "morphsOtherGender"
+        target_morphs = "morphsOtherGender"
     else:
-        targetmorphs = "morphs"
-    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
-    return appearance['storables'][charindex][targetmorphs]
+        target_morphs = "morphs"
+    char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
+    return appearance['storables'][char_index][target_morphs]
 
 
 def get_morph_index_with_characterinfo_from_appearance(appearance):
@@ -254,24 +254,24 @@ def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replace
 def get_appearance_gender(appearance):
     """ Return the gender of the appearance, or False if it could not be determined """
     # determine futa
-    charindex = get_morph_index_with_characterinfo_from_appearance(appearance)
-    morphlist = appearance['storables'][charindex]["morphs"]
-    morphnames = []
-    for morph in morphlist:
-        morphnames.append(morph['name'])
+    char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
+    morph_list = appearance['storables'][char_index]["morphs"]
+    morph_names = []
+    for morph in morph_list:
+        morph_names.append(morph['name'])
 
-    if "MVR_G2Female" in morphnames and appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "true":
+    if "MVR_G2Female" in morph_names and appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "true":
         return FUTA
 
     # determine female
     if get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomyAlt', 'enabled') == "true" or \
             get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomy', 'enabled') == "true" or \
-            FEMALE in appearance['storables'][charindex]['character']:
+            FEMALE in appearance['storables'][char_index]['character']:
         return FEMALE
 
     # determine male
-    if appearance['storables'][charindex]['useFemaleMorphsOnMale'] == "false" and \
-            (MALE in appearance['storables'][charindex]['character'] or
+    if appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "false" and \
+            (MALE in appearance['storables'][char_index]['character'] or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomy', 'enabled') == "true" or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomyAlt', 'enabled') == "true"):
         return MALE
@@ -335,58 +335,58 @@ def dedupe_morphs(morphlists):
     #     for morphlist in morphlists
     # ]
 
-    new_morphlists = []
-    for morphlist in morphlists:
+    new_morph_lists = []
+    for morph_list in morphlists:
         new_morph = []
         found = []
         found_morphs = {}
-        for morph in morphlist:
+        for morph in morph_list:
             if morph['name'] not in found:
                 found.append(morph['name'])
                 found_morphs[morph['name']] = morph
                 new_morph.append(morph)
-        new_morphlists.append(new_morph)
-    return new_morphlists
+        new_morph_lists.append(new_morph)
+    return new_morph_lists
 
 
-def count_morphvalues_below_threshold(morphlist, threshold):
+def count_morphvalues_below_threshold(morph_list, threshold):
     """ checks for each morph in morphlist if the absolut value is below the threshold and returns a count and
         percentage """
     count = 0
-    for morph in morphlist:
+    for morph in morph_list:
         if abs(float(morph['value'])) < threshold:
             count += 1
-    percentage = count / len(morphlist)
+    percentage = count / len(morph_list)
     return count, percentage
 
 
-def filter_morphs_below_threshold(morphlist, threshold):
+def filter_morphs_below_threshold(morph_list, threshold):
     """ goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above
         threshold """
 
     # suggestion ChatGPT:
     # return [morph for morph in morphlist if "value" in morph and abs(float(morph['value'])) >= threshold]
 
-    new_morphlist = []
-    for morph in morphlist:
+    new_morph_list = []
+    for morph in morph_list:
         if "value" in morph:
             if abs(float(morph['value'])) >= threshold:
-                new_morphlist.append(morph)
-    return new_morphlist
+                new_morph_list.append(morph)
+    return new_morph_list
 
 
 def get_all_morphnames_in_morphlists(morphlists):
-    """ returns a list of alle morphnames found in the morphlists """
+    """ returns a list of alle morph_names found in the morphlists """
 
     # suggestion ChatGPT, also rename to get_unique_morph_names
-    # morphnames = list(set(name for morphlist in morphlists for name in get_morph_names(morphlist)))
-    # return morphnames
+    # morph_names = list(set(name for morph_list in morphlists for name in get_morph_names(morph_list)))
+    # return morph_names
 
-    morphnames = []
-    for morphlist in morphlists:
-        morphnames.extend(get_morph_names(morphlist))
-    morphnames = list(dict.fromkeys(morphnames))  # remove duplicates but keep the same order
-    return morphnames
+    morph_names = []
+    for morph_list in morphlists:
+        morph_names.extend(get_morph_names(morph_list))
+    morph_names = list(dict.fromkeys(morph_names))  # remove duplicates but keep the same order
+    return morph_names
 
 
 def fuse_characters(filename1, filename2, settings):
@@ -394,29 +394,29 @@ def fuse_characters(filename1, filename2, settings):
         non_uniform_mutation. Returns the child created by these procedures. """
     threshold = settings['morph threshold']
     files = [filename1, filename2]
-    morphlists = []
+    morph_lists = []
     for i, f in enumerate(files):
         print("Reading appearance:", f)
         appearance = load_appearance(f)
-        morphlist = get_morphlist_from_appearance(appearance)
-        morphlist = filter_morphs_below_threshold(morphlist, threshold)
-        morphlists.append(morphlist)
-    morphlists = dedupe_morphs(morphlists)
+        morph_list = get_morph_list_from_appearance(appearance)
+        morph_list = filter_morphs_below_threshold(morph_list, threshold)
+        morph_lists.append(morph_list)
+    morph_lists = dedupe_morphs(morph_lists)
 
-    morphnames = get_all_morphnames_in_morphlists(morphlists)
-    morphlists = pad_morphnames_to_morphlists(morphlists, morphnames)
+    morphnames = get_all_morphnames_in_morphlists(morph_lists)
+    morph_lists = pad_morph_names_to_morph_lists(morph_lists, morphnames)
 
     sortedmorphlists = []
-    for morphlist in morphlists:
-        sortedmorphlists.append(sorted(morphlist, key=lambda d: d['name']))
+    for morph_list in morph_lists:
+        sortedmorphlists.append(sorted(morph_list, key=lambda d: d['name']))
 
     child_morphlist = intuitive_crossover(sortedmorphlists[0], sortedmorphlists[1])
     child_morphlist = non_uniform_mutation(child_morphlist)
 
     # select child template
-    templatefile = settings['child template']
-    child_appearance = load_appearance(templatefile)
-    print("Using as appearance template:", templatefile)
+    template_file = settings['child template']
+    child_appearance = load_appearance(template_file)
+    print("Using as appearance template:", template_file)
     child_appearance = save_morph_to_appearance(child_morphlist, child_appearance)
     return child_appearance
 

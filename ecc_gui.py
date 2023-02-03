@@ -432,7 +432,7 @@ class AppWindow(tk.Frame):
             answer = messagebox.askquestion("Continue last session?",
                                             f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
-                self.generator.gencounter = self.settings['generation counter']
+                self.generator.gen_counter = self.settings['generation counter']
                 self.continue_last_session()
                 return
             else:
@@ -859,7 +859,7 @@ class AppWindow(tk.Frame):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
             app. This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
-        self.broadcast_generation_number_to_vam(self.generator.gencounter)
+        self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         print("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
@@ -874,7 +874,7 @@ class AppWindow(tk.Frame):
         self.overviewlabel.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
         self.generationlabel = tk.Label(self.overviewframe, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
         self.generationlabel.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gencounter, font=FILENAME_FONT, bg=BG_COLOR,
+        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gen_counter, font=FILENAME_FONT, bg=BG_COLOR,
                                               fg=FG_COLOR, anchor="w", justify=tk.LEFT)
         self.generationnumberlabel.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
         self.templatelabel = tk.Label(self.overviewframe, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
@@ -894,14 +894,14 @@ class AppWindow(tk.Frame):
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
-        self.broadcast_generation_number_to_vam(self.generator.gencounter)
+        self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         self.broadcast_message_to_vam_rating_blocker("")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
-        self.generationnumberlabel.config(text=self.generator.gencounter)
+        self.generationnumberlabel.config(text=self.generator.gen_counter)
         self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.lastfivecommands))
+        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.last_five_commands))
 
     @staticmethod
     def last_given_commands_to_string(list_of_commands):
@@ -935,7 +935,7 @@ class AppWindow(tk.Frame):
                 appearance_templates.append(appearance)
 
         for i in range(1, ecc_utility.POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
@@ -946,7 +946,7 @@ class AppWindow(tk.Frame):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
         for i in range(1, ecc_utility.POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, template_appearance)
             ecc_logic.save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
 
@@ -1035,7 +1035,7 @@ class AppWindow(tk.Frame):
         filtered = []
         for f in filenames:
             appearance = self.generator.appearances[f]
-            morphlist = ecc_logic.get_morphlist_from_appearance(appearance)
+            morphlist = ecc_logic.get_morph_list_from_appearance(appearance)
             morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
             if len(morphlist) > self.settings['min morph threshold']:
                 filtered.append(f)
@@ -1150,21 +1150,21 @@ class AppWindow(tk.Frame):
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
 
-            morphlist_tmp = copy.deepcopy(ecc_logic.get_morphlist_from_appearance(self.chromosome[str(number)]['appearance']))
+            morphlist_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(self.chromosome[str(number)]['appearance']))
             morphlist_tmp = ecc_logic.filter_morphs_below_threshold(morphlist_tmp, threshold)
             nmorphs = str(len(morphlist_tmp))
             if int(nmorphs) < self.settings['min morph threshold']:
-                if self.generator.gencounter == 0:  # only do this in the initialization selection step
+                if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.hide_parentfile_from_view(number)
                     return
             else:
-                if self.generator.gencounter == 0:  # only do this in the initialization selection step
+                if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.chromosome[str(number)]['filenamedisplay'].configure(
                         text=self.chromosome[str(number)]['shortfilename'])
                     self.chromosome[str(number)]['can load'] = True
         else:
             nmorphs = "N/A"
-        if self.generator.gencounter == 0:  # after the app is initialized, the morph information is not being shown anymore
+        if self.generator.gen_counter == 0:  # after the app is initialized, the morph information is not being shown anymore
             self.chromosome[str(number)]['nmorphdisplay'].configure(text=str(nmorphs))
 
     def hide_parentfile_from_view(self, number):
@@ -1197,8 +1197,8 @@ class AppWindow(tk.Frame):
             self.gaussian_initialize_population(source_files=self.settings['source files'])
         elif method == "Random Crossover":
             self.crossover_initialize_population(self.settings['source files'])
-        self.generator.gencounter = 1
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.generator.gen_counter = 1
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker("")
 
@@ -1206,7 +1206,7 @@ class AppWindow(tk.Frame):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
-        if self.generator.gencounter == 0:
+        if self.generator.gen_counter == 0:
             ecc_utility.save_settings(self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
@@ -1225,7 +1225,7 @@ class AppWindow(tk.Frame):
         elites = self.get_elites_from_population()
 
         # Save elite appearances over child template (we do this, because the user might have changed the template file)
-        elite_morph_lists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in elites]
+        elite_morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in elites]
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
         new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in
                           elite_morph_lists]
@@ -1238,9 +1238,9 @@ class AppWindow(tk.Frame):
         self.save_population(new_population)
         self.update_population(new_population)
 
-        self.generator.gencounter += 1
-        self.settings['generation counter'] = self.generator.gencounter
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.generator.gen_counter += 1
+        self.settings['generation counter'] = self.generator.gen_counter
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker("")
         ecc_utility.save_settings(self.settings)
@@ -1339,9 +1339,9 @@ class AppWindow(tk.Frame):
             time_string = now.strftime("%d-%m-%Y %H:%M:%S")
             command_dict['time'] = time_string
             command_dict['command'] = command
-            self.generator.lastfivecommands.insert(0, command_dict)
-            if len(self.generator.lastfivecommands) > 5:
-                self.generator.lastfivecommands.pop()
+            self.generator.last_five_commands.insert(0, command_dict)
+            if len(self.generator.last_five_commands) > 5:
+                self.generator.last_five_commands.pop()
             self.update_overview_window()
 
         # parse rate child commands
@@ -1368,13 +1368,13 @@ class AppWindow(tk.Frame):
             self.switch_layout_to_overview()
         elif "generate next population" in commands[0].lower():
             self.generate_next_population(self.settings['method'])
-            self.broadcast_generation_number_to_vam(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         elif "reset" in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(givewarning=False)
-            self.broadcast_generation_number_to_vam(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gen_counter)
 
         if self.generator.connected_to_VAM:
             self.update_overview_window()
@@ -1527,7 +1527,7 @@ class AppWindow(tk.Frame):
             child_appearance = ecc_logic.fuse_characters(random_parents[0], random_parents[1], self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
-        self.generator.gencounter += 1
+        self.generator.gen_counter += 1
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
         # to do: why two lines?
@@ -1550,9 +1550,9 @@ class AppWindow(tk.Frame):
 
         print(f"Source files: {source_files} ({len(appearances)} Files)")
 
-        morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
+        morphlists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
         morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
-        morphlists = ecc_logic.pad_morphnames_to_morphlists(morphlists, morphnames, filenames)
+        morphlists = ecc_logic.pad_morph_names_to_morph_lists(morphlists, morphnames, filenames)
         morphlists = ecc_logic.dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
@@ -1580,7 +1580,7 @@ class AppWindow(tk.Frame):
             new_population.append(child_appearance)
 
         self.save_population(new_population)
-        self.generator.gencounter += 1
+        self.generator.gen_counter += 1
 
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
@@ -1636,7 +1636,7 @@ class AppWindow(tk.Frame):
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.columninfo['1'].destroy()
         self.columninfo['2'].destroy()
         self.columninfo['3'].destroy()
