@@ -12,27 +12,16 @@ import pathlib
 import random
 import shutil
 import time
-
 from PIL import ImageTk, Image, UnidentifiedImageError
+import ecc_utility
+
 
 MALE = 'Male'
 FEMALE = 'Female'
 FUTA = 'Futa'
-
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
-NO_FILE_SELECTED_TEXT = "…"
-SETTINGS_FILENAME = "settings.json"
-DATA_PATH = "data"
-SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
-CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
-POP_SIZE = 20
-MINIMAL_RATING_FOR_KEEP_ELITES = 2
-INITIAL_RATING = 3
-DEFAULT_MAX_KEPT_ELITES = 1
-MAX_VAMDIR_STRING_LENGTH = 42
-MAX_APPEARANCEDIR_STRING_LENGTH = 45
 
 
 class Generator:
@@ -86,7 +75,7 @@ class Generator:
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
         thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
         if not os.path.exists(thumbnailpath):
-            thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+            thumbnailpath = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
 
         image = None
         jpg_loaded = False
@@ -99,7 +88,7 @@ class Generator:
 
         if not jpg_loaded:
             try:
-                thumbnailpath = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
+                thumbnailpath = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
                 image = Image.open(thumbnailpath)
             except Exception as e:
                 print(f'*** Error! {e}')
@@ -131,7 +120,7 @@ def save_appearance(appearance, filename):
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
             thumbnailpath = os.path.splitext(filename)[0] + '.jpg'
-            shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
+            shutil.copyfile(os.path.join(ecc_utility.DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnailpath)
             return True
         except Exception as exception:
             print(f'{exception=}')
