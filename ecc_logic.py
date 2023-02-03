@@ -44,7 +44,6 @@ class Generator:
     def fill_data_with_all_appearances(self):
         """ Loads all available presets found in the default VAM directory into dictionaries
             to save loading-times when using the app """
-        # path = self.get_vam_default_appearance_path()
         path = self.settings['appearance dir']
 
         if self.settings['recursive directory search']:
@@ -178,8 +177,8 @@ def intuitive_crossover(morph_list1, morph_list2):
     """ returns a new morph which is the combined morph of morphlist1 and morphlist2 where each gene has 0.5 chance to
         be selected
         reference: https://towardsdatascience.com/unit-3-genetic-algorithms-part-1-986e3b4666d7
-        for zip check this: https://www.programiz.com/python-programming/methods/built-in/zip
         """
+    # for zip check this: https://www.programiz.com/python-programming/methods/built-in/zip
     zipped_morphs = zip(morph_list1, morph_list2)
     return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
@@ -204,7 +203,7 @@ def calculate_single_mutation(value, b=0.5):
         return (0.0 + float(value)) * r2 * b
 
     # ChatGPT suggests this, but I have to implement a unit test first to verify if it is legit.
-    # also, it looks quite obfuscated
+    # also, it looks quite obfuscated. todo: test
     # r2 = random.random()
     # return ((1.0 - 2 * (random.random() >= 0.5)) * float(value) + (1.0 - float(value))) * r2 * b
 
@@ -253,6 +252,7 @@ def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replace
 
 def get_appearance_gender(appearance):
     """ Return the gender of the appearance, or False if it could not be determined """
+
     # determine futa
     char_index = get_morph_index_with_characterinfo_from_appearance(appearance)
     morph_list = appearance['storables'][char_index]["morphs"]
@@ -283,7 +283,7 @@ def get_value_for_key_and_id_in_appearance(appearance, idx, key):
 
     storables = appearance['storables']
 
-    # suggestion from ChatGTP, looks legit, but not so easy to read?
+    # suggestion from ChatGTP, looks legit, but not so easy to read? todo: test
     # return next((item[key] for item in storables if 'id' in item and item['id'] == idx and key in item), False)
 
     for item in storables:
@@ -326,17 +326,17 @@ def save_morph_to_appearance(morph_list, appearance):
     return appearance
 
 
-def dedupe_morphs(morphlists):
+def dedupe_morphs(morph_lists):
     """ removes duplicate morphs from each morphlist in morphlists """
 
-    #suggestion from ChatGPT -- do not understand yet. :)
+    # suggestion from ChatGPT -- do not understand yet. :) todo: test
     # return [
-    #     [morph for i, morph in enumerate(morphlist) if morph['name'] not in morphlist[:i]]
-    #     for morphlist in morphlists
+    #     [morph for i, morph in enumerate(morph_list) if morph['name'] not in morph_list[:i]]
+    #     for morph_list in morph_lists
     # ]
 
     new_morph_lists = []
-    for morph_list in morphlists:
+    for morph_list in morph_lists:
         new_morph = []
         found = []
         found_morphs = {}
@@ -364,8 +364,8 @@ def filter_morphs_below_threshold(morph_list, threshold):
     """ goes through each morph in each morphlist in the list of morphlists and only keeps morphs with values above
         threshold """
 
-    # suggestion ChatGPT:
-    # return [morph for morph in morphlist if "value" in morph and abs(float(morph['value'])) >= threshold]
+    # suggestion ChatGPT: todo test
+    # return [morph for morph in morph_list if "value" in morph and abs(float(morph['value'])) >= threshold]
 
     new_morph_list = []
     for morph in morph_list:
@@ -403,21 +403,21 @@ def fuse_characters(filename1, filename2, settings):
         morph_lists.append(morph_list)
     morph_lists = dedupe_morphs(morph_lists)
 
-    morphnames = get_all_morphnames_in_morphlists(morph_lists)
-    morph_lists = pad_morph_names_to_morph_lists(morph_lists, morphnames)
+    morph_names = get_all_morphnames_in_morphlists(morph_lists)
+    morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names)
 
-    sortedmorphlists = []
+    sorted_morph_lists = []
     for morph_list in morph_lists:
-        sortedmorphlists.append(sorted(morph_list, key=lambda d: d['name']))
+        sorted_morph_lists.append(sorted(morph_list, key=lambda d: d['name']))
 
-    child_morphlist = intuitive_crossover(sortedmorphlists[0], sortedmorphlists[1])
-    child_morphlist = non_uniform_mutation(child_morphlist)
+    child_morph_list = intuitive_crossover(sorted_morph_lists[0], sorted_morph_lists[1])
+    child_morph_list = non_uniform_mutation(child_morph_list)
 
     # select child template
     template_file = settings['child template']
     child_appearance = load_appearance(template_file)
     print("Using as appearance template:", template_file)
-    child_appearance = save_morph_to_appearance(child_morphlist, child_appearance)
+    child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
     return child_appearance
 
 
