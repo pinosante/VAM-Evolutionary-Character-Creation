@@ -202,11 +202,6 @@ def calculate_single_mutation(value, b=0.5):
     else:
         return (0.0 + float(value)) * r2 * b
 
-    # ChatGPT suggests this, but I have to implement a unit test first to verify if it is legit.
-    # also, it looks quite obfuscated. todo: test
-    # r2 = random.random()
-    # return ((1.0 - 2 * (random.random() >= 0.5)) * float(value) + (1.0 - float(value))) * r2 * b
-
 
 def get_morph_list_from_appearance(appearance):
     """ Based on gender, either returns the morphs or morphsOtherGender from the appearance json """
@@ -275,6 +270,7 @@ def get_appearance_gender(appearance):
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomy', 'enabled') == "true" or
              get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomyAlt', 'enabled') == "true"):
         return MALE
+
     return False
 
 
