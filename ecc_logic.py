@@ -245,30 +245,75 @@ def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replace
     return None
 
 
-def get_appearance_gender(appearance):
-    """ Return the gender of the appearance, or False if it could not be determined """
+def uses_female_morphs_on_male(appearance):
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    return appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "true"
 
-    # determine futa
+
+def is_anatomy_enabled(appearance, anatomy_key):
+    return get_value_for_key_and_id_in_appearance(appearance, anatomy_key, 'enabled') == "true"
+
+
+def is_female_anatomy(appearance):
+    return is_anatomy_enabled(appearance, 'FemaleAnatomy')
+
+
+def is_alt_female_anatomy(appearance):
+    return is_anatomy_enabled(appearance, 'FemaleAnatomyAlt')
+
+
+def is_male_anatomy(appearance):
+    return is_anatomy_enabled(appearance, 'MaleAnatomy')
+
+
+def is_alt_male_anatomy(appearance):
+    return is_anatomy_enabled(appearance, 'MaleAnatomyAlt')
+
+
+def has_female_text(appearance):
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    return FEMALE in appearance['storables'][char_index]['character']
+
+
+def has_male_text(appearance):
+    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    return MALE in appearance['storables'][char_index]['character']
+
+
+def is_futa(appearance):
+    """ determine futa """
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
     morph_list = appearance['storables'][char_index]["morphs"]
-    morph_names = []
-    for morph in morph_list:
-        morph_names.append(morph['name'])
+    morph_names = {morph['name'] for morph in morph_list}
+    return "MVR_G2Female" in morph_names and uses_female_morphs_on_male(appearance)
 
-    if "MVR_G2Female" in morph_names and appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "true":
+
+def is_female(appearance):
+    """ determine female """
+    return is_female_anatomy(appearance) \
+        or is_alt_female_anatomy(appearance) \
+        or has_female_text(appearance)
+
+
+def is_male(appearance):
+    """ determine male """
+    if uses_female_morphs_on_male(appearance):
+        return False
+
+    return has_male_text(appearance) \
+        or is_male_anatomy(appearance) \
+        or is_alt_male_anatomy(appearance)
+
+
+def get_appearance_gender(appearance):
+    """ Return the gender of the appearance, or False if it could not be determined """
+    if is_futa(appearance):
         return FUTA
 
-    # determine female
-    if get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomyAlt', 'enabled') == "true" or \
-            get_value_for_key_and_id_in_appearance(appearance, 'FemaleAnatomy', 'enabled') == "true" or \
-            FEMALE in appearance['storables'][char_index]['character']:
+    if is_female(appearance):
         return FEMALE
 
-    # determine male
-    if appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "false" and \
-            (MALE in appearance['storables'][char_index]['character'] or
-             get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomy', 'enabled') == "true" or
-             get_value_for_key_and_id_in_appearance(appearance, 'MaleAnatomyAlt', 'enabled') == "true"):
+    if is_male(appearance):
         return MALE
 
     return False
