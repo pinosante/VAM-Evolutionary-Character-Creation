@@ -8,6 +8,7 @@ DATA_PATH = "data"
 SETTINGS_FILENAME = "settings.json"
 
 POP_SIZE = 20
+INITIAL_RATING = 3
 
 MAIN_SCRIPT_NAME = "VAM Evolutionary Character Creation.py"
 

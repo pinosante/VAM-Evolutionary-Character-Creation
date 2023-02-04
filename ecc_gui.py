@@ -20,6 +20,7 @@ import numpy as np
 
 import ecc_logic
 import ecc_utility
+from ecc_population import Population, Chromosome
 
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
@@ -27,7 +28,6 @@ NO_FILE_SELECTED_TEXT = "…"
 SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
 CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
 MINIMAL_RATING_FOR_KEEP_ELITES = 2
-INITIAL_RATING = 3
 DEFAULT_MAX_KEPT_ELITES = 1
 DEFAULT_FONT = "Calibri"
 FILENAME_FONT = ("Courier", 9)
@@ -70,6 +70,8 @@ CHOOSE_FILES_TEXT = "Choose Files"
 # RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
 # RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 # RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
+
+
 
 
 class AppWindow(tk.Frame):
@@ -207,24 +209,10 @@ class AppWindow(tk.Frame):
         self.columninfo['3'] = tk.Label(self.parentselectionframe, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
         self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
 
-        self.chromosome = dict()
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            new_chromosome = dict()
-            new_chromosome['filebutton'] = tk.Button(self.parentselectionframe, text="Parent " + str(i),
-                                                              bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                                              activebackground=BUTTON_ACTIVE_COLOR,
-                                                              command=lambda i=i: self.select_file(i), width=10)
-            new_chromosome['filebutton'].grid(row=i + 1, column=0, sticky=tk.W)
-            new_chromosome['filenamedisplay'] = tk.Label(self.parentselectionframe, text=NO_FILE_SELECTED_TEXT,
-                                                                  font=FILENAME_FONT, width=28, anchor="w", bg=BG_COLOR,
-                                                                  fg=FG_COLOR)
-            new_chromosome['filenamedisplay'].grid(row=i + 1, column=1, sticky=tk.W)
-            new_chromosome['nmorphdisplay'] = tk.Label(self.parentselectionframe, text="N/A", bg=BG_COLOR,
-                                                                fg=FG_COLOR)
-            new_chromosome['nmorphdisplay'].grid(row=i + 1, column=2, sticky=tk.W)
-            new_chromosome['can load'] = False
-
-            self.chromosome[str(i)] = new_chromosome
+        # initialize population and chromosomes
+        self.population = Population(ecc_utility.POP_SIZE)
+        for chromo in self.population.chromosomes:
+            chromo.initialize_ui(self.parentselectionframe)
 
         ###
         ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
@@ -640,12 +628,12 @@ class AppWindow(tk.Frame):
             loading an appearance file for that parent number is cancelled or invalid """
         keylist = ['shortfilename', 'appearance', 'filename']
         for key in keylist:
-            if key in self.chromosome[str(number)]:
-                del self.chromosome[str(number)][key]
+            if key in self.population.chromosomes[number]:
+                del self.population.chromosomes[number].key
         if 'file ' + str(number) in self.settings:
             del self.settings['file ' + str(number)]
-        self.chromosome[str(number)]['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
-        self.chromosome[str(number)]['can load'] = False
+        self.population.chromosomes[number].file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
+        self.population.chromosomes[number].can load = False
         self.update_morph_info(number)
         self.update_initialize_population_button()
 
@@ -763,8 +751,7 @@ class AppWindow(tk.Frame):
             elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 source_files = self.get_all_appearance_filenames()
             elif self.settings['source files'] == CHOOSE_FILES_TEXT:
-                source_files = [self.chromosome[str(i)]['filename'] for i in range(1, ecc_utility.POP_SIZE + 1) if
-                                self.chromosome[str(i)]['can load']]
+                source_files = [c.filename for c in self.population.chromosomes if c.can_load]
             else:
                 source_files = []
             if len(source_files) >= 2:
@@ -787,14 +774,8 @@ class AppWindow(tk.Frame):
 
     def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
-        if filename not in self.generator.appearances:
-            return
-        chromosome = self.chromosome[str(number)]
-        chromosome['filename'] = filename
-        chromosome['shortfilename'] = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
-        chromosome['filenamedisplay'].configure(text=chromosome['shortfilename'])
-        chromosome['appearance'] = self.generator.appearances[filename]
-        chromosome['can load'] = True
+        if filename in self.generator.appearances:
+            self.population.chromosomes[number].update_gui_file(filename, self.generator.appearances[filename])
 
     def select_template_file(self, genderlist, title):
         """ Called by the Female, Male and Futa load template file buttons. Opens a file selection dialogue which
@@ -931,21 +912,22 @@ class AppWindow(tk.Frame):
             if gender == self.childtemplate['gender']:
                 appearance_templates.append(appearance)
 
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
-            updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
+        for c in self.population.chromosomes:
+            morph_list = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(c.filename))
+            updated_appearance = ecc_logic.save_morph_to_appearance(
+                    morph_list, appearance_templates[c.index])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
-            ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
-        
+            ecc_logic.save_appearance(nude_appearance, c.filename)
+
         self.broadcast_message_to_vam_rating_blocker("")
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
-            updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, template_appearance)
-            ecc_logic.save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
+        for c in self.population.chromosomes:
+            morph_list = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(c.filename))
+            updated_appearance = ecc_logic.save_morph_to_appearance(morph_list, template_appearance)
+            ecc_logic.save_appearance(updated_appearance, c.filename)
 
     def file_selection_with_thumbnails(self, genderlist, title, filteronmorphcount=True):
         """ Called by select_template_file and select_file. Creates a custom file selection popup window, with icons
@@ -1142,37 +1124,37 @@ class AppWindow(tk.Frame):
         else:
             template_gender = ""
 
-        if 'filename' in self.chromosome[str(number)]:
-            gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(self.chromosome[str(number)]['filename']))
+        c = self.population.chromosomes[number]
+        if c.filename != '':
+            gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(c.filename))
             if not ecc_logic.is_compatible_gender(gender, template_gender):
-                self.hide_parentfile_from_view(
+                self.hide_parent_file_from_view(
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
 
-            morphlist_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(self.chromosome[str(number)]['appearance']))
-            morphlist_tmp = ecc_logic.filter_morphs_below_threshold(morphlist_tmp, threshold)
-            nmorphs = str(len(morphlist_tmp))
+            morph_list_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(c.appearance))
+            morph_list_tmp = ecc_logic.filter_morphs_below_threshold(morph_list_tmp, threshold)
+            nmorphs = str(len(morph_list_tmp))
             if int(nmorphs) < self.settings['min morph threshold']:
                 if self.generator.gen_counter == 0:  # only do this in the initialization selection step
-                    self.hide_parentfile_from_view(number)
+                    self.hide_parent_file_from_view(number)
                     return
             else:
                 if self.generator.gen_counter == 0:  # only do this in the initialization selection step
-                    self.chromosome[str(number)]['filenamedisplay'].configure(
-                        text=self.chromosome[str(number)]['shortfilename'])
-                    self.chromosome[str(number)]['can load'] = True
+                    c.file_name_display.configure(text=c.short_filename)
+                    c.can_load = True
         else:
             nmorphs = "N/A"
         if self.generator.gen_counter == 0:  # after the app is initialized, the morph information is not being shown anymore
-            self.chromosome[str(number)]['nmorphdisplay'].configure(text=str(nmorphs))
+            c.nmorph_display.configure(text=str(nmorphs))
 
-    def hide_parentfile_from_view(self, number):
+    def hide_parent_file_from_view(self, number):
         """ Replaces the file label of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
-        chromosome = self.chromosome[str(number)]
-        chromosome['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
-        chromosome['nmorphdisplay'].configure(text="N/A")
-        chromosome['can load'] = False
+        c = self.population.chromosomes[number]
+        c.file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
+        c.nmorph_display.configure(text="N/A")
+        c.can_load = False
 
     def restart_population(self, method):
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
@@ -1187,10 +1169,11 @@ class AppWindow(tk.Frame):
         # they all have a False flag for self.chromosome[str(i)]['can load'] which is used
         # later on in Gaussian and Crossover generation to skip loading them.
         if self.settings['source files'] == CHOOSE_FILES_TEXT:
-            for i in range(1, ecc_utility.POP_SIZE + 1):
-                if 'file ' + str(i) in self.settings:
-                    if len(self.settings['file ' + str(i)]) > 0:
-                        self.chromosome[str(i)]['filename'] = self.settings['file ' + str(i)]
+            for c in self.population.chromosomes:
+                filename = f'file {str(c.index)}'
+                if filename in self.settings:
+                    if len(self.settings[filename]) > 0:
+                        c.filename = self.settings[filename]
 
         if method == "Gaussian Samples":
             self.gaussian_initialize_population(source_files=self.settings['source files'])
@@ -1273,11 +1256,12 @@ class AppWindow(tk.Frame):
             the rating window and setting the generation counter to the last known value. """
         path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i) + ".vap")
-            c = self.chromosome[str(i)]
-            self.chromosome[str(i)]['filename'] = filename
-            self.chromosome[str(i)]['appearance'] = ecc_logic.load_appearance(filename)
+
+        for c in self.population.chromosomes:
+            filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(c.index) + ".vap")
+            c.filename = filename
+            c.appearance = ecc_logic.load_appearance(filename)
+
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
@@ -1443,41 +1427,41 @@ class AppWindow(tk.Frame):
             reference: https://stackoverflow.com/questions/10324015/fitness-proportionate-selection-roulette-wheel-selection-in-python
             """
 
-        total_ratings = sum([self.chromosome[str(i)]['rating'] for i in range(1, ecc_utility.POP_SIZE + 1)])
+        total_ratings = sum([c.rating for c in self.population.chromosomes])
         choices = []
 
         while len(choices) < 2:
             pick = random.uniform(0, total_ratings)
             current = 0
-            for i in range(1, ecc_utility.POP_SIZE + 1):
-                chromosome = self.chromosome[str(i)]
-                current += chromosome['rating']
+
+            for c in self.population.chromosomes:
+                current += chromosome.rating
                 if current > pick:
                     if not chromosome in choices:
                         choices.append(chromosome)
                     break
+
         return choices
 
     def get_elites_from_population(self):
         """ Returns the children appearances where the rating is the maximum rating that the user selected.
             If the maximum selected rating is lower than MINIMAL_RATING_FOR_KEEP_ELITES, then no appearances are
             returned. Returns a maximum of appearances equal to user setting 'max kept elites'. """
-        max_selected_rating = max([chromosomeValue['rating'] for chromosomeValue in self.chromosome.values()])
-
+        max_selected_rating = max(chromo.rating for chromo in self.population.chromosomes)
         if max_selected_rating < MINIMAL_RATING_FOR_KEEP_ELITES:
             return []
 
         # Select all appearances with maximum rating.
-        appearances_with_maximum_rating = [chromosomeValue['appearance'] for chromosomeValue in self.chromosome.values()
-                                           if chromosomeValue['rating'] == max_selected_rating]
+        appearances_with_maximum_rating = [chromo.appearance for chromo in self.population.chromosome
+                                           if chromo.rating == max_selected_rating]
 
         # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
         return appearances_with_maximum_rating[:self.settings['max kept elites']]
 
     def reset_ratings(self):
         """ Clear all ratings in the GUI. """
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            self.press_rating_button(i, INITIAL_RATING)
+        for chromo in self.population.chromosomes:
+            self.press_rating_button(chromo.index, ecc_utility.INITIAL_RATING)
 
     def get_appearance_filenames(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
@@ -1504,8 +1488,7 @@ class AppWindow(tk.Frame):
         return self.get_appearance_filenames(get_only_favorites=True)
 
     def get_selected_appearance_filenames(self):
-        filenames = [self.chromosome[str(i)]['filename'] for i in range(1, ecc_utility.POP_SIZE + 1) if
-                     self.chromosome[str(i)]['can load']]
+        filenames = [c.filename for c in self.population.chromosomes if c.can_load]
         self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
 
@@ -1661,14 +1644,40 @@ class AppWindow(tk.Frame):
         rating_font_size = 13
         self.generatechild.configure(width=27, height=6)
 
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            chromosome = self.chromosome[str(i)]
-            chromosome['filebutton'].destroy()
-            chromosome['filenamedisplay'].destroy()
-            chromosome['nmorphdisplay'].destroy()
-            del chromosome['filebutton']
-            del chromosome['filenamedisplay']
-            del chromosome['nmorphdisplay']
+        for c in self.population.chromosomes:
+            c.destroy_ui()
+
+        for c in self.population.chromosomes:
+            c.child_label = tk.Label(self.parentselectionframe, text="Child " + str(c.index),
+                                        font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
+                                        bg=BG_COLOR, fg=FG_COLOR)
+            c.child_label.grid(row=i + 1, column=0, sticky=tk.W)
+            c.rating = ecc_utility.INITIAL_RATING
+            c.rating_buttons = list(5)
+            #todo go on here
+
+            BAUSTELLE
+
+
+            for j in range(1, 6):
+                chromosome['rating button ' + str(j)] = \
+                    tk.Button(self.parentselectionframe, width=2,
+                              font=(
+                                  DEFAULT_FONT, rating_font_size,
+                                  "bold"),
+                              bg=RATING_RAISED_BG_COLOR,
+                              fg=RATING_RAISED_FG_COLOR,
+                              activebackground=RATING_ACTIVE_BG_COLOR,
+                              activeforeground=RATING_ACTIVE_FG_COLOR,
+                              text=str(j), command=lambda i=i, j=j: self.press_rating_button(i, j))
+                chromosome['rating button ' + str(j)].grid(row=i + 1, column=j)
+                chromosome['rating button ' + str(j)].bind("<Enter>",
+                                                   lambda e, i=i, j=j: self.on_enter_rating_button(
+                                                                            i, j, event=e))
+                chromosome['rating button ' + str(j)].bind("<Leave>",
+                                                   lambda e, i=i, j=j: self.on_leave_rating_button(
+                                                                            i, j, event=e))
+
 
         for i in range(1, ecc_utility.POP_SIZE + 1):
             chromosome = self.chromosome[str(i)]
