@@ -15,7 +15,7 @@ import numpy as np
 
 import ecc_logic
 import ecc_utility
-
+from ecc_gui_constants import *
 
 class Chromosome:
     def __init__(self, index):
@@ -42,7 +42,7 @@ class Chromosome:
                                              fg=FG_COLOR)
         self.file_name_display.grid(row=self.index + 1, column=1, sticky=tk.W)
         self.nmorph_display = tk.Label(frame, text="N/A", bg=BG_COLOR, fg=FG_COLOR)
-        self.nmorph_display.grid(row=i + 1, column=2, sticky=tk.W)
+        self.nmorph_display.grid(row=self.index + 1 + 1, column=2, sticky=tk.W)
         self.can_load = False
 
     def update_gui_file(self, filename, appearance):
@@ -60,9 +60,20 @@ class Chromosome:
         del self.file_name_display
         del self.nmorph_display
 
+    def get_rating_button(self, rating):
+        """rating button now are kept inside a zero based list, so decrement the one-based rating"""
+        return self.rating_buttons[rating - 1]
+
 
 class Population:
     def __init__(self, size):
         self.chromosomes = [Chromosome(index) for index in range(size)]
 
+    def get_chromosome(self, index):
+        """index is one-based, but chromosomes are inside a zero-based list"""
+        c = self.chromosomes[index - 1]
+        assert c.index == index - 1
+        return c
 
+if __name__ == '__main__':
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

@@ -20,33 +20,9 @@ import numpy as np
 
 import ecc_logic
 import ecc_utility
+from ecc_gui_constants import *
 from ecc_population import Population, Chromosome
 
-ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
-APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
-NO_FILE_SELECTED_TEXT = "…"
-SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
-CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
-MINIMAL_RATING_FOR_KEEP_ELITES = 2
-DEFAULT_MAX_KEPT_ELITES = 1
-DEFAULT_FONT = "Calibri"
-FILENAME_FONT = ("Courier", 9)
-BG_COLOR = "#F9F9F9"
-FG_COLOR = "black"
-BUTTON_BG_COLOR = "#ffbeed"
-BUTTON_FG_COLOR = "black"
-BUTTON_ACTIVE_COLOR = BUTTON_BG_COLOR
-HOVER_COLOR = "#f900ff"
-MAX_VAMDIR_STRING_LENGTH = 42
-MAX_APPEARANCEDIR_STRING_LENGTH = 45
-RATING_SUNKEN_BG_COLOR = BUTTON_BG_COLOR
-RATING_SUNKEN_FG_COLOR = BUTTON_FG_COLOR
-RATING_RAISED_BG_COLOR = BG_COLOR
-RATING_RAISED_FG_COLOR = FG_COLOR
-RATING_HOVER_BG_COLOR = BUTTON_BG_COLOR
-RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
-RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
-RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
@@ -99,7 +75,8 @@ class AppWindow(tk.Frame):
         self.titleframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
         self.titleframe.grid_columnconfigure(0, weight=1)
         self.titlelabel = tk.Label(self.titleframe, text="Initialization",
-                            font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
+                            font=(DEFAULT_FONT, 14, "bold"),
+                                   bg=BG_COLOR, fg=FG_COLOR)
         self.titlelabel.grid(row=0, column=0, sticky=tk.W)
 
         ###
@@ -626,14 +603,17 @@ class AppWindow(tk.Frame):
     def remove_parent_file_from_gui(self, number):
         """ Removes all internal information for a specific parent file for the chosen parent number. Called when
             loading an appearance file for that parent number is cancelled or invalid """
-        keylist = ['shortfilename', 'appearance', 'filename']
-        for key in keylist:
-            if key in self.population.chromosomes[number]:
-                del self.population.chromosomes[number].key
-        if 'file ' + str(number) in self.settings:
+
+        c = self.population.get_chromosome(number)
+        c.filename = ''
+        c.short_filename = ''
+        c.appearance = None
+        c.file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
+        c.can_load = False
+
+        if f'file {number}' in self.settings:
             del self.settings['file ' + str(number)]
-        self.population.chromosomes[number].file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
-        self.population.chromosomes[number].can load = False
+
         self.update_morph_info(number)
         self.update_initialize_population_button()
 
@@ -1124,7 +1104,7 @@ class AppWindow(tk.Frame):
         else:
             template_gender = ""
 
-        c = self.population.chromosomes[number]
+        c = self.population.get_chromosome(number)
         if c.filename != '':
             gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(c.filename))
             if not ecc_logic.is_compatible_gender(gender, template_gender):
@@ -1134,8 +1114,8 @@ class AppWindow(tk.Frame):
 
             morph_list_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(c.appearance))
             morph_list_tmp = ecc_logic.filter_morphs_below_threshold(morph_list_tmp, threshold)
-            nmorphs = str(len(morph_list_tmp))
-            if int(nmorphs) < self.settings['min morph threshold']:
+            number_of_morphs = str(len(morph_list_tmp))
+            if int(number_of_morphs) < self.settings['min morph threshold']:
                 if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.hide_parent_file_from_view(number)
                     return
@@ -1144,9 +1124,9 @@ class AppWindow(tk.Frame):
                     c.file_name_display.configure(text=c.short_filename)
                     c.can_load = True
         else:
-            nmorphs = "N/A"
+            number_of_morphs = "N/A"
         if self.generator.gen_counter == 0:  # after the app is initialized, the morph information is not being shown anymore
-            c.nmorph_display.configure(text=str(nmorphs))
+            c.nmorph_display.configure(text=str(number_of_morphs))
 
     def hide_parent_file_from_view(self, number):
         """ Replaces the file label of the parent file #number with '...'  and 'N/A' but keeps the file info
@@ -1209,12 +1189,12 @@ class AppWindow(tk.Frame):
         # Save elite appearances over child template (we do this, because the user might have changed the template file)
         elite_morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in elites]
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
-        new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in
-                          elite_morph_lists]
+        new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance)
+                          for elite_morph_list in elite_morph_lists]
 
         for i in range(ecc_utility.POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
-            child_appearance = ecc_logic.fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'],
+            child_appearance = ecc_logic.fuse_characters(random_parents[0].filename, random_parents[1].filename,
                                                self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
@@ -1435,10 +1415,10 @@ class AppWindow(tk.Frame):
             current = 0
 
             for c in self.population.chromosomes:
-                current += chromosome.rating
+                current += c.rating
                 if current > pick:
-                    if not chromosome in choices:
-                        choices.append(chromosome)
+                    if not c in choices:
+                        choices.append(c)
                     break
 
         return choices
@@ -1452,7 +1432,7 @@ class AppWindow(tk.Frame):
             return []
 
         # Select all appearances with maximum rating.
-        appearances_with_maximum_rating = [chromo.appearance for chromo in self.population.chromosome
+        appearances_with_maximum_rating = [chromo.appearance for chromo in self.population.chromosomes
                                            if chromo.rating == max_selected_rating]
 
         # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
@@ -1461,7 +1441,7 @@ class AppWindow(tk.Frame):
     def reset_ratings(self):
         """ Clear all ratings in the GUI. """
         for chromo in self.population.chromosomes:
-            self.press_rating_button(chromo.index, ecc_utility.INITIAL_RATING)
+            self.press_rating_button(chromo.index + 1, ecc_utility.INITIAL_RATING)
 
     def get_appearance_filenames(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
@@ -1612,9 +1592,9 @@ class AppWindow(tk.Frame):
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child in enumerate(population):
-            self.chromosome[str(i + 1)]['appearance'] = child
+            self.population.chromosomes[i].appearance = child
             filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i + 1) + ".vap")
-            self.chromosome[str(i + 1)]['filename'] = filename
+            self.population.chromosomes[i].filename = filename
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
@@ -1636,8 +1616,8 @@ class AppWindow(tk.Frame):
                                                   "Please Select Parent Template"))
         self.changetemplatebutton.grid(row=0, column=0, sticky=tk.W)
 
-        labeltxt = os.path.basename(self.settings['child template'])[7:-4]
-        self.changetemplatebuttonlabel = tk.Label(self.changetemplateframe, text=labeltxt, width=14, anchor="w",
+        label_txt = os.path.basename(self.settings['child template'])[7:-4]
+        self.changetemplatebuttonlabel = tk.Label(self.changetemplateframe, text=label_txt, width=14, anchor='w',
                                                   font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.changetemplatebuttonlabel.grid(row=0, column=1, sticky=tk.W, padx=0)
 
@@ -1648,62 +1628,26 @@ class AppWindow(tk.Frame):
             c.destroy_ui()
 
         for c in self.population.chromosomes:
-            c.child_label = tk.Label(self.parentselectionframe, text="Child " + str(c.index),
-                                        font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
+            index = c.index + 1
+            c.child_label = tk.Label(self.parentselectionframe, text=f'Child {index}',
+                                        font=(DEFAULT_FONT, 11, 'bold'), width=10, anchor= 'w',
                                         bg=BG_COLOR, fg=FG_COLOR)
-            c.child_label.grid(row=i + 1, column=0, sticky=tk.W)
+            c.child_label.grid(row=index + 1, column=0, sticky=tk.W)
             c.rating = ecc_utility.INITIAL_RATING
-            c.rating_buttons = list(5)
-            #todo go on here
-
-            BAUSTELLE
-
-
+            c.rating_buttons = list()
             for j in range(1, 6):
-                chromosome['rating button ' + str(j)] = \
-                    tk.Button(self.parentselectionframe, width=2,
-                              font=(
-                                  DEFAULT_FONT, rating_font_size,
-                                  "bold"),
+                new_rating_button = tk.Button(self.parentselectionframe, width=2,
+                              font=( DEFAULT_FONT, rating_font_size, 'bold'),
                               bg=RATING_RAISED_BG_COLOR,
                               fg=RATING_RAISED_FG_COLOR,
                               activebackground=RATING_ACTIVE_BG_COLOR,
                               activeforeground=RATING_ACTIVE_FG_COLOR,
-                              text=str(j), command=lambda i=i, j=j: self.press_rating_button(i, j))
-                chromosome['rating button ' + str(j)].grid(row=i + 1, column=j)
-                chromosome['rating button ' + str(j)].bind("<Enter>",
-                                                   lambda e, i=i, j=j: self.on_enter_rating_button(
-                                                                            i, j, event=e))
-                chromosome['rating button ' + str(j)].bind("<Leave>",
-                                                   lambda e, i=i, j=j: self.on_leave_rating_button(
-                                                                            i, j, event=e))
+                              text=str(j), command=lambda i=index, r=j: self.press_rating_button(i, r))
+                new_rating_button.grid(row=index, column=j)
+                new_rating_button.bind('<Enter>', lambda e, i=index, r=j: self.on_enter_rating_button(i, r, event=e))
+                new_rating_button.bind('<Leave>', lambda e, i=index, r=j: self.on_leave_rating_button(i, r, event=e))
+                c.rating_buttons.append(new_rating_button)
 
-
-        for i in range(1, ecc_utility.POP_SIZE + 1):
-            chromosome = self.chromosome[str(i)]
-            chromosome['childlabel'] = tk.Label(self.parentselectionframe, text="Child " + str(i),
-                                        font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
-                                        bg=BG_COLOR, fg=FG_COLOR)
-            chromosome['childlabel'].grid(row=i + 1, column=0, sticky=tk.W)
-            chromosome['rating'] = INITIAL_RATING
-            for j in range(1, 6):
-                chromosome['rating button ' + str(j)] = \
-                    tk.Button(self.parentselectionframe, width=2,
-                              font=(
-                                  DEFAULT_FONT, rating_font_size,
-                                  "bold"),
-                              bg=RATING_RAISED_BG_COLOR,
-                              fg=RATING_RAISED_FG_COLOR,
-                              activebackground=RATING_ACTIVE_BG_COLOR,
-                              activeforeground=RATING_ACTIVE_FG_COLOR,
-                              text=str(j), command=lambda i=i, j=j: self.press_rating_button(i, j))
-                chromosome['rating button ' + str(j)].grid(row=i + 1, column=j)
-                chromosome['rating button ' + str(j)].bind("<Enter>",
-                                                   lambda e, i=i, j=j: self.on_enter_rating_button(
-                                                                            i, j, event=e))
-                chromosome['rating button ' + str(j)].bind("<Leave>",
-                                                   lambda e, i=i, j=j: self.on_leave_rating_button(
-                                                                            i, j, event=e))
 
     def press_restart_button(self, givewarning=True):
         if givewarning:
@@ -1719,34 +1663,33 @@ class AppWindow(tk.Frame):
 
     def on_enter_rating_button(self, child, rating, event=None):
         """ Show hover effect when entering mouse over a rating button. """
-        chromosome = self.chromosome[str(child)]
-        if rating == chromosome['rating']:
+        c = self.population.get_chromosome(child)
+        if rating == c.rating:
             return
-        chromosome['rating button ' + str(rating)]['background'] = RATING_HOVER_BG_COLOR
-        chromosome['rating button ' + str(rating)]['foreground'] = RATING_HOVER_FG_COLOR
+        crb = c.get_rating_button(rating)
+        crb['background'] = RATING_HOVER_BG_COLOR
+        crb['foreground'] = RATING_HOVER_FG_COLOR
 
     def on_leave_rating_button(self, child, rating, event=None):
         """ Show hover effect when exiting mouse over a rating button. """
-        chromosome = self.chromosome[str(child)]
-        if rating == chromosome['rating']:
+        c = self.population.get_chromosome(child)
+        if rating == c.rating:
             return
-        chromosome['rating button ' + str(rating)]['background'] = RATING_RAISED_BG_COLOR
-        chromosome['rating button ' + str(rating)]['foreground'] = RATING_RAISED_FG_COLOR
+        crb = c.get_rating_button(rating)
+        crb['background'] = RATING_RAISED_BG_COLOR
+        crb['foreground'] = RATING_RAISED_FG_COLOR
 
     def press_rating_button(self, child, rating):
         """ Presses the rating button. """
-        chromosome = self.chromosome[str(child)]
-        chromosome['rating button ' + str(rating)].configure(relief=tk.SUNKEN,
-                                                         bg=RATING_SUNKEN_BG_COLOR,
-                                                         fg=RATING_SUNKEN_FG_COLOR)
-        chromosome['rating'] = rating
+        c = self.population.get_chromosome(child)
+        crb = c.get_rating_button(rating)
+        crb.configure(relief=tk.SUNKEN, bg=RATING_SUNKEN_BG_COLOR, fg=RATING_SUNKEN_FG_COLOR)
+        c.rating = rating
 
-        # reset unchosen buttons
-        rest = [x for x in range(1, 6) if x != rating]
-        for n in rest:
-            chromosome['rating button ' + str(n)].configure(relief=tk.RAISED,
-                                                        bg=RATING_RAISED_BG_COLOR,
-                                                        fg=RATING_RAISED_FG_COLOR)
+        # reset other buttons
+        for i, b in enumerate(c.rating_buttons):
+            if i+1 != rating:
+                b.configure(relief=tk.RAISED, bg=RATING_RAISED_BG_COLOR, fg=RATING_RAISED_FG_COLOR)
 
 
 if __name__ == '__main__':
