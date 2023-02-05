@@ -6,20 +6,18 @@ Please credit me if you change, use or adapt this file.
 
 import copy
 import glob
-import json
-import os
 import pathlib
 import random
 import shutil
 import time
 from PIL import ImageTk, Image, UnidentifiedImageError
-import ecc_utility
+from ecc_utility import *
 
 
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
-
+STORABLES = 'storables'
 
 class Generator:
     def __init__(self, settings):
@@ -71,7 +69,7 @@ class Generator:
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
         thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
         if not os.path.exists(thumbnail_path):
-            thumbnail_path = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
+            thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
 
         image = None
         jpg_loaded = False
@@ -84,7 +82,7 @@ class Generator:
 
         if not jpg_loaded:
             try:
-                thumbnail_path = os.path.join(ecc_utility.DATA_PATH, NO_THUMBNAIL_FILENAME)
+                thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
                 image = Image.open(thumbnail_path)
             except Exception as e:
                 print(f'*** Error! {e}')
@@ -116,7 +114,7 @@ def save_appearance(appearance, filename):
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
             thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
-            shutil.copyfile(os.path.join(ecc_utility.DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
+            shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
             return True
         except Exception as exception:
             print(f'{exception=}')
@@ -208,18 +206,18 @@ def get_morph_list_from_appearance(appearance):
     else:
         target_morphs = "morphs"
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
-    return appearance['storables'][char_index][target_morphs]
+    return appearance[STORABLES][char_index][target_morphs]
 
 
 def get_morph_index_with_character_info_from_appearance(appearance):
     """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
     character_key_found = False
-    for dictionary in appearance['storables']:
+    for dictionary in appearance[STORABLES]:
         if "character" in dictionary:
             character_key_found = True
     if not character_key_found:
         return None
-    for index, dictionary in enumerate(appearance['storables']):
+    for index, dictionary in enumerate(appearance[STORABLES]):
         if "morphs" in dictionary and dictionary['id'] == "geometry":
             return index
     return None
@@ -244,7 +242,7 @@ def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replace
 
 def uses_female_morphs_on_male(appearance):
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
-    return appearance['storables'][char_index]['useFemaleMorphsOnMale'] == "true"
+    return appearance[STORABLES][char_index]['useFemaleMorphsOnMale'] == "true"
 
 
 def is_anatomy_enabled(appearance, anatomy_key):
@@ -269,18 +267,18 @@ def is_alt_male_anatomy(appearance):
 
 def has_female_text(appearance):
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
-    return FEMALE in appearance['storables'][char_index]['character']
+    return FEMALE in appearance[STORABLES][char_index]['character']
 
 
 def has_male_text(appearance):
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
-    return MALE in appearance['storables'][char_index]['character']
+    return MALE in appearance[STORABLES][char_index]['character']
 
 
 def is_futa(appearance):
     """ determine futa """
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
-    morph_list = appearance['storables'][char_index]["morphs"]
+    morph_list = appearance[STORABLES][char_index]["morphs"]
     morph_names = {morph['name'] for morph in morph_list}
     return "MVR_G2Female" in morph_names and uses_female_morphs_on_male(appearance)
 
@@ -318,8 +316,7 @@ def get_appearance_gender(appearance):
 
 def get_value_for_key_and_id_in_appearance(appearance, idx, key):
     """ Loops through the appearance json to match a dictionary with id = idx and then returns the value of ['key'] """
-    storables = appearance['storables']
-    for item in storables:
+    for item in appearance[STORABLES]:
         if 'id' in item:
             if item['id'] == idx:
                 if key in item:
@@ -330,7 +327,7 @@ def get_value_for_key_and_id_in_appearance(appearance, idx, key):
 def remove_clothing_from_appearance(appearance):
     """ Removes the clothing and references to the clothing from the appearance. """
     clothing = list()
-    for dictionary in appearance['storables']:
+    for dictionary in appearance[STORABLES]:
         if dictionary['id'] == 'geometry':
             clothing = dictionary['clothing']
             dictionary['clothing'] = list()
@@ -339,28 +336,28 @@ def remove_clothing_from_appearance(appearance):
     ids_to_delete = [item['internalId'] for item in clothing if 'internalId' in item]
 
     indexes_to_delete = []
-    for idx, dictionary in enumerate(appearance['storables']):
+    for idx, dictionary in enumerate(appearance[STORABLES]):
         for id2 in ids_to_delete:
             if id2 in dictionary['id']:
                 indexes_to_delete.append(idx)
     indexes_to_delete = list(set(indexes_to_delete))
     for index in sorted(indexes_to_delete, reverse=True):
-        del appearance['storables'][index]
+        del appearance[STORABLES][index]
     return appearance
 
 
 def save_morph_to_appearance(morph_list, appearance):
-    """ Depending on gender, replace the corresponding morph with the morphlist """
+    """ Depending on gender, replace the corresponding morph with the morph_list """
     appearance = copy.deepcopy(appearance)
     gender = get_appearance_gender(appearance)
     target_morphs = "morphsOtherGender" if gender == FUTA else "morphs"
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
-    appearance['storables'][char_index][target_morphs] = morph_list
+    appearance[STORABLES][char_index][target_morphs] = morph_list
     return appearance
 
 
 def dedupe_morphs(morph_lists):
-    """ removes duplicate morphs from each morphlist in morphlists """
+    """ removes duplicate morphs from each morph_list in morph_lists """
 
     # suggestion from ChatGPT -- do not understand yet. :) todo: test
     # return [
@@ -402,21 +399,20 @@ def filter_morphs_below_threshold(morph_list, threshold):
 
     new_morph_list = []
     for morph in morph_list:
-        if "value" in morph:
-            if abs(float(morph['value'])) >= threshold:
-                new_morph_list.append(morph)
+        if 'value' in morph and abs(float(morph['value'])) >= threshold:
+            new_morph_list.append(morph)
     return new_morph_list
 
 
-def get_all_morph_names_in_morph_lists(morphlists):
-    """ returns a list of alle morph_names found in the morphlists """
+def get_all_morph_names_in_morph_lists(morph_lists):
+    """ returns a list of alle morph_names found in the morph_lists """
 
     # suggestion ChatGPT, also rename to get_unique_morph_names
     # morph_names = list(set(name for morph_list in morph_lists for name in get_morph_names(morph_list)))
     # return morph_names
 
     morph_names = list()
-    for morph_list in morphlists:
+    for morph_list in morph_lists:
         morph_names.extend(get_morph_names(morph_list))
     return list(dict.fromkeys(morph_names))  # remove duplicates but keep the same order
 
@@ -424,7 +420,7 @@ def get_all_morph_names_in_morph_lists(morphlists):
 def select_child_template(child_morph_list, settings):
     template_file = settings['child template']
     child_appearance = load_appearance(template_file)
-    print("Using as appearance template:", template_file)
+    print('Using as appearance template:', template_file)
     child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
     return child_appearance
 
@@ -436,7 +432,7 @@ def fuse_characters(filename1, filename2, settings):
     files = [filename1, filename2]
     morph_lists = list()
     for i, f in enumerate(files):
-        print("Reading appearance:", f)
+        print('Reading appearance:', f)
         appearance = load_appearance(f)
         morph_list = get_morph_list_from_appearance(appearance)
         morph_list = filter_morphs_below_threshold(morph_list, threshold)
@@ -477,4 +473,4 @@ def is_compatible_gender(gender1, gender2):
 
 
 if __name__ == '__main__':
-    print(f'I am just a module, please launch the main script "{ecc_utility.MAIN_SCRIPT_NAME}".')
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

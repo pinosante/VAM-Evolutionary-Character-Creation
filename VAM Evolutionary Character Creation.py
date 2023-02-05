@@ -23,8 +23,6 @@ def main():
     """
     settings = ecc_utility.load_settings()
 
-    # todo: convert Logic into class later
-
     generator = ecc_logic.Generator(settings)
 
     main_window = tk.Tk()

@@ -2,15 +2,17 @@
 import os
 import tkinter as tk
 from ecc_gui_constants import *
+from ecc_utility import *
 
 
 class Chromosome:
     """todo: split chromosome into GUI, BL and DAL part"""
-    def __init__(self, index):
+    def __init__(self, index, settings):
         # data -- todo: decide if indices should be start with 0 or with 1
         self.index = index
+        self.settings = settings
         self.appearance = None
-        self.rating = ecc_utility.INITIAL_RATING
+        self.rating = INITIAL_RATING
         # file access
         self.filename = ''
         self.short_filename = ''
@@ -73,7 +75,7 @@ class Chromosome:
         crb['background'] = RATING_RAISED_BG_COLOR
         crb['foreground'] = RATING_RAISED_FG_COLOR
 
-    def press_rating_button(self, rating):
+    def update_rating(self, rating):
         """ Presses the rating button. """
         if rating == self.rating:
             return
@@ -90,7 +92,7 @@ class Chromosome:
                                     font=(DEFAULT_FONT, 11, 'bold'), width=10, anchor='w',
                                     bg=BG_COLOR, fg=FG_COLOR)
         self.child_label.grid(row=index + 1, column=0, sticky=tk.W)
-        self.rating = ecc_utility.INITIAL_RATING
+        self.rating = INITIAL_RATING
         self.rating_buttons = list()
         for j in range(MIN_RATING, MAX_RATING + 1):
             new_rating_button = tk.Button(frame, width=2,
@@ -99,20 +101,25 @@ class Chromosome:
                                           fg=RATING_RAISED_FG_COLOR,
                                           activebackground=RATING_ACTIVE_BG_COLOR,
                                           activeforeground=RATING_ACTIVE_FG_COLOR,
-                                          text=str(j), command=lambda r=j: self.press_rating_button(r))
+                                          text=str(j), command=lambda r=j: self.update_rating(r))
             new_rating_button.grid(row=index, column=j)
             new_rating_button.bind('<Enter>', lambda e, r=j: self.on_enter_rating_button(r, event=e))
             new_rating_button.bind('<Leave>', lambda e, r=j: self.on_leave_rating_button(r, event=e))
             self.rating_buttons.append(new_rating_button)
 
+    def update_appearance(self, appearance, filename):
+        self.appearance = appearance
+        self.filename = os.path.join(filename, f'Preset_{CHILDREN_FILENAME_PREFIX}{self.index + 1}.vap')
+
 
 class Population:
-    def __init__(self, size):
-        self.chromosomes = [Chromosome(index) for index in range(size)]
+    def __init__(self, size, settings):
+        self.settings = settings
+        self.chromosomes = [Chromosome(index, settings) for index in range(size)]
 
     def get_chromosome(self, index):
         """index is one-based, but chromosomes are inside a zero-based list"""
-        assert 1 <= index <= ecc_utility.POP_SIZE
+        assert 1 <= index <= POP_SIZE
         c = self.chromosomes[index - 1]
         assert c.index == index - 1
         return c
