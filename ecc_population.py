@@ -17,6 +17,7 @@ import ecc_logic
 import ecc_utility
 from ecc_gui_constants import *
 
+
 class Chromosome:
     def __init__(self, index):
         self.index = index
@@ -27,22 +28,23 @@ class Chromosome:
         self.file_button = None
         self.file_name_display = None
         self.child_label = None
-        self.nmorph_display = None
+        self.n_morph_display = None
         self.rating = ecc_utility.INITIAL_RATING
         self.rating_buttons = list()
 
     def initialize_ui(self, frame):
-        self.file_button = tk.Button(frame, text="Parent " + str(self.index),
-                                                 bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                                 activebackground=BUTTON_ACTIVE_COLOR,
-                                                 command=lambda i=self.index: self.select_file(i), width=10)
-        self.file_button.grid(row=self.index + 1, column=0, sticky=tk.W)
+        index = self.index + 1
+        self.file_button = tk.Button(frame, text=f'Parent {index}',
+                                     bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                     activebackground=BUTTON_ACTIVE_COLOR,
+                                     command=lambda i=index: self.select_file(i), width=10)
+        self.file_button.grid(row=index, column=0, sticky=tk.W)
         self.file_name_display = tk.Label(frame, text=NO_FILE_SELECTED_TEXT,
-                                             font=FILENAME_FONT, width=28, anchor="w", bg=BG_COLOR,
-                                             fg=FG_COLOR)
-        self.file_name_display.grid(row=self.index + 1, column=1, sticky=tk.W)
-        self.nmorph_display = tk.Label(frame, text="N/A", bg=BG_COLOR, fg=FG_COLOR)
-        self.nmorph_display.grid(row=self.index + 1 + 1, column=2, sticky=tk.W)
+                                          font=FILENAME_FONT, width=28, anchor='w', bg=BG_COLOR,
+                                          fg=FG_COLOR)
+        self.file_name_display.grid(row=index, column=1, sticky=tk.W)
+        self.n_morph_display = tk.Label(frame, text="N/A", bg=BG_COLOR, fg=FG_COLOR)
+        self.n_morph_display.grid(row=index + 1, column=2, sticky=tk.W)
         self.can_load = False
 
     def update_gui_file(self, filename, appearance):
@@ -55,13 +57,14 @@ class Chromosome:
     def destroy_ui(self):
         self.file_button.destroy()
         self.file_name_display.destroy()
-        self.nmorph_display.destroy()
+        self.n_morph_display.destroy()
         del self.file_button
         del self.file_name_display
-        del self.nmorph_display
+        del self.n_morph_display
 
     def get_rating_button(self, rating):
         """rating button now are kept inside a zero based list, so decrement the one-based rating"""
+        assert MIN_RATING <= rating <= MAX_RATING
         return self.rating_buttons[rating - 1]
 
 
@@ -71,9 +74,11 @@ class Population:
 
     def get_chromosome(self, index):
         """index is one-based, but chromosomes are inside a zero-based list"""
+        assert 1 <= index <= ecc_utility.POP_SIZE
         c = self.chromosomes[index - 1]
         assert c.index == index - 1
         return c
+
 
 if __name__ == '__main__':
     print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

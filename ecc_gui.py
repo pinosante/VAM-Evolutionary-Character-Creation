@@ -1126,14 +1126,14 @@ class AppWindow(tk.Frame):
         else:
             number_of_morphs = "N/A"
         if self.generator.gen_counter == 0:  # after the app is initialized, the morph information is not being shown anymore
-            c.nmorph_display.configure(text=str(number_of_morphs))
+            c.n_morph_display.configure(text=str(number_of_morphs))
 
     def hide_parent_file_from_view(self, number):
         """ Replaces the file label of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
         c = self.population.chromosomes[number]
         c.file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
-        c.nmorph_display.configure(text="N/A")
+        c.n_morph_display.configure(text="N/A")
         c.can_load = False
 
     def restart_population(self, method):
