@@ -28,7 +28,7 @@ RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
 MIN_RATING = 1
 MAX_RATING = 5
-
+RATING_FONT_SIZE = 13
 
 if __name__ == '__main__':
     print(f'I am just a module, please launch the main script "{ecc_utility.MAIN_SCRIPT_NAME}".')

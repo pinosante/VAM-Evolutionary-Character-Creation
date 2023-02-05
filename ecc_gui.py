@@ -23,11 +23,11 @@ import ecc_utility
 from ecc_gui_constants import *
 from ecc_population import Population, Chromosome
 
-
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
 CHOOSE_ALL_TEXT = "Choose All Appearances"
 CHOOSE_FILES_TEXT = "Choose Files"
+
 
 ###
 ### Below are the settings for a dark theme
@@ -46,8 +46,6 @@ CHOOSE_FILES_TEXT = "Choose Files"
 # RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
 # RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
 # RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
-
-
 
 
 class AppWindow(tk.Frame):
@@ -75,7 +73,7 @@ class AppWindow(tk.Frame):
         self.titleframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
         self.titleframe.grid_columnconfigure(0, weight=1)
         self.titlelabel = tk.Label(self.titleframe, text="Initialization",
-                            font=(DEFAULT_FONT, 14, "bold"),
+                                   font=(DEFAULT_FONT, 14, "bold"),
                                    bg=BG_COLOR, fg=FG_COLOR)
         self.titlelabel.grid(row=0, column=0, sticky=tk.W)
 
@@ -85,17 +83,17 @@ class AppWindow(tk.Frame):
         self.vamdirframe = tk.Frame(self.master, bg=BG_COLOR)
         self.vamdirframe.grid(row=1, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
         self.vamdirtitlelabel = tk.Label(self.vamdirframe,
-                            text="Step 1: Select VAM Base Folder (with VaM.exe)",
-                            font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+                                         text="Step 1: Select VAM Base Folder (with VaM.exe)",
+                                         font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.vamdirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
         self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
-                            fg=BUTTON_FG_COLOR,
-                            activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                            command=lambda: self.select_vamdir())
+                                      fg=BUTTON_FG_COLOR,
+                                      activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                                      command=lambda: self.select_vamdir())
         self.vamdirbutton.grid(row=1, column=0, sticky=tk.W)
         self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT,
-                            font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
-                            bg=BG_COLOR, fg=FG_COLOR)
+                                    font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
+                                    bg=BG_COLOR, fg=FG_COLOR)
         self.vamdirlabel.grid(row=1, column=1, sticky=tk.W)
 
         ###
@@ -104,17 +102,17 @@ class AppWindow(tk.Frame):
         self.appearancedirframe = tk.Frame(self.master, bg=BG_COLOR)
         self.appearancedirframe.grid(row=2, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
         self.appearancedirtitlelabel = tk.Label(self.appearancedirframe,
-                            text="Step 2: Select Appearance folder to use",
-                            font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+                                                text="Step 2: Select Appearance folder to use",
+                                                font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         self.appearancedirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
         self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder",
-                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                            activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                            command=lambda: self.select_appearancedir())
+                                             bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                             activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                                             command=lambda: self.select_appearancedir())
         self.appearancedirbutton.grid(row=1, column=0, sticky=tk.W)
         self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT,
-                            font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
-                            bg=BG_COLOR, fg=FG_COLOR)
+                                           font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
+                                           bg=BG_COLOR, fg=FG_COLOR)
         self.appearancedirlabel.grid(row=1, column=1, sticky=tk.W)
 
         ###
@@ -123,29 +121,32 @@ class AppWindow(tk.Frame):
         self.childtemplateframe = tk.Frame(self.master, bg=BG_COLOR)
         self.childtemplateframe.grid(row=3, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
         self.childtemplatelabel = tk.Label(self.childtemplateframe,
-                            text="Step 3: Select Child Template Appearance", font=subtitlefont,
-                            bg=BG_COLOR, fg=FG_COLOR)
+                                           text="Step 3: Select Child Template Appearance", font=subtitlefont,
+                                           bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
 
         self.childtemplatebutton = {}
         self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female",
-                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                            command=lambda: self.select_template_file(["Female"],
-                            "Please Select Parent Template"))
+                                                       bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                                       activebackground=BUTTON_ACTIVE_COLOR,
+                                                       command=lambda: self.select_template_file(["Female"],
+                                                                                                 "Please Select Parent Template"))
         self.childtemplatebutton['Female'].grid(row=1, column=0, sticky=tk.W, padx=0)
         self.childtemplatebutton['Male'] = tk.Button(self.childtemplateframe, text="Male",
-                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                            command=lambda: self.select_template_file(["Male"],
-                            "Please Select Parent Template"))
+                                                     bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                                     activebackground=BUTTON_ACTIVE_COLOR,
+                                                     command=lambda: self.select_template_file(["Male"],
+                                                                                               "Please Select Parent Template"))
         self.childtemplatebutton['Male'].grid(row=1, column=1, sticky=tk.W, padx=0)
         self.childtemplatebutton['Futa'] = tk.Button(self.childtemplateframe, text="Futa",
-                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                            command=lambda: self.select_template_file(["Futa"],
-                            "Please Select Parent Template"))
+                                                     bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                                     activebackground=BUTTON_ACTIVE_COLOR,
+                                                     command=lambda: self.select_template_file(["Futa"],
+                                                                                               "Please Select Parent Template"))
         self.childtemplatebutton['Futa'].grid(row=1, column=2, sticky=tk.W, padx=0)
         self.childtemplate = dict()
         self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
-                            font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
+                                               font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplate['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
 
         ###
@@ -310,7 +311,6 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
 
-
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
             not found """
@@ -319,7 +319,7 @@ class AppWindow(tk.Frame):
                 appearancedir = NO_FILE_SELECTED_TEXT
             else:
                 appearancedir = ecc_utility.strip_dir_string_to_max_length(self.settings['appearance dir'],
-                                                               MAX_APPEARANCEDIR_STRING_LENGTH)
+                                                                           MAX_APPEARANCEDIR_STRING_LENGTH)
                 self.appearancedirbutton.configure(relief=tk.SUNKEN)
         else:
             appearancedir = NO_FILE_SELECTED_TEXT
@@ -335,7 +335,8 @@ class AppWindow(tk.Frame):
             if len(self.settings['VAM base dir']) < 1:
                 vamdir = NO_FILE_SELECTED_TEXT
             else:
-                vamdir = ecc_utility.strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH)
+                vamdir = ecc_utility.strip_dir_string_to_max_length(self.settings['VAM base dir'],
+                                                                    MAX_VAMDIR_STRING_LENGTH)
                 self.vamdirbutton.configure(relief=tk.SUNKEN)
         else:
             vamdir = NO_FILE_SELECTED_TEXT
@@ -345,7 +346,8 @@ class AppWindow(tk.Frame):
             if os.path.isfile(self.settings['child template']):
                 self.childtemplate['label'].configure(
                     text=self.create_template_labeltext(self.settings['child template']))
-                self.childtemplate['gender'] = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(self.settings['child template']))
+                self.childtemplate['gender'] = ecc_logic.get_appearance_gender(
+                    ecc_logic.load_appearance(self.settings['child template']))
                 self.press_childtemplate_button(self.childtemplate['gender'])
 
         if 'morph threshold' in self.settings:
@@ -520,7 +522,7 @@ class AppWindow(tk.Frame):
 
     def update_favorites_found_label(self):
         """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
-        #filenames = self.get_favorited_appearance_files()
+        # filenames = self.get_favorited_appearance_files()
         filenames = self.get_fav_appearance_filenames()
         txt = str(len(filenames)) + " favorite appearances found"
         self.favoritesinfo.configure(text=txt)
@@ -631,7 +633,8 @@ class AppWindow(tk.Frame):
         if os.path.exists(os.path.join(folder_path, "vam.exe")):
             self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
             self.vamdirlabel.configure(
-                text=ecc_utility.strip_dir_string_to_max_length(self.settings['VAM base dir'], MAX_VAMDIR_STRING_LENGTH))
+                text=ecc_utility.strip_dir_string_to_max_length(self.settings['VAM base dir'],
+                                                                MAX_VAMDIR_STRING_LENGTH))
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
@@ -832,7 +835,8 @@ class AppWindow(tk.Frame):
         self.overviewlabel.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
         self.generationlabel = tk.Label(self.overviewframe, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
         self.generationlabel.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gen_counter, font=FILENAME_FONT, bg=BG_COLOR,
+        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gen_counter, font=FILENAME_FONT,
+                                              bg=BG_COLOR,
                                               fg=FG_COLOR, anchor="w", justify=tk.LEFT)
         self.generationnumberlabel.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
         self.templatelabel = tk.Label(self.overviewframe, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
@@ -881,7 +885,7 @@ class AppWindow(tk.Frame):
 
         filenames = list(self.generator.appearances.keys())
         random.shuffle(filenames)
-        filename_generator = ecc_utility.generate_list_element(filenames)    
+        filename_generator = ecc_utility.generate_list_element(filenames)
 
         appearance_templates = list()
         for filename in filename_generator:
@@ -895,7 +899,7 @@ class AppWindow(tk.Frame):
         for c in self.population.chromosomes:
             morph_list = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(c.filename))
             updated_appearance = ecc_logic.save_morph_to_appearance(
-                    morph_list, appearance_templates[c.index])
+                morph_list, appearance_templates[c.index])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, c.filename)
 
@@ -1064,7 +1068,7 @@ class AppWindow(tk.Frame):
         name = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
 
         self.appearancebutton[str(fileindex)] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR, command=lambda
-                                                filename=filename: self.end_file_selection_with_thumbnails(filename))
+            filename=filename: self.end_file_selection_with_thumbnails(filename))
         self.appearancebutton[str(fileindex)].grid(row=row * 2, column=column, padx=0, pady=0)
         self.appearancebutton[str(fileindex)].configure(image=thumbnail)
         self.appearancebutton[str(fileindex)].bind("<Enter>",
@@ -1169,7 +1173,8 @@ class AppWindow(tk.Frame):
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
         if self.generator.gen_counter == 0:
-            ecc_utility.save_settings(self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
+            ecc_utility.save_settings(
+                self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
             elif method == "Random Crossover":
@@ -1195,7 +1200,7 @@ class AppWindow(tk.Frame):
         for i in range(ecc_utility.POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
             child_appearance = ecc_logic.fuse_characters(random_parents[0].filename, random_parents[1].filename,
-                                               self.settings)
+                                                         self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
         self.update_population(new_population)
@@ -1309,13 +1314,13 @@ class AppWindow(tk.Frame):
 
         # parse rate child commands
         commands = command.split(";")
-        commands = [x.lstrip().rstrip() for x in commands]
+        commands = [x.strip() for x in commands]
         if "child" in commands[0].lower() and "rate" in commands[1].lower():
             child = commands[0].split(" ")
             child = int(child[1])
             rating = commands[1].split(" ")
             rating = int(rating[1])
-            self.press_rating_button(child, rating)
+            self.population.get_chromosome(child).press_rating_button(rating)
         # the random number in commands[1] for the if statements below are not used in any way by this script, except
         # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
         # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
@@ -1380,8 +1385,9 @@ class AppWindow(tk.Frame):
         try:
             with open(path, encoding="utf-8") as f:
                 text_json = json.load(f)
-            text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json['storables'], id_string, needed_key,
-                                                                        replacement_string)
+            text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json['storables'], id_string,
+                                                                                  needed_key,
+                                                                                  replacement_string)
             with open(path, "w", encoding="utf-8") as json_file:
                 json.dump(text_json, json_file, indent=3)
         except IOError as e:
@@ -1440,8 +1446,8 @@ class AppWindow(tk.Frame):
 
     def reset_ratings(self):
         """ Clear all ratings in the GUI. """
-        for chromo in self.population.chromosomes:
-            self.press_rating_button(chromo.index + 1, ecc_utility.INITIAL_RATING)
+        for c in self.population.chromosomes:
+            c.press_rating_button(ecc_utility.INITIAL_RATING)
 
     def get_appearance_filenames(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
@@ -1471,7 +1477,6 @@ class AppWindow(tk.Frame):
         filenames = [c.filename for c in self.population.chromosomes if c.can_load]
         self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
-
 
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
@@ -1525,7 +1530,8 @@ class AppWindow(tk.Frame):
         threshold = self.settings['morph threshold']
 
         for i in range(1, ecc_utility.POP_SIZE + 1):
-            txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(ecc_utility.POP_SIZE) + ")"
+            txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(
+                ecc_utility.POP_SIZE) + ")"
             self.generatechild.configure(text=txt, bg="red")
             self.generatechild.update()
             self.broadcast_message_to_vam_rating_blocker(txt)
@@ -1549,7 +1555,6 @@ class AppWindow(tk.Frame):
         self.generatechild.configure(text="Generate Next Population")
         self.generatechild.update()
         return
-
 
     @staticmethod
     def get_means_from_morphlists(morph_lists):
@@ -1620,34 +1625,10 @@ class AppWindow(tk.Frame):
         self.changetemplatebuttonlabel = tk.Label(self.changetemplateframe, text=label_txt, width=14, anchor='w',
                                                   font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.changetemplatebuttonlabel.grid(row=0, column=1, sticky=tk.W, padx=0)
-
-        rating_font_size = 13
         self.generatechild.configure(width=27, height=6)
-
         for c in self.population.chromosomes:
             c.destroy_ui()
-
-        for c in self.population.chromosomes:
-            index = c.index + 1
-            c.child_label = tk.Label(self.parentselectionframe, text=f'Child {index}',
-                                        font=(DEFAULT_FONT, 11, 'bold'), width=10, anchor= 'w',
-                                        bg=BG_COLOR, fg=FG_COLOR)
-            c.child_label.grid(row=index + 1, column=0, sticky=tk.W)
-            c.rating = ecc_utility.INITIAL_RATING
-            c.rating_buttons = list()
-            for j in range(1, 6):
-                new_rating_button = tk.Button(self.parentselectionframe, width=2,
-                              font=( DEFAULT_FONT, rating_font_size, 'bold'),
-                              bg=RATING_RAISED_BG_COLOR,
-                              fg=RATING_RAISED_FG_COLOR,
-                              activebackground=RATING_ACTIVE_BG_COLOR,
-                              activeforeground=RATING_ACTIVE_FG_COLOR,
-                              text=str(j), command=lambda i=index, r=j: self.press_rating_button(i, r))
-                new_rating_button.grid(row=index, column=j)
-                new_rating_button.bind('<Enter>', lambda e, i=index, r=j: self.on_enter_rating_button(i, r, event=e))
-                new_rating_button.bind('<Leave>', lambda e, i=index, r=j: self.on_leave_rating_button(i, r, event=e))
-                c.rating_buttons.append(new_rating_button)
-
+            c.initialize_rating_buttons(self.parentselectionframe)
 
     def press_restart_button(self, givewarning=True):
         if givewarning:
@@ -1660,36 +1641,6 @@ class AppWindow(tk.Frame):
         print("We are restarting")
         self.restart_population(self.settings['method'])
         return True
-
-    def on_enter_rating_button(self, child, rating, event=None):
-        """ Show hover effect when entering mouse over a rating button. """
-        c = self.population.get_chromosome(child)
-        if rating == c.rating:
-            return
-        crb = c.get_rating_button(rating)
-        crb['background'] = RATING_HOVER_BG_COLOR
-        crb['foreground'] = RATING_HOVER_FG_COLOR
-
-    def on_leave_rating_button(self, child, rating, event=None):
-        """ Show hover effect when exiting mouse over a rating button. """
-        c = self.population.get_chromosome(child)
-        if rating == c.rating:
-            return
-        crb = c.get_rating_button(rating)
-        crb['background'] = RATING_RAISED_BG_COLOR
-        crb['foreground'] = RATING_RAISED_FG_COLOR
-
-    def press_rating_button(self, child, rating):
-        """ Presses the rating button. """
-        c = self.population.get_chromosome(child)
-        crb = c.get_rating_button(rating)
-        crb.configure(relief=tk.SUNKEN, bg=RATING_SUNKEN_BG_COLOR, fg=RATING_SUNKEN_FG_COLOR)
-        c.rating = rating
-
-        # reset other buttons
-        for i, b in enumerate(c.rating_buttons):
-            if i+1 != rating:
-                b.configure(relief=tk.RAISED, bg=RATING_RAISED_BG_COLOR, fg=RATING_RAISED_FG_COLOR)
 
 
 if __name__ == '__main__':
