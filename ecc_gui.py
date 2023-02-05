@@ -753,7 +753,7 @@ class AppWindow(tk.Frame):
     def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
         if filename in self.generator.appearances:
-            self.population.chromosomes[number].update_gui_file(filename, self.generator.appearances[filename])
+            self.population.get_chromosome(number).update_gui_file(filename, self.generator.appearances[filename])
 
     def select_template_file(self, genderlist, title):
         """ Called by the Female, Male and Futa load template file buttons. Opens a file selection dialogue which
