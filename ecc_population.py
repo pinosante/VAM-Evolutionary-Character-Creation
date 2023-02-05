@@ -25,18 +25,19 @@ class Chromosome:
 
     def initialize_ui(self, frame, select_file_callback):
         index = self.index + 1
+        row = index + 1
         self.file_button = tk.Button(frame, text=f'Parent {index}',
                                      bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                                      activebackground=BUTTON_ACTIVE_COLOR,
                                      # todo: fix this! select_file is still from gui, but cannot be accessed here
                                      command=lambda s=select_file_callback: self.select_file(s), width=10)
-        self.file_button.grid(row=index, column=0, sticky=tk.W)
+        self.file_button.grid(row=row, column=0, sticky=tk.W)
         self.file_name_display = tk.Label(frame, text=NO_FILE_SELECTED_TEXT,
                                           font=FILENAME_FONT, width=28, anchor='w', bg=BG_COLOR,
                                           fg=FG_COLOR)
-        self.file_name_display.grid(row=index, column=1, sticky=tk.W)
+        self.file_name_display.grid(row=row, column=1, sticky=tk.W)
         self.n_morph_display = tk.Label(frame, text="N/A", bg=BG_COLOR, fg=FG_COLOR)
-        self.n_morph_display.grid(row=index + 1, column=2, sticky=tk.W)
+        self.n_morph_display.grid(row=row, column=2, sticky=tk.W)
         self.can_load = False
 
     def update_gui_file(self, filename, appearance):
