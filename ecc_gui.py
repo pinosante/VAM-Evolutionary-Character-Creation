@@ -683,15 +683,16 @@ class AppWindow(tk.Frame):
         """ Updates the Initialize Population button, by checking if all necessary files and settings are correct. If
             not, shows in the button what items are missing and makes the button do nothing. If criteria are met, button
             color is changed to green and button functionality is restored. """
-        isok, missing = self.can_generate_new_population()
-        if isok:
+        missing_messages = self.can_generate_new_population()
+        if len(missing_messages) == 0:
             self.generatechild.configure(relief="raised",
                                          bg="lightgreen", font=(DEFAULT_FONT, 12, "bold"), text="Initialize Population",
                                          width=52, height=6,
                                          state='normal',
                                          command=lambda: self.generate_next_population(self.settings['method']))
         else:
-            txt = ("Cannot Initialize Population:\n" + missing).rstrip()
+            messages = '\n'.join(missing_messages)
+            txt = f'Cannot Initialize Population:\n{messages}'
             self.generatechild.configure(relief=tk.RAISED, bg="#D0D0D0",
                                          font=(DEFAULT_FONT, 12, "bold"),
                                          width=52, height=6,
@@ -699,31 +700,22 @@ class AppWindow(tk.Frame):
                                          text=txt,
                                          state='disabled')
 
+    def is_setting_valid(self, setting_name):
+        return setting_name in self.settings and len(self.settings[setting_name]) != 0
+
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
-            False and string 'missing' with all missing features, or True if all criteria are met. """
-        missing = ""
-
-        if 'VAM base dir' in self.settings:
-            if len(self.settings['VAM base dir']) > 0:
-                pass
-            else:
-                missing += "· Please select the VAM base folder\n"
+            False and message list with all missing features, or True if all criteria are met. """
+        messages = list()
+        if not self.is_setting_valid('VAM base dir'):
+            messages.append('· Please select the VAM base folder')
+        if not self.is_setting_valid('appearance dir'):
+            messages.append('· Please select an Appearance folder')
+        if not self.is_setting_valid('appearance dir'):
+            messages.append('· Please select a child template appearance')
+        if 'source files' not in self.settings:
+            messages.append('· Please have at least 2 Parent files')
         else:
-            missing += "· Please select the VAM base folder\n"
-
-        if 'appearance dir' in self.settings:
-            if len(self.settings['appearance dir']) > 0:
-                pass
-            else:
-                missing += "· Please select an Appearance folder\n"
-        else:
-            missing += "· Please select an Appearance folder\n"
-
-        if 'child template' not in self.settings:
-            missing += "· Please select a child template appearance\n"
-
-        if 'source files' in self.settings:
             if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
                 source_files = self.get_fav_appearance_filenames()
             elif self.settings['source files'] == CHOOSE_ALL_TEXT:
@@ -731,24 +723,14 @@ class AppWindow(tk.Frame):
             elif self.settings['source files'] == CHOOSE_FILES_TEXT:
                 source_files = [c.filename for c in self.population.chromosomes if c.can_load]
             else:
-                source_files = []
-            if len(source_files) >= 2:
-                pass
-            else:
-                missing += "· Please have at least 2 Parent files\n"
-        else:
-            missing += "· Please have at least 2 Parent files\n"
-
+                source_files = list()
+            if len(source_files) < 2:
+                messages.append('· Please have at least 2 Parent files')
         if 'morph threshold' not in self.settings:
-            missing += "· Please enter correct value for option A\n"
-
+            messages.append('· Please enter a valid value for min morph number')
         if 'min morph threshold' not in self.settings:
-            missing += "· Please enter correct value for option B\n"
-
-        if len(missing) == 0:
-            return True, ""
-        else:
-            return False, missing
+            messages.append('· Please enter a valid value for min morph threshold')
+        return messages
 
     def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
