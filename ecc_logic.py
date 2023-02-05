@@ -16,9 +16,6 @@ from PIL import ImageTk, Image, UnidentifiedImageError
 import ecc_utility
 
 
-MALE = 'Male'
-FEMALE = 'Female'
-FUTA = 'Futa'
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"

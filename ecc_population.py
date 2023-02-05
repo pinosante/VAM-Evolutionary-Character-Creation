@@ -5,7 +5,7 @@ from ecc_gui_constants import *
 
 
 class Chromosome:
-    """todo"""
+    """todo: split chromosome into GUI, BL and DAL part"""
     def __init__(self, index):
         # data -- todo: decide if indices should be start with 0 or with 1
         self.index = index

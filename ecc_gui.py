@@ -19,7 +19,7 @@ from tkinter import ttk
 import numpy as np
 
 import ecc_logic
-import ecc_utility
+from ecc_utility import *
 from ecc_gui_constants import *
 from ecc_population import Population, Chromosome
 
@@ -125,29 +125,15 @@ class AppWindow(tk.Frame):
                                            bg=BG_COLOR, fg=FG_COLOR)
         self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
 
-        self.childtemplatebutton = {}
-        self.childtemplatebutton['Female'] = tk.Button(self.childtemplateframe, text="Female",
-                                                       bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                                       activebackground=BUTTON_ACTIVE_COLOR,
-                                                       command=lambda: self.select_template_file(["Female"],
-                                                                                                 "Please Select Parent Template"))
-        self.childtemplatebutton['Female'].grid(row=1, column=0, sticky=tk.W, padx=0)
-        self.childtemplatebutton['Male'] = tk.Button(self.childtemplateframe, text="Male",
-                                                     bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                                     activebackground=BUTTON_ACTIVE_COLOR,
-                                                     command=lambda: self.select_template_file(["Male"],
-                                                                                               "Please Select Parent Template"))
-        self.childtemplatebutton['Male'].grid(row=1, column=1, sticky=tk.W, padx=0)
-        self.childtemplatebutton['Futa'] = tk.Button(self.childtemplateframe, text="Futa",
-                                                     bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                                     activebackground=BUTTON_ACTIVE_COLOR,
-                                                     command=lambda: self.select_template_file(["Futa"],
-                                                                                               "Please Select Parent Template"))
-        self.childtemplatebutton['Futa'].grid(row=1, column=2, sticky=tk.W, padx=0)
-        self.childtemplate = dict()
-        self.childtemplate['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
-                                               font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        self.childtemplate['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
+        self.child_template_button = {
+            FEMALE: self.create_child_template_button(self, FEMALE, 0),
+            MALE: self.create_child_template_button(self, MALE, 1),
+            FUTA: self.create_child_template_button(self, FUTA, 2)
+        }
+        self.child_template = dict()
+        self.child_template['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
+                                                font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
+        self.child_template['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
 
         ###
         ### PARENT FILES
@@ -188,7 +174,7 @@ class AppWindow(tk.Frame):
         self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
 
         # initialize population and chromosomes
-        self.population = Population(ecc_utility.POP_SIZE)
+        self.population = Population(POP_SIZE)
         for chromo in self.population.chromosomes:
             chromo.initialize_ui(self.parentselectionframe)
 
@@ -311,6 +297,15 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
 
+    def create_child_template_button(self, gender_text, column):
+        button = tk.Button(self.childtemplateframe, text=gender_text,
+                           bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                           activebackground=BUTTON_ACTIVE_COLOR,
+                           command=lambda: self.select_template_file([gender_text],
+                                                                     'Please Select Parent Template'))
+        button.grid(row=1, column=column, sticky=tk.W, padx=0)
+        return button
+
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
             not found """
@@ -344,11 +339,11 @@ class AppWindow(tk.Frame):
 
         if 'child template' in self.settings:
             if os.path.isfile(self.settings['child template']):
-                self.childtemplate['label'].configure(
+                self.child_template['label'].configure(
                     text=self.create_template_labeltext(self.settings['child template']))
-                self.childtemplate['gender'] = ecc_logic.get_appearance_gender(
+                self.child_template['gender'] = ecc_logic.get_appearance_gender(
                     ecc_logic.load_appearance(self.settings['child template']))
-                self.press_childtemplate_button(self.childtemplate['gender'])
+                self.press_childtemplate_button(self.child_template['gender'])
 
         if 'morph threshold' in self.settings:
             self.threshold_var.set(self.settings['morph threshold'])
@@ -425,9 +420,9 @@ class AppWindow(tk.Frame):
         all_genders = ['Female', 'Male', 'Futa']
         remaining_genders = [g for g in all_genders if g != gender]
         if gender in all_genders:
-            self.childtemplatebutton[gender].configure(relief=tk.SUNKEN)
+            self.child_template_button[gender].configure(relief=tk.SUNKEN)
         for remaining in remaining_genders:
-            self.childtemplatebutton[remaining].configure(relief=tk.RAISED)
+            self.child_template_button[remaining].configure(relief=tk.RAISED)
 
     def create_template_labeltext(self, filename):
         """ Returns a formatted label text for a given Appearance file with
@@ -435,7 +430,7 @@ class AppWindow(tk.Frame):
         template_gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
         # labeltxt = os.path.basename(filename)[7:-4] + " (" + template_gender + " Template)"
         labeltxt = os.path.basename(filename)[7:-4]
-        self.childtemplate['gender'] = template_gender
+        self.child_template['gender'] = template_gender
         return labeltxt
 
     def track_threshold_change(self, var, index, mode):
@@ -583,8 +578,8 @@ class AppWindow(tk.Frame):
             Will immediately return (do nothing) if there is no child template available. If child is available, will
             show a file selection window filtered for matching genders. Updates the GUI with choices and saves to
             settings. """
-        if 'gender' in self.childtemplate:
-            match = ecc_logic.matching_genders(self.childtemplate['gender'])
+        if 'gender' in self.child_template:
+            match = ecc_logic.matching_genders(self.child_template['gender'])
         else:
             return
 
@@ -767,19 +762,19 @@ class AppWindow(tk.Frame):
         filename = self.file_selection_with_thumbnails(genderlist, title, filteronmorphcount=False)
 
         if filename == "":  # user did not select files
-            self.childtemplate['label'].configure(text=NO_FILE_SELECTED_TEXT)
+            self.child_template['label'].configure(text=NO_FILE_SELECTED_TEXT)
             self.press_childtemplate_button(None)
-            if 'gender' in self.childtemplate:
-                del self.childtemplate['gender']
+            if 'gender' in self.child_template:
+                del self.child_template['gender']
             if 'child template' in self.settings:
                 del self.settings['child template']
             self.update_initialize_population_button()
             self.file_selection_popup.destroy()
             self.update_found_labels()
             return
-        self.childtemplate['label'].configure(text=self.create_template_labeltext(filename))
-        self.childtemplate['gender'] = self.generator.gender[filename]
-        self.press_childtemplate_button(self.childtemplate['gender'])
+        self.child_template['label'].configure(text=self.create_template_labeltext(filename))
+        self.child_template['gender'] = self.generator.gender[filename]
+        self.press_childtemplate_button(self.child_template['gender'])
         self.settings['child template'] = filename
         for i in range(1, ecc_utility.POP_SIZE + 1):
             self.update_morph_info(i)
@@ -790,7 +785,7 @@ class AppWindow(tk.Frame):
         """ Called by the change template button in the rating windows. Opens a file selection dialogue which
             specifically filters for the gender of the template which is currently being used. If user does not
             select a valid new template file, the old template file is used. """
-        filename = self.file_selection_with_thumbnails(ecc_logic.matching_genders(self.childtemplate['gender']), title,
+        filename = self.file_selection_with_thumbnails(ecc_logic.matching_genders(self.child_template['gender']), title,
                                                        filteronmorphcount=False)
         if filename == "":  # user did not select files
             return
@@ -803,8 +798,8 @@ class AppWindow(tk.Frame):
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
-        if not ecc_logic.is_compatible_gender(gender, self.childtemplate['gender']):
-            matches = ecc_logic.matching_genders(self.childtemplate['gender'])
+        if not ecc_logic.is_compatible_gender(gender, self.child_template['gender']):
+            matches = ecc_logic.matching_genders(self.child_template['gender'])
             if len(matches) > 1:  # Female and Futa
                 selectmsg = "Please select a Female or Futa as template."
             else:
@@ -893,7 +888,7 @@ class AppWindow(tk.Frame):
                 break
             appearance = ecc_logic.load_appearance(filename)
             gender = ecc_logic.get_appearance_gender(appearance)
-            if gender == self.childtemplate['gender']:
+            if gender == self.child_template['gender']:
                 appearance_templates.append(appearance)
 
         for c in self.population.chromosomes:
@@ -1103,8 +1098,8 @@ class AppWindow(tk.Frame):
         else:
             threshold = float(threshold)
 
-        if 'gender' in self.childtemplate:
-            template_gender = self.childtemplate['gender']
+        if 'gender' in self.child_template:
+            template_gender = self.child_template['gender']
         else:
             template_gender = ""
 
@@ -1459,9 +1454,9 @@ class AppWindow(tk.Frame):
             filenames = list(self.generator.appearances.keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
-        if 'gender' in self.childtemplate:
+        if 'gender' in self.child_template:
             filenames = self.filter_filename_list_on_genders(filenames,
-                                                             ecc_logic.matching_genders(self.childtemplate['gender']))
+                                                             ecc_logic.matching_genders(self.child_template['gender']))
             filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
