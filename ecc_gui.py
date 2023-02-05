@@ -716,15 +716,7 @@ class AppWindow(tk.Frame):
         if 'source files' not in self.settings:
             messages.append('· Please have at least 2 Parent files')
         else:
-            if self.settings['source files'] == CHOOSE_ALL_FAVORITES_TEXT:
-                source_files = self.get_fav_appearance_filenames()
-            elif self.settings['source files'] == CHOOSE_ALL_TEXT:
-                source_files = self.get_all_appearance_filenames()
-            elif self.settings['source files'] == CHOOSE_FILES_TEXT:
-                source_files = [c.filename for c in self.population.chromosomes if c.can_load]
-            else:
-                source_files = list()
-            if len(source_files) < 2:
+            if len(self.select_appearances_strategies[self.settings['source files']]()) < 2:
                 messages.append('· Please have at least 2 Parent files')
         if 'morph threshold' not in self.settings:
             messages.append('· Please enter a valid value for min morph number')
