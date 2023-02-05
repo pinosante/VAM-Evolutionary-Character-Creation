@@ -176,7 +176,7 @@ class AppWindow(tk.Frame):
         # initialize population and chromosomes
         self.population = Population(POP_SIZE, settings)
         for chromo in self.population.chromosomes:
-            chromo.initialize_ui(self.parentselectionframe)
+            chromo.initialize_ui(self.parentselectionframe, self.select_file)
 
         ###
         ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)

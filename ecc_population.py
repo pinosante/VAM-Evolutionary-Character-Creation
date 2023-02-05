@@ -1,5 +1,4 @@
 """todo"""
-import os
 import tkinter as tk
 from ecc_gui_constants import *
 from ecc_utility import *
@@ -24,12 +23,13 @@ class Chromosome:
         self.n_morph_display = None
         self.rating_buttons = list()
 
-    def initialize_ui(self, frame):
+    def initialize_ui(self, frame, select_file_callback):
         index = self.index + 1
         self.file_button = tk.Button(frame, text=f'Parent {index}',
                                      bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                                      activebackground=BUTTON_ACTIVE_COLOR,
-                                     command=lambda i=index: self.select_file(i), width=10)
+                                     # todo: fix this! select_file is still from gui, but cannot be accessed here
+                                     command=lambda s=select_file_callback: self.select_file(s), width=10)
         self.file_button.grid(row=index, column=0, sticky=tk.W)
         self.file_name_display = tk.Label(frame, text=NO_FILE_SELECTED_TEXT,
                                           font=FILENAME_FONT, width=28, anchor='w', bg=BG_COLOR,
@@ -59,21 +59,19 @@ class Chromosome:
         assert MIN_RATING <= rating <= MAX_RATING
         return self.rating_buttons[rating - 1]
 
-    def on_enter_rating_button(self, rating, event=None):
+    def on_enter_rating_button(self, rating):
         """ Show hover effect when entering mouse over a rating button. """
         if rating == self.rating:
             return
         crb = self.get_rating_button(rating)
-        crb['background'] = RATING_HOVER_BG_COLOR
-        crb['foreground'] = RATING_HOVER_FG_COLOR
+        crb.configure(bg=RATING_HOVER_BG_COLOR, fg=RATING_HOVER_FG_COLOR)
 
-    def on_leave_rating_button(self, rating, event=None):
+    def on_leave_rating_button(self, rating):
         """ Show hover effect when exiting mouse over a rating button. """
         if rating == self.rating:
             return
         crb = self.get_rating_button(rating)
-        crb['background'] = RATING_RAISED_BG_COLOR
-        crb['foreground'] = RATING_RAISED_FG_COLOR
+        crb.configure(bg=RATING_RAISED_BG_COLOR, fg=RATING_RAISED_FG_COLOR)
 
     def update_rating(self, rating):
         """ Presses the rating button. """
@@ -103,13 +101,17 @@ class Chromosome:
                                           activeforeground=RATING_ACTIVE_FG_COLOR,
                                           text=str(j), command=lambda r=j: self.update_rating(r))
             new_rating_button.grid(row=index, column=j)
-            new_rating_button.bind('<Enter>', lambda e, r=j: self.on_enter_rating_button(r, event=e))
-            new_rating_button.bind('<Leave>', lambda e, r=j: self.on_leave_rating_button(r, event=e))
+            new_rating_button.bind('<Enter>', lambda r=j: self.on_enter_rating_button(r))
+            new_rating_button.bind('<Leave>', lambda r=j: self.on_leave_rating_button(r))
             self.rating_buttons.append(new_rating_button)
 
     def update_appearance(self, appearance, filename):
         self.appearance = appearance
         self.filename = os.path.join(filename, f'Preset_{CHILDREN_FILENAME_PREFIX}{self.index + 1}.vap')
+
+    def select_file(self, select_file_callback):
+        """event handler. this is required because the gui has some work to do if a file is selected"""
+        select_file_callback(self.index + 1)
 
 
 class Population:
