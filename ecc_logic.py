@@ -17,7 +17,6 @@ from ecc_utility import *
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
-STORABLES = 'storables'
 
 class Generator:
     def __init__(self, settings):

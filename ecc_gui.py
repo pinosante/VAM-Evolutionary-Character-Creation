@@ -1354,7 +1354,7 @@ class AppWindow(tk.Frame):
         try:
             with open(path, encoding="utf-8") as f:
                 text_json = json.load(f)
-            text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json['storables'], id_string,
+            text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json[STORABLES], id_string,
                                                                                   needed_key,
                                                                                   replacement_string)
             with open(path, "w", encoding="utf-8") as json_file:
@@ -1392,7 +1392,7 @@ class AppWindow(tk.Frame):
             for c in self.population.chromosomes:
                 current += c.rating
                 if current > pick:
-                    if not c in choices:
+                    if c not in choices:
                         choices.append(c)
                     break
 
@@ -1402,13 +1402,13 @@ class AppWindow(tk.Frame):
         """ Returns the children appearances where the rating is the maximum rating that the user selected.
             If the maximum selected rating is lower than MINIMAL_RATING_FOR_KEEP_ELITES, then no appearances are
             returned. Returns a maximum of appearances equal to user setting 'max kept elites'. """
-        max_selected_rating = max(chromo.rating for chromo in self.population.chromosomes)
+        max_selected_rating = max(c.rating for c in self.population.chromosomes)
         if max_selected_rating < MINIMAL_RATING_FOR_KEEP_ELITES:
-            return []
+            return list()
 
         # Select all appearances with maximum rating.
-        appearances_with_maximum_rating = [chromo.appearance for chromo in self.population.chromosomes
-                                           if chromo.rating == max_selected_rating]
+        appearances_with_maximum_rating = [c.appearance for c in self.population.chromosomes
+                                           if c.rating == max_selected_rating]
 
         # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
         return appearances_with_maximum_rating[:self.settings['max kept elites']]
@@ -1481,21 +1481,17 @@ class AppWindow(tk.Frame):
 
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
-
         appearances = [self.generator.appearances[f] for f in filenames]
-
         print(f"Source files: {source_files} ({len(appearances)} Files)")
-
-        morphlists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
-        morphnames = ecc_logic.get_all_morph_names_in_morph_lists(morphlists)
-        morphlists = ecc_logic.pad_morph_names_to_morph_lists(morphlists, morphnames, filenames)
-        morphlists = ecc_logic.dedupe_morphs(morphlists)
-        means = self.get_means_from_morphlists(morphlists)
+        morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
+        morph_names = ecc_logic.get_all_morph_names_in_morph_lists(morph_lists)
+        morph_lists = ecc_logic.pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
+        morph_lists = ecc_logic.dedupe_morphs(morph_lists)
+        means = self.get_means_from_morphlists(morph_lists)
         means = list(means.values())
-
-        covariances = self.get_cov_from_morph_lists(morphlists)
+        covariances = self.get_cov_from_morph_lists(morph_lists)
         new_population = list()
-        templatefile = self.settings['child template']
+        template_file = self.settings['child template']
         threshold = self.settings['morph threshold']
 
         for i in range(1, POP_SIZE + 1):
@@ -1507,13 +1503,13 @@ class AppWindow(tk.Frame):
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
             sample = [str(x) for x in sample]
-            new_morphlist = copy.deepcopy(morphlists[0])
-            for i, morph in enumerate(new_morphlist):
-                morph['value'] = sample[i]
-            new_morphlist = ecc_logic.filter_morphs_below_threshold(new_morphlist, threshold)
-            child_appearance = ecc_logic.load_appearance(templatefile)
-            print("Using as appearance template:", templatefile)
-            child_appearance = ecc_logic.save_morph_to_appearance(new_morphlist, child_appearance)
+            new_morph_list = copy.deepcopy(morph_lists[0])
+            for j, morph in enumerate(new_morph_list):
+                morph['value'] = sample[j]
+            new_morph_list = ecc_logic.filter_morphs_below_threshold(new_morph_list, threshold)
+            child_appearance = ecc_logic.load_appearance(template_file)
+            print("Using as appearance template:", template_file)
+            child_appearance = ecc_logic.save_morph_to_appearance(new_morph_list, child_appearance)
             new_population.append(child_appearance)
 
         self.save_population(new_population)
@@ -1556,8 +1552,8 @@ class AppWindow(tk.Frame):
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
-            savefilename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i + 1) + ".vap")
-            ecc_logic.save_appearance(child_appearance, savefilename)
+            save_filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i + 1) + ".vap")
+            ecc_logic.save_appearance(child_appearance, save_filename)
         return True
 
     def update_population(self, new_appearances):
@@ -1571,9 +1567,8 @@ class AppWindow(tk.Frame):
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
         self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
-        self.columninfo['1'].destroy()
-        self.columninfo['2'].destroy()
-        self.columninfo['3'].destroy()
+        for i in [1, 2, 3]:
+            self.columninfo[str(i)].destroy()
 
         self.titlerestartbutton = tk.Button(self.titleframe, text="Restart", anchor=tk.E, bg=BUTTON_BG_COLOR,
                                             fg=BUTTON_FG_COLOR, relief=tk.RAISED,
