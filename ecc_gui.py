@@ -388,8 +388,10 @@ class AppWindow(tk.Frame):
             self.settings['thumbnails per row'] = 5
 
         if 'generation counter' in self.settings:
-            answer = messagebox.askquestion("Continue last session?",
-                                            f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
+            gc = self.settings["generation counter"]
+            answer = messagebox.askquestion('Continue last session?',
+                                            f"""Your last session ended at Generation {gc}.
+Do you want to continue that session?""")
             if answer == "yes":
                 self.generator.gen_counter = self.settings['generation counter']
                 self.continue_last_session()
@@ -510,8 +512,7 @@ class AppWindow(tk.Frame):
     def update_all_appearances_found_label(self):
         """ Counts the amount of appearance available in the default VAM directory and updates the GUI """
         filenames = self.get_all_appearance_filenames()
-        txt = str(len(filenames)) + " appearances found"
-        self.favoritesinfo.configure(text=txt)
+        self.favoritesinfo.configure(text=f'{len(filenames)} appearances found')
         self.update_initialize_population_button()
         self.favoriteslabel.configure(text="Step 5: All Appearances Chosen")
 
@@ -519,8 +520,7 @@ class AppWindow(tk.Frame):
         """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
         # filenames = self.get_favorited_appearance_files()
         filenames = self.get_fav_appearance_filenames()
-        txt = str(len(filenames)) + " favorite appearances found"
-        self.favoritesinfo.configure(text=txt)
+        self.favoritesinfo.configure(text=f'{len(filenames)} favorite appearances found')
         self.favoriteslabel.configure(text="Step 5: All Favorited Appearances Chosen")
         self.update_initialize_population_button()
 
@@ -562,7 +562,7 @@ class AppWindow(tk.Frame):
             settings. """
         self.gaussianbutton.configure(relief=tk.SUNKEN)
         self.randomcrossoverbutton.configure(relief=tk.RAISED)
-        self.settings['method'] = "Gaussian Samples"
+        self.settings['method'] = 'Gaussian Samples'
         self.update_initialize_population_button()
 
     def choose_random_crossover(self):
@@ -570,7 +570,7 @@ class AppWindow(tk.Frame):
             settings. """
         self.gaussianbutton.configure(relief=tk.RAISED)
         self.randomcrossoverbutton.configure(relief=tk.SUNKEN)
-        self.settings['method'] = "Random Crossover"
+        self.settings['method'] = 'Random Crossover'
         self.update_initialize_population_button()
 
     def select_file(self, number):
@@ -585,7 +585,7 @@ class AppWindow(tk.Frame):
 
         filename = self.file_selection_with_thumbnails(match, "Please select a parent Appearance")
 
-        if filename == "":  # user did not select files
+        if filename == '':  # user did not select files
             self.remove_parent_file_from_gui(number)
             return
 
@@ -618,14 +618,14 @@ class AppWindow(tk.Frame):
         """ Shows filedialog to find the location of the VAM.exe. Choice is validated, GUI updated and settings
             saved. """
         # try to open the file dialog in the last known location
-        vamdir = ""
+        vamdir = ''
         if 'VAM base dir' in self.settings:
             if len(self.settings['VAM base dir']) > 0:
                 vamdir = self.settings['VAM base dir']
 
         folder_path = tk.filedialog.askdirectory(initialdir=vamdir,
                                                  title="Please select the folder which has the VAM.exe file")
-        if os.path.exists(os.path.join(folder_path, "vam.exe")):
+        if os.path.exists(os.path.join(folder_path, 'vam.exe')):
             self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
             self.vamdirlabel.configure(
                 text=strip_dir_string_to_max_length(self.settings['VAM base dir'],
@@ -645,7 +645,7 @@ class AppWindow(tk.Frame):
     def select_appearancedir(self):
         """ Shows filedialog to select the appearance directory, GUI updated and settings saved. """
         # try to open the file dialog in the last known location
-        appearancedir = ""
+        appearancedir = ''
         if 'appearance dir' in self.settings:
             if len(self.settings['appearance dir']) > 0:
                 appearancedir = self.settings['appearance dir']
@@ -669,11 +669,12 @@ class AppWindow(tk.Frame):
         self.update_initialize_population_button()
         self.update_found_labels()
 
+    @property
     def get_vam_default_appearance_path(self):
         """ Returns the path to the default Appearance directory based on the VAM base path, or returns '' if no base path
             is found in settings. """
-        path = ""
-        if "VAM base dir" in self.settings:
+        path = ''
+        if 'VAM base dir' in self.settings:
             if len(self.settings['VAM base dir']) > 0:
                 appearance_path = "Custom/Atom/Person/Appearance"
                 path = os.path.join(self.settings['VAM base dir'], appearance_path)
@@ -705,7 +706,7 @@ class AppWindow(tk.Frame):
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
-            False and message list with all missing features, or True if all criteria are met. """
+            message list with all missing features, or an empty list if all criteria are met. """
         messages = list()
         if not self.is_setting_valid('VAM base dir'):
             messages.append('· Please select the VAM base folder')
@@ -839,9 +840,9 @@ class AppWindow(tk.Frame):
         """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
             to a string with \n for line separation
             to do: simplify this"""
-        string = ""
+        string = ''
         for command_dict in list_of_commands:
-            line = command_dict['time'] + ": " + command_dict['command'] + "\n"
+            line = command_dict['time'] + ': ' + command_dict['command'] + "\n"
             string = string + line
         string = string[:-1]  # remove the extra \n at the end
         return string
@@ -850,7 +851,7 @@ class AppWindow(tk.Frame):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
         print('variate_population_with_templates')
-        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         filenames = list(self.generator.appearances.keys())
         random.shuffle(filenames)
@@ -867,12 +868,11 @@ class AppWindow(tk.Frame):
 
         for c in self.population.chromosomes:
             morph_list = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(c.filename))
-            updated_appearance = ecc_logic.save_morph_to_appearance(
-                morph_list, appearance_templates[c.index])
+            updated_appearance = ecc_logic.save_morph_to_appearance(morph_list, appearance_templates[c.index])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, c.filename)
 
-        self.broadcast_message_to_vam_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker('')
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
@@ -1208,7 +1208,7 @@ class AppWindow(tk.Frame):
     def continue_last_session(self):
         """ Skip choosing the settings and continue from the last session. This only means switching the layout to
             the rating window and setting the generation counter to the last known value. """
-        path = self.get_vam_default_appearance_path()
+        path = self.get_vam_default_appearance_path
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
 
         for c in self.population.chromosomes:
@@ -1548,7 +1548,7 @@ class AppWindow(tk.Frame):
 
     def save_population(self, population):
         """ save a population list of child appearances to files """
-        path = self.get_vam_default_appearance_path()
+        path = self.get_vam_default_appearance_path
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
@@ -1558,7 +1558,7 @@ class AppWindow(tk.Frame):
 
     def update_population(self, new_appearances):
         """ update all chromosome appearances with the list of child appearance in population """
-        path = self.get_vam_default_appearance_path()
+        path = self.get_vam_default_appearance_path
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for chromosome, appearance in zip(self.population.chromosomes, new_appearances):
