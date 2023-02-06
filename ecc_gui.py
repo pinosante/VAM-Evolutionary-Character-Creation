@@ -309,17 +309,7 @@ class AppWindow(tk.Frame):
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
             not found """
-        if 'appearance dir' in self.settings:
-            if len(self.settings['appearance dir']) < 1:
-                appearancedir = NO_FILE_SELECTED_TEXT
-            else:
-                appearancedir = strip_dir_string_to_max_length(self.settings['appearance dir'],
-                                                                           MAX_APPEARANCEDIR_STRING_LENGTH)
-                self.appearancedirbutton.configure(relief=tk.SUNKEN)
-        else:
-            appearancedir = NO_FILE_SELECTED_TEXT
-            self.settings['appearance dir'] = ""
-        self.appearancedirlabel.configure(text=appearancedir)
+        self.investigate_appearance_directory()
 
         if 'recursive directory search' in self.settings:
             self.use_recursive_directory_search(self.settings['recursive directory search'])
@@ -400,6 +390,19 @@ Do you want to continue that session?""")
                 del self.settings['generation counter']
 
         self.update_initialize_population_button()
+
+    def investigate_appearance_directory(self):
+        if 'appearance dir' in self.settings:
+            if len(self.settings['appearance dir']) < 1:
+                appearancedir = NO_FILE_SELECTED_TEXT
+            else:
+                appearancedir = strip_dir_string_to_max_length(self.settings['appearance dir'],
+                                                               MAX_APPEARANCEDIR_STRING_LENGTH)
+                self.appearancedirbutton.configure(relief=tk.SUNKEN)
+        else:
+            appearancedir = NO_FILE_SELECTED_TEXT
+            self.settings['appearance dir'] = ""
+        self.appearancedirlabel.configure(text=appearancedir)
 
     def use_recursive_directory_search(self, choice):
         """ Called by the use recursive directory button in the app. Depending on the choice, sinks the GUI button
