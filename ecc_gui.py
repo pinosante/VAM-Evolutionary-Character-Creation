@@ -321,7 +321,7 @@ class AppWindow(tk.Frame):
                 vamdir = NO_FILE_SELECTED_TEXT
             else:
                 vamdir = strip_dir_string_to_max_length(self.settings['VAM base dir'],
-                                                                    MAX_VAMDIR_STRING_LENGTH)
+                                                        MAX_VAMDIR_STRING_LENGTH)
                 self.vamdirbutton.configure(relief=tk.SUNKEN)
         else:
             vamdir = NO_FILE_SELECTED_TEXT
@@ -632,7 +632,7 @@ Do you want to continue that session?""")
             self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
             self.vamdirlabel.configure(
                 text=strip_dir_string_to_max_length(self.settings['VAM base dir'],
-                                                                MAX_VAMDIR_STRING_LENGTH))
+                                                    MAX_VAMDIR_STRING_LENGTH))
             self.vamdirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
@@ -664,7 +664,7 @@ Do you want to continue that session?""")
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
             self.appearancedirlabel.configure(
                 text=strip_dir_string_to_max_length(self.settings['appearance dir'],
-                                                                MAX_APPEARANCEDIR_STRING_LENGTH))
+                                                    MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearancedirbutton.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
@@ -1018,12 +1018,13 @@ Do you want to continue that session?""")
         fileindex = 0
         self.appearancebutton = {}
         self.appearancelabel = {}
-        for j in range(max_vertical):
-            for i in range(thumbnails_per_row):
-                if fileindex < len(filenames):
-                    button, label = self.make_appearance_button(window, filenames[fileindex], j, i, fileindex)
-                    self.all_appearance_widgets.extend([button, label])
-                    fileindex += 1
+        for row in range(max_vertical):
+            for column in range(thumbnails_per_row):
+                if fileindex >= len(filenames):
+                    return
+                button, label = self.make_appearance_button(window, filenames[fileindex], row, column, fileindex)
+                self.all_appearance_widgets.extend([button, label])
+                fileindex += 1
 
     def apply_file_filter(self, filenames):
         """ Applies file filter to file selection window. """
@@ -1034,38 +1035,38 @@ Do you want to continue that session?""")
         self.remove_all_appearance_widgets()
         self.show_all_appearance_buttons(self.appearancesframe, filtered, self.thumbnails_per_row)
 
-    def make_appearance_button(self, window, filename, row, column, fileindex):
+    def make_appearance_button(self, window, file_name, row, column, file_index):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        thumbnail = self.generator.thumbnails[filename]
-        name = os.path.basename(filename)[7:-4]  # remove Preset_ and .vap
+        thumbnail = self.generator.thumbnails[file_name]
+        name = os.path.basename(file_name)[7:-4]  # remove Preset_ and .vap
 
-        self.appearancebutton[str(fileindex)] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR, command=lambda
-            filename=filename: self.end_file_selection_with_thumbnails(filename))
-        self.appearancebutton[str(fileindex)].grid(row=row * 2, column=column, padx=0, pady=0)
-        self.appearancebutton[str(fileindex)].configure(image=thumbnail)
-        self.appearancebutton[str(fileindex)].bind("<Enter>",
-                                                   lambda e, index=fileindex: self.on_enter_appearancebutton(index,
-                                                                                                             event=e))
-        self.appearancebutton[str(fileindex)].bind("<Leave>",
-                                                   lambda e, index=fileindex: self.on_leave_appearancebutton(index,
-                                                                                                             event=e))
-        self.appearancebutton[str(fileindex)].image = thumbnail
-        self.appearancelabel[str(fileindex)] = tk.Label(window, text=name, font=FILENAME_FONT, width=26, anchor=tk.W,
-                                                        bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
-        self.appearancelabel[str(fileindex)].grid(row=row * 2 + 1, column=column, sticky=tk.W)
-        return self.appearancebutton[str(fileindex)], self.appearancelabel[str(fileindex)]
+        self.appearancebutton[file_index] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR,
+                                            command=lambda fn=file_name: self.end_file_selection_with_thumbnails(fn))
+        self.appearancebutton[file_index].grid(row=row * 2, column=column, padx=0, pady=0)
+        self.appearancebutton[file_index].configure(image=thumbnail)
+        self.appearancebutton[file_index].bind("<Enter>",
+                                                    lambda e, index=file_index: self.on_enter_appearancebutton(index,
+                                                                                                               event=e))
+        self.appearancebutton[file_index].bind("<Leave>",
+                                                    lambda e, index=file_index: self.on_leave_appearancebutton(index,
+                                                                                                               event=e))
+        self.appearancebutton[file_index].image = thumbnail
+        self.appearancelabel[file_index] = tk.Label(window, text=name, font=FILENAME_FONT, width=26, anchor=tk.W,
+                                                         bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
+        self.appearancelabel[file_index].grid(row=row * 2 + 1, column=column, sticky=tk.W)
+        return self.appearancebutton[file_index], self.appearancelabel[file_index]
 
     def on_enter_appearancebutton(self, index, event=None):
         """ Show hover effect when entering mouse over an image file. """
-        self.appearancebutton[str(index)]['background'] = HOVER_COLOR
-        self.appearancelabel[str(index)]['background'] = BG_COLOR
-        self.appearancelabel[str(index)]['foreground'] = HOVER_COLOR
+        self.appearancebutton[index]['background'] = HOVER_COLOR
+        self.appearancelabel[index]['background'] = BG_COLOR
+        self.appearancelabel[index]['foreground'] = HOVER_COLOR
 
     def on_leave_appearancebutton(self, index, event=None):
         """ Show hover effect when exiting mouse over an image file. """
-        self.appearancebutton[str(index)]['background'] = BG_COLOR
-        self.appearancelabel[str(index)]['background'] = BG_COLOR
-        self.appearancelabel[str(index)]['foreground'] = FG_COLOR
+        self.appearancebutton[index]['background'] = BG_COLOR
+        self.appearancelabel[index]['background'] = BG_COLOR
+        self.appearancelabel[index]['foreground'] = FG_COLOR
 
     def update_morph_info(self, number):
         """ Updates morph info in the GUI for Parent file 'number'. """
