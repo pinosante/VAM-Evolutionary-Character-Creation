@@ -57,7 +57,7 @@ class Generator:
                 if appearance['is_fav']:
                     print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
                 self.appearances[f] = appearance
-                print(f"Loading file {f} into database.")
+                # print(f"Loading file {f} into database.")
                 self.thumbnails[f] = self.get_thumbnail_for_filename(f)
                 self.gender[f] = get_appearance_gender(self.appearances[f])
 
