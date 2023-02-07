@@ -1013,18 +1013,18 @@ Do you want to continue that session?""")
 
     def show_all_appearance_buttons(self, window, filenames, thumbnails_per_row):
         """ Show all appearance files as image buttons, in the given window. """
-        self.all_appearance_widgets = []
+        self.all_appearance_widgets = list()
         max_vertical = int(len(filenames) / thumbnails_per_row) + 1
-        fileindex = 0
-        self.appearancebutton = {}
-        self.appearancelabel = {}
+        file_index = 0
+        self.appearancebutton = dict()
+        self.appearancelabel = dict()
         for row in range(max_vertical):
             for column in range(thumbnails_per_row):
-                if fileindex >= len(filenames):
+                if file_index >= len(filenames):
                     return
-                button, label = self.make_appearance_button(window, filenames[fileindex], row, column, fileindex)
-                self.all_appearance_widgets.extend([button, label])
-                fileindex += 1
+                button, label = self.make_appearance_button(window, filenames[file_index], row, column, file_index)
+                self.all_appearance_widgets.extend((button, label))
+                file_index += 1
 
     def apply_file_filter(self, filenames):
         """ Applies file filter to file selection window. """
@@ -1035,25 +1035,30 @@ Do you want to continue that session?""")
         self.remove_all_appearance_widgets()
         self.show_all_appearance_buttons(self.appearancesframe, filtered, self.thumbnails_per_row)
 
+    def make_appearance_button_sub(self, window, file_name, row, column, file_index):
+        """ todo """
+        thumbnail = self.generator.thumbnails[file_name]
+        appearance_button = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR,
+                                      command=lambda fn=file_name: self.end_file_selection_with_thumbnails(fn))
+        appearance_button.grid(row=row * 2, column=column, padx=0, pady=0)
+        appearance_button.configure(image=thumbnail)
+        appearance_button.bind("<Enter>", lambda e, index=file_index: self.on_enter_appearancebutton(index, event=e))
+        appearance_button.bind("<Leave>", lambda e, index=file_index: self.on_leave_appearancebutton(index, event=e))
+        appearance_button.image = thumbnail
+        return appearance_button
+
+    def make_appearance_button_label(self, window, file_name, row, column):
+        """ todo """
+        label_name = os.path.basename(file_name)[7:-4]  # remove Preset_ and .vap
+        appearance_label = tk.Label(window, text=label_name, font=FILENAME_FONT, width=26, anchor=tk.W,
+                                    bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
+        appearance_label.grid(row=row * 2 + 1, column=column, sticky=tk.W)
+        return appearance_label
+
     def make_appearance_button(self, window, file_name, row, column, file_index):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        thumbnail = self.generator.thumbnails[file_name]
-        name = os.path.basename(file_name)[7:-4]  # remove Preset_ and .vap
-
-        self.appearancebutton[file_index] = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR,
-                                            command=lambda fn=file_name: self.end_file_selection_with_thumbnails(fn))
-        self.appearancebutton[file_index].grid(row=row * 2, column=column, padx=0, pady=0)
-        self.appearancebutton[file_index].configure(image=thumbnail)
-        self.appearancebutton[file_index].bind("<Enter>",
-                                                    lambda e, index=file_index: self.on_enter_appearancebutton(index,
-                                                                                                               event=e))
-        self.appearancebutton[file_index].bind("<Leave>",
-                                                    lambda e, index=file_index: self.on_leave_appearancebutton(index,
-                                                                                                               event=e))
-        self.appearancebutton[file_index].image = thumbnail
-        self.appearancelabel[file_index] = tk.Label(window, text=name, font=FILENAME_FONT, width=26, anchor=tk.W,
-                                                         bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
-        self.appearancelabel[file_index].grid(row=row * 2 + 1, column=column, sticky=tk.W)
+        self.appearancebutton[file_index] = self.make_appearance_button_sub(window, file_name, row, column, file_index)
+        self.appearancelabel[file_index] = self.make_appearance_button_label(window, file_name, row, column)
         return self.appearancebutton[file_index], self.appearancelabel[file_index]
 
     def on_enter_appearancebutton(self, index, event=None):
