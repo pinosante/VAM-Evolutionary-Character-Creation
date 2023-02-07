@@ -23,6 +23,9 @@ from ecc_utility import *
 from ecc_gui_constants import *
 from ecc_population import Population
 
+FOREGROUND = 'foreground'
+BACKGROUND = 'background'
+
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
 CHOOSE_ALL_TEXT = "Choose All Appearances"
@@ -1055,23 +1058,23 @@ Do you want to continue that session?""")
         appearance_label.grid(row=row * 2 + 1, column=column, sticky=tk.W)
         return appearance_label
 
-    def make_appearance_button(self, window, file_name, row, column, file_index):
+    def make_appearance_button(self, window, file_name, row, column, index):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        self.appearancebutton[file_index] = self.make_appearance_button_sub(window, file_name, row, column, file_index)
-        self.appearancelabel[file_index] = self.make_appearance_button_label(window, file_name, row, column)
-        return self.appearancebutton[file_index], self.appearancelabel[file_index]
+        self.appearancebutton[index] = self.make_appearance_button_sub(window, file_name, row, column, index)
+        self.appearancelabel[index] = self.make_appearance_button_label(window, file_name, row, column)
+        return self.appearancebutton[index], self.appearancelabel[index]
 
     def on_enter_appearancebutton(self, index, event=None):
         """ Show hover effect when entering mouse over an image file. """
-        self.appearancebutton[index]['background'] = HOVER_COLOR
-        self.appearancelabel[index]['background'] = BG_COLOR
-        self.appearancelabel[index]['foreground'] = HOVER_COLOR
+        self.appearancebutton[index][BACKGROUND] = HOVER_COLOR
+        self.appearancelabel[index][BACKGROUND] = BG_COLOR
+        self.appearancelabel[index][FOREGROUND] = HOVER_COLOR
 
     def on_leave_appearancebutton(self, index, event=None):
         """ Show hover effect when exiting mouse over an image file. """
-        self.appearancebutton[index]['background'] = BG_COLOR
-        self.appearancelabel[index]['background'] = BG_COLOR
-        self.appearancelabel[index]['foreground'] = FG_COLOR
+        self.appearancebutton[index][BACKGROUND] = BG_COLOR
+        self.appearancelabel[index][BACKGROUND] = BG_COLOR
+        self.appearancelabel[index][FOREGROUND] = FG_COLOR
 
     def update_morph_info(self, number):
         """ Updates morph info in the GUI for Parent file 'number'. """
@@ -1525,8 +1528,8 @@ Do you want to continue that session?""")
         self.generator.gen_counter += 1
 
         self.update_population(new_population)
-        self.generatechild.configure(bg="lightgreen", text="")
-        self.generatechild.configure(text="Generate Next Population")
+        self.generatechild.configure(bg='lightgreen', text='')
+        self.generatechild.configure(text='Generate Next Population')
         self.generatechild.update()
         return
 
@@ -1561,7 +1564,7 @@ Do you want to continue that session?""")
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
-            save_filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i + 1) + ".vap")
+            save_filename = os.path.join(save_path, 'Preset_' + CHILDREN_FILENAME_PREFIX + str(i + 1) + '.vap')
             ecc_logic.save_appearance(child_appearance, save_filename)
         return True
 
@@ -1575,21 +1578,21 @@ Do you want to continue that session?""")
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
+        self.titlelabel.configure(text='Generation ' + str(self.generator.gen_counter))
         for i in [1, 2, 3]:
             self.columninfo[str(i)].destroy()
 
-        self.titlerestartbutton = tk.Button(self.titleframe, text="Restart", anchor=tk.E, bg=BUTTON_BG_COLOR,
+        self.titlerestartbutton = tk.Button(self.titleframe, text='Restart', anchor=tk.E, bg=BUTTON_BG_COLOR,
                                             fg=BUTTON_FG_COLOR, relief=tk.RAISED,
                                             command=lambda: self.press_restart_button())
         self.titlerestartbutton.grid(columnspan=10, row=0, column=1, sticky=tk.E)
 
         self.changetemplateframe = tk.Frame(self.master, bg=BG_COLOR)
         self.changetemplateframe.grid(row=7, column=1, padx=(10, 0), pady=(5, 0), sticky=tk.W)
-        self.changetemplatebutton = tk.Button(self.changetemplateframe, text="Change template", anchor=tk.W,
+        self.changetemplatebutton = tk.Button(self.changetemplateframe, text='Change template', anchor=tk.W,
                                               bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED,
                                               command=lambda: self.press_change_template_file(
-                                                  "Please Select Parent Template"))
+                                                  'Please Select Parent Template'))
         self.changetemplatebutton.grid(row=0, column=0, sticky=tk.W)
 
         label_txt = os.path.basename(self.settings['child template'])[7:-4]
@@ -1603,13 +1606,13 @@ Do you want to continue that session?""")
 
     def press_restart_button(self, givewarning=True):
         if givewarning:
-            answer = messagebox.askquestion("Warning!",
-                                            "Warning! This will reset all your current progress, " +
-                                            "reinitialize the app and restart with a (newly generated) Generation 1. " +
-                                            "Are you sure?")
+            answer = messagebox.askquestion('Warning!',
+                                            'Warning! This will reset all your current progress, ' +
+                                            'reinitialize the app and restart with a (newly generated) Generation 1. ' +
+                                            'Are you sure?')
             if answer == "no":
                 return False
-        print("We are restarting")
+        print('We are restarting')
         self.restart_population(self.settings['method'])
         return True
 
