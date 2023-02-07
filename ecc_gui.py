@@ -1123,15 +1123,15 @@ Do you want to continue that session?""")
             dictionary """
         c = self.population.chromosomes[number]
         c.file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
-        c.n_morph_display.configure(text="N/A")
+        c.n_morph_display.configure(text='N/A')
         c.can_load = False
 
     def restart_population(self, method):
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
             Generation counter is reset to 1. """
         # todo: split into GUI and BL
-        print(f"Restarting, with {method}")
-        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
+        print(f'Restarting, with {method}')
+        self.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
         # since the chromosomes now contain the Evolutionary Children files at this stage. Only the
@@ -1146,7 +1146,7 @@ Do you want to continue that session?""")
                     if len(self.settings[filename]) > 0:
                         c.filename = self.settings[filename]
 
-        if method == "Gaussian Samples":
+        if method == 'Gaussian Samples':
             self.gaussian_initialize_population(source_files=self.settings['source files'])
         elif method == "Random Crossover":
             self.crossover_initialize_population(self.settings['source files'])
@@ -1163,18 +1163,18 @@ Do you want to continue that session?""")
         if self.generator.gen_counter == 0:
             save_settings(
                 self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
-            if method == "Gaussian Samples":
+            if method == 'Gaussian Samples':
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
-            elif method == "Random Crossover":
+            elif method == 'Random Crossover':
                 self.crossover_initialize_population(self.settings['source files'])
             self.change_parent_to_generation_display()
             self.switch_layout_to_rating()
             self.reset_ratings()
             self.change_gui_to_show_user_to_start_vam()
-            self.scan_vam_for_command_updates("Initialize")
+            self.scan_vam_for_command_updates('Initialize')
             return
 
-        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
+        self.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         # Start the new population with the elites from the last generation (depending on settings)
         elites = self.get_elites_from_population()
@@ -1195,9 +1195,9 @@ Do you want to continue that session?""")
 
         self.generator.gen_counter += 1
         self.settings['generation counter'] = self.generator.gen_counter
-        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
+        self.titlelabel.configure(text=f'Generation {self.generator.gen_counter}')
         self.reset_ratings()
-        self.broadcast_message_to_vam_rating_blocker("")
+        self.broadcast_message_to_vam_rating_blocker('')
         save_settings(self.settings)
 
     def change_gui_to_show_user_to_start_vam(self):
@@ -1206,22 +1206,22 @@ Do you want to continue that session?""")
         for widget in self.master.winfo_children():
             widget.grid_forget()
         self.messageframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.messageframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
-        self.messagelabel = tk.Label(self.messageframe, text="App is ready. \nPlease start VAM, load the",
-                                     font=(DEFAULT_FONT, 14, ""), bg=BG_COLOR, fg=FG_COLOR)
+        self.messageframe.grid(row=0, column=1, padx=10, pady=0, sticky='nsew')
+        self.messagelabel = tk.Label(self.messageframe, text='App is ready. \nPlease start VAM, load the',
+                                     font=(DEFAULT_FONT, 14, ''), bg=BG_COLOR, fg=FG_COLOR)
         self.messagelabel.pack(side=tk.TOP)
-        self.messagelabel = tk.Label(self.messageframe, text="VAM Evolutionary Character Creation Companion",
-                                     font=(DEFAULT_FONT, 14, "italic"), bg=BG_COLOR, fg=FG_COLOR)
+        self.messagelabel = tk.Label(self.messageframe, text='VAM Evolutionary Character Creation Companion',
+                                     font=(DEFAULT_FONT, 14, 'italic'), bg=BG_COLOR, fg=FG_COLOR)
         self.messagelabel.pack(side=tk.TOP)
-        self.messagelabel = tk.Label(self.messageframe, text="save, and click on 'Connect to App'",
-                                     font=(DEFAULT_FONT, 14, ""), bg=BG_COLOR, fg=FG_COLOR)
+        self.messagelabel = tk.Label(self.messageframe, text='save, and click on "Connect to App"',
+                                     font=(DEFAULT_FONT, 14, ''), bg=BG_COLOR, fg=FG_COLOR)
         self.messagelabel.pack(side=tk.TOP)
-        self.warninglabel = tk.Label(self.messageframe, text="\nImportant: do NOT close this window.\n ",
-                                     font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
+        self.warninglabel = tk.Label(self.messageframe, text='\nImportant: do NOT close this window.\n ',
+                                     font=(DEFAULT_FONT, 14, 'bold'), bg=BG_COLOR, fg='red')
         self.warninglabel.pack(side=tk.TOP)
         self.lastmessagelabel = tk.Label(self.messageframe,
-                                         text="This app needs to stay active to communicate with VAM.",
-                                         font=(DEFAULT_FONT, 14, ""), bg=BG_COLOR, fg=FG_COLOR)
+                                         text='This app needs to stay active to communicate with VAM.',
+                                         font=(DEFAULT_FONT, 14, ''), bg=BG_COLOR, fg=FG_COLOR)
         self.lastmessagelabel.pack(side=tk.TOP)
 
     def continue_last_session(self):
@@ -1231,14 +1231,14 @@ Do you want to continue that session?""")
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
 
         for c in self.population.chromosomes:
-            filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(c.index) + ".vap")
+            filename = os.path.join(save_path, f'Preset_{CHILDREN_FILENAME_PREFIX}{c.index}.vap')
             c.filename = filename
             c.appearance = ecc_logic.load_appearance(filename)
 
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
-        self.generatechild.configure(text="Generate Next Population")
+        self.generatechild.configure(text='Generate Next Population')
         self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
 
@@ -1261,21 +1261,21 @@ Do you want to continue that session?""")
         if not path:
             return
         try:
-            with open(path, encoding="utf-8") as f:
+            with open(path, encoding='utf-8') as f:
                 linestring = f.read()
                 lines = linestring.split('\n')
                 # print(f"Length of lines {len(lines)}")
                 if len(lines) < 70:  # incomplete file
-                    raise IOError(f"Not enough lines ({len(lines)}) in the file ")
+                    raise IOError(f'Not enough lines ({len(lines)}) in the file ')
                 # f.seek(0) # back to start of file
                 command_json = json.loads(linestring)
-                command = ecc_logic.value_from_id_in_dict_list(command_json['storables'], "Text", "text")
+                command = ecc_logic.value_from_id_in_dict_list(command_json['storables'], 'Text', 'text')
                 if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
                     self.broadcast_last_command_to_vam(command)
                     self.execute_vam_command(command)
-                    print(f"We have a new command: {command}")
+                    print(f'We have a new command: {command}')
         except IOError as e:
             print(e)
             self.master.after(25, lambda lastcommand=lastcommand: self.scan_vam_for_command_updates(lastcommand))
@@ -1295,7 +1295,7 @@ Do you want to continue that session?""")
             # add command to last five commands
             command_dict = {}
             now = datetime.now()
-            time_string = now.strftime("%d-%m-%Y %H:%M:%S")
+            time_string = now.strftime('%d-%m-%Y %H:%M:%S')
             command_dict['time'] = time_string
             command_dict['command'] = command
             self.generator.last_five_commands.insert(0, command_dict)
@@ -1304,9 +1304,9 @@ Do you want to continue that session?""")
             self.update_overview_window()
 
         # parse rate child commands
-        commands = command.split(";")
+        commands = command.split(';')
         commands = [x.strip() for x in commands]
-        if "child" in commands[0].lower() and "rate" in commands[1].lower():
+        if 'child' in commands[0].lower() and 'rate' in commands[1].lower():
             child = commands[0].split(" ")
             child = int(child[1])
             rating = commands[1].split(" ")
@@ -1315,20 +1315,20 @@ Do you want to continue that session?""")
         # the random number in commands[1] for the if statements below are not used in any way by this script, except
         # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
         # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
-        elif "use template" in commands[0].lower():
+        elif 'use template' in commands[0].lower():
             filename = self.get_vam_path(commands[1])
             filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
-        elif "variate population" in commands[0].lower():
+        elif 'variate population' in commands[0].lower():
             self.variate_population_with_templates()
-        elif "connect to app" in commands[0].lower():
+        elif 'connect to app' in commands[0].lower():
             self.generator.connected_to_VAM = True
             self.reset_ratings()
             self.switch_layout_to_overview()
-        elif "generate next population" in commands[0].lower():
+        elif 'generate next population' in commands[0].lower():
             self.generate_next_population(self.settings['method'])
             self.broadcast_generation_number_to_vam(self.generator.gen_counter)
-        elif "reset" in commands[0].lower():
+        elif 'reset' in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
@@ -1361,7 +1361,7 @@ Do you want to continue that session?""")
         path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMText.vap')
         if not path:
             return False
-        self.write_value_to_vam_file(path, "Text", "text", command)
+        self.write_value_to_vam_file(path, 'Text', 'text', command)
 
     def broadcast_message_to_vam_rating_blocker(self, text):
         # todo: candidate for logic
@@ -1369,7 +1369,7 @@ Do you want to continue that session?""")
             r'Custom\Atom\UIButton\VAM Evolutionary Character Creation\Preset_Python2VAMRatingBlocker.vap')
         if not path:
             return False
-        self.write_value_to_vam_file(path, "Text", "text", text)
+        self.write_value_to_vam_file(path, 'Text', 'text', text)
 
     @staticmethod
     def write_value_to_vam_file(path, id_string, needed_key, replacement_string):
@@ -1378,12 +1378,12 @@ Do you want to continue that session?""")
             pair with ("needed_key", "replacement_string"). Then it will overwrite the VAM file. """
         # todo: candidate for logic
         try:
-            with open(path, encoding="utf-8") as f:
+            with open(path, encoding='utf-8') as f:
                 text_json = json.load(f)
             text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json[STORABLES], id_string,
                                                                                   needed_key,
                                                                                   replacement_string)
-            with open(path, "w", encoding="utf-8") as json_file:
+            with open(path, 'w', encoding='utf-8') as json_file:
                 json.dump(text_json, json_file, indent=3)
         except IOError as e:
             print(e)
@@ -1397,7 +1397,7 @@ Do you want to continue that session?""")
         self.sourcefilesframe.grid_remove()
         self.methodframe.grid_remove()
         self.parentselectionframe.grid()
-        self.chromosomelabel.configure(text="Rate Children")
+        self.chromosomelabel.configure(text='Rate Children')
         self.favoritesframe.grid_remove()
         self.optionsframe.grid_remove()
 
@@ -1482,12 +1482,12 @@ Do you want to continue that session?""")
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
             Updates population info and the GUI. """
-        print("Using random pairwise chromosome crossover for sample initialization.")
+        print('Using random pairwise chromosome crossover for sample initialization.')
 
         # select source files
         parent_filenames = self.select_appearances_strategies[source_files]()
 
-        print(f"Source files: {source_files} ({len(parent_filenames)} Files)")
+        print(f'Source files: {source_files} ({len(parent_filenames)} Files)')
 
         new_population = list()
         for i in range(1, POP_SIZE + 1):
@@ -1497,9 +1497,9 @@ Do you want to continue that session?""")
         self.save_population(new_population)
         self.generator.gen_counter += 1
         self.update_population(new_population)
-        self.generatechild.configure(bg="lightgreen", text="")
+        self.generatechild.configure(bg='lightgreen', text='')
         # to do: why two lines?
-        self.generatechild.configure(text="Generate Next Population")
+        self.generatechild.configure(text='Generate Next Population')
         self.generatechild.update()
         return
 
@@ -1507,7 +1507,7 @@ Do you want to continue that session?""")
         # todo: split the UI and the BL parts
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
-        print("Using random samples from multivariate gaussian distribution for initialization.")
+        print('Using random samples from multivariate gaussian distribution for initialization.')
         self.generatechild.configure(text="Generating Population\n Please be patient!\n", bg="red")
         self.generatechild.update()
 
@@ -1527,9 +1527,9 @@ Do you want to continue that session?""")
         threshold = self.settings['morph threshold']
 
         for i in range(1, POP_SIZE + 1):
-            txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(
+            txt = 'Generating Population\n' + 'Please be patient!\n' + '(' + str(i) + "/" + str(
                 POP_SIZE) + ")"
-            self.generatechild.configure(text=txt, bg="red")
+            self.generatechild.configure(text=txt, bg='red')
             self.generatechild.update()
             self.broadcast_message_to_vam_rating_blocker(txt)
 
@@ -1540,7 +1540,7 @@ Do you want to continue that session?""")
                 morph['value'] = sample[j]
             new_morph_list = ecc_logic.filter_morphs_below_threshold(new_morph_list, threshold)
             child_appearance = ecc_logic.load_appearance(template_file)
-            print("Using as appearance template:", template_file)
+            print('Using as appearance template:', template_file)
             child_appearance = ecc_logic.save_morph_to_appearance(new_morph_list, child_appearance)
             new_population.append(child_appearance)
 
