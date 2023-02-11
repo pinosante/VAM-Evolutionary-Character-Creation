@@ -21,17 +21,11 @@ import numpy as np
 import ecc_logic
 import ecc_utility
 
-THUMBNAIL_SIZE = 184, 184
-NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
-CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
 NO_FILE_SELECTED_TEXT = "…"
-SETTINGS_FILENAME = "settings.json"
-DATA_PATH = "data"
 SAVED_CHILDREN_PATH = "VAM Evolutionary Character Creation"
 CHILDREN_FILENAME_PREFIX = "Evolutionary_Child_"
-POP_SIZE = 20
 MINIMAL_RATING_FOR_KEEP_ELITES = 2
 INITIAL_RATING = 3
 DEFAULT_MAX_KEPT_ELITES = 1
@@ -91,9 +85,6 @@ class AppWindow(tk.Frame):
             CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
         }
 
-        self.init_ui()
-
-    def init_ui(self):
         self.master.title(APP_TITLE)
 
         subtitlefont = (DEFAULT_FONT, 11, "bold")
@@ -217,7 +208,7 @@ class AppWindow(tk.Frame):
         self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
 
         self.chromosome = dict()
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             new_chromosome = dict()
             new_chromosome['filebutton'] = tk.Button(self.parentselectionframe, text="Parent " + str(i),
                                                               bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
@@ -408,7 +399,7 @@ class AppWindow(tk.Frame):
         else:
             self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
 
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             if 'file ' + str(i) in self.settings:
                 if len(self.settings['file ' + str(i)]) > 0:
                     filename = self.settings['file ' + str(i)]
@@ -438,7 +429,7 @@ class AppWindow(tk.Frame):
             answer = messagebox.askquestion("Continue last session?",
                                             f"Your last session ended at Generation {self.settings['generation counter']}. Do you want to continue that session?")
             if answer == "yes":
-                self.generator.gencounter = self.settings['generation counter']
+                self.generator.gen_counter = self.settings['generation counter']
                 self.continue_last_session()
                 return
             else:
@@ -504,7 +495,7 @@ class AppWindow(tk.Frame):
             self.update_initialize_population_button()
             return
 
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             self.update_morph_info(i)
 
     def track_minmorph_change(self, var, index, mode):
@@ -517,7 +508,7 @@ class AppWindow(tk.Frame):
             self.settings['min morph threshold'] = value
 
             # also update the morph info on Chosen Files
-            for i in range(1, POP_SIZE + 1):
+            for i in range(1, ecc_utility.POP_SIZE + 1):
                 self.update_morph_info(i)
             self.update_found_labels()
             self.update_initialize_population_button()
@@ -537,7 +528,7 @@ class AppWindow(tk.Frame):
         try:
             value = int(string)
 
-            if 0 <= value <= POP_SIZE:
+            if 0 <= value <= ecc_utility.POP_SIZE:
                 self.settings['max kept elites'] = value
             else:
                 self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
@@ -572,7 +563,7 @@ class AppWindow(tk.Frame):
         self.update_initialize_population_button()
 
     def choose_all_appearances(self):
-        """ Called when the choose all appearances button is pressed. Sinks the corresponding GUI button and raises
+        """ Called when the "choose all appearances" button is pressed. Sinks the corresponding GUI button and raises
             the other options. Updates GUI. Saves choice in settings. """
         self.parentselectionframe.grid_remove()
         self.favoritesframe.grid()
@@ -583,7 +574,7 @@ class AppWindow(tk.Frame):
         self.update_found_labels()
 
     def choose_all_favorites(self):
-        """ Called when the choose all favorite appearances button is pressed. Sinks the corresponding GUI button and
+        """ Called when the "choose all favorite" appearances button is pressed. Sinks the corresponding GUI button and
             raises the other options. Updates GUI. Saves choice in settings. """
         self.parentselectionframe.grid_remove()
         self.favoritesframe.grid()
@@ -772,7 +763,7 @@ class AppWindow(tk.Frame):
             elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 source_files = self.get_all_appearance_filenames()
             elif self.settings['source files'] == CHOOSE_FILES_TEXT:
-                source_files = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
+                source_files = [self.chromosome[str(i)]['filename'] for i in range(1, ecc_utility.POP_SIZE + 1) if
                                 self.chromosome[str(i)]['can load']]
             else:
                 source_files = []
@@ -826,7 +817,7 @@ class AppWindow(tk.Frame):
         self.childtemplate['gender'] = self.generator.gender[filename]
         self.press_childtemplate_button(self.childtemplate['gender'])
         self.settings['child template'] = filename
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             self.update_morph_info(i)
         self.update_initialize_population_button()
         self.update_found_labels()
@@ -848,7 +839,7 @@ class AppWindow(tk.Frame):
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
-        if not ecc_logic.can_match_genders(gender, self.childtemplate['gender']):
+        if not ecc_logic.is_compatible_gender(gender, self.childtemplate['gender']):
             matches = ecc_logic.matching_genders(self.childtemplate['gender'])
             if len(matches) > 1:  # Female and Futa
                 selectmsg = "Please select a Female or Futa as template."
@@ -863,9 +854,9 @@ class AppWindow(tk.Frame):
 
     def switch_layout_to_overview(self):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
-            app. This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
+            app). This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
-        self.broadcast_generation_number_to_vam(self.generator.gencounter)
+        self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         print("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
@@ -880,7 +871,7 @@ class AppWindow(tk.Frame):
         self.overviewlabel.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
         self.generationlabel = tk.Label(self.overviewframe, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
         self.generationlabel.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gencounter, font=FILENAME_FONT, bg=BG_COLOR,
+        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gen_counter, font=FILENAME_FONT, bg=BG_COLOR,
                                               fg=FG_COLOR, anchor="w", justify=tk.LEFT)
         self.generationnumberlabel.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
         self.templatelabel = tk.Label(self.overviewframe, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
@@ -900,14 +891,14 @@ class AppWindow(tk.Frame):
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
-        self.broadcast_generation_number_to_vam(self.generator.gencounter)
+        self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         self.broadcast_message_to_vam_rating_blocker("")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
-        self.generationnumberlabel.config(text=self.generator.gencounter)
+        self.generationnumberlabel.config(text=self.generator.gen_counter)
         self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.lastfivecommands))
+        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.last_five_commands))
 
     @staticmethod
     def last_given_commands_to_string(list_of_commands):
@@ -933,15 +924,15 @@ class AppWindow(tk.Frame):
 
         appearance_templates = list()
         for filename in filename_generator:
-            if len(appearance_templates) >= POP_SIZE:
+            if len(appearance_templates) >= ecc_utility.POP_SIZE:
                 break
             appearance = ecc_logic.load_appearance(filename)
             gender = ecc_logic.get_appearance_gender(appearance)
             if gender == self.childtemplate['gender']:
                 appearance_templates.append(appearance)
 
-        for i in range(1, POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+        for i in range(1, ecc_utility.POP_SIZE + 1):
+            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, appearance_templates[i - 1])
             nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
             ecc_logic.save_appearance(nude_appearance, self.chromosome[str(i)]['filename'])
@@ -951,8 +942,8 @@ class AppWindow(tk.Frame):
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
-        for i in range(1, POP_SIZE + 1):
-            morphlist = ecc_logic.get_morphlist_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
+        for i in range(1, ecc_utility.POP_SIZE + 1):
+            morphlist = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(self.chromosome[str(i)]['filename']))
             updated_appearance = ecc_logic.save_morph_to_appearance(morphlist, template_appearance)
             ecc_logic.save_appearance(updated_appearance, self.chromosome[str(i)]['filename'])
 
@@ -967,8 +958,8 @@ class AppWindow(tk.Frame):
 
         filenames = list(self.generator.appearances.keys())
         if filteronmorphcount:
-            filenames = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
-        filenames = self.filter_filenamelist_on_genders(filenames, genderlist)
+            filenames = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+        filenames = self.filter_filename_list_on_genders(filenames, genderlist)
 
         # create popup window
         self.file_selection_popup = tk.Toplevel()
@@ -979,7 +970,7 @@ class AppWindow(tk.Frame):
         self.file_selection_popup.geometry(geometry)
         self.file_selection_popup.title(title)
         self.file_selection_popup.configure(bg=BG_COLOR)
-        self.file_selection_popup.iconbitmap(os.path.join(DATA_PATH, ICON_FILENAME))
+        self.file_selection_popup.iconbitmap(os.path.join(ecc_utility.DATA_PATH, ICON_FILENAME))
         self.file_selection_popup.grab_set()
 
         #
@@ -1030,24 +1021,26 @@ class AppWindow(tk.Frame):
         self.my_canvas.unbind_all('<Escape>')
         return self._file_selection
 
-    def filter_filenamelist_on_morph_threshold_and_min_morphs(self, filenames):
+    def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
         """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
             Returns an empty list if neither of these settings are available. """
-        if 'morph threshold' not in self.settings:
-            return []
-        elif 'min morph threshold' not in self.settings:
-            return []
 
-        filtered = []
+        if 'morph threshold' not in self.settings:
+            return list()
+
+        if 'min morph threshold' not in self.settings:
+            return list()
+
+        filtered = list()
         for f in filenames:
             appearance = self.generator.appearances[f]
-            morphlist = ecc_logic.get_morphlist_from_appearance(appearance)
-            morphlist = ecc_logic.filter_morphs_below_threshold(morphlist, self.settings['morph threshold'])
-            if len(morphlist) > self.settings['min morph threshold']:
+            morph_list = ecc_logic.get_morph_list_from_appearance(appearance)
+            morph_list = ecc_logic.filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
+            if len(morph_list) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
 
-    def filter_filenamelist_on_genders(self, filenames, genderlist):
+    def filter_filename_list_on_genders(self, filenames, genderlist):
         """ For a give list of filenames, filters on gender. """
         filtered = []
         for f in filenames:
@@ -1151,30 +1144,30 @@ class AppWindow(tk.Frame):
 
         if 'filename' in self.chromosome[str(number)]:
             gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(self.chromosome[str(number)]['filename']))
-            if not ecc_logic.can_match_genders(gender, template_gender):
+            if not ecc_logic.is_compatible_gender(gender, template_gender):
                 self.hide_parentfile_from_view(
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
 
-            morphlist_tmp = copy.deepcopy(ecc_logic.get_morphlist_from_appearance(self.chromosome[str(number)]['appearance']))
+            morphlist_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(self.chromosome[str(number)]['appearance']))
             morphlist_tmp = ecc_logic.filter_morphs_below_threshold(morphlist_tmp, threshold)
             nmorphs = str(len(morphlist_tmp))
             if int(nmorphs) < self.settings['min morph threshold']:
-                if self.generator.gencounter == 0:  # only do this in the initialization selection step
+                if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.hide_parentfile_from_view(number)
                     return
             else:
-                if self.generator.gencounter == 0:  # only do this in the initialization selection step
+                if self.generator.gen_counter == 0:  # only do this in the initialization selection step
                     self.chromosome[str(number)]['filenamedisplay'].configure(
                         text=self.chromosome[str(number)]['shortfilename'])
                     self.chromosome[str(number)]['can load'] = True
         else:
             nmorphs = "N/A"
-        if self.generator.gencounter == 0:  # after the app is initialized, the morph information is not being shown anymore
+        if self.generator.gen_counter == 0:  # after the app is initialized, the morph information is not being shown anymore
             self.chromosome[str(number)]['nmorphdisplay'].configure(text=str(nmorphs))
 
     def hide_parentfile_from_view(self, number):
-        """ Replaces the filelable of the parent file #number with '...'  and 'N/A' but keeps the file info
+        """ Replaces the file label of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
         chromosome = self.chromosome[str(number)]
         chromosome['filenamedisplay'].configure(text=NO_FILE_SELECTED_TEXT)
@@ -1194,7 +1187,7 @@ class AppWindow(tk.Frame):
         # they all have a False flag for self.chromosome[str(i)]['can load'] which is used
         # later on in Gaussian and Crossover generation to skip loading them.
         if self.settings['source files'] == CHOOSE_FILES_TEXT:
-            for i in range(1, POP_SIZE + 1):
+            for i in range(1, ecc_utility.POP_SIZE + 1):
                 if 'file ' + str(i) in self.settings:
                     if len(self.settings['file ' + str(i)]) > 0:
                         self.chromosome[str(i)]['filename'] = self.settings['file ' + str(i)]
@@ -1203,8 +1196,8 @@ class AppWindow(tk.Frame):
             self.gaussian_initialize_population(source_files=self.settings['source files'])
         elif method == "Random Crossover":
             self.crossover_initialize_population(self.settings['source files'])
-        self.generator.gencounter = 1
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.generator.gen_counter = 1
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker("")
 
@@ -1212,7 +1205,7 @@ class AppWindow(tk.Frame):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         print(method)
-        if self.generator.gencounter == 0:
+        if self.generator.gen_counter == 0:
             ecc_utility.save_settings(self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == "Gaussian Samples":
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
@@ -1231,12 +1224,12 @@ class AppWindow(tk.Frame):
         elites = self.get_elites_from_population()
 
         # Save elite appearances over child template (we do this, because the user might have changed the template file)
-        elite_morph_lists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in elites]
+        elite_morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in elites]
         template_appearance = ecc_logic.load_appearance(self.settings['child template'])
         new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance) for elite_morph_list in
                           elite_morph_lists]
 
-        for i in range(POP_SIZE - len(new_population)):
+        for i in range(ecc_utility.POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
             child_appearance = ecc_logic.fuse_characters(random_parents[0]['filename'], random_parents[1]['filename'],
                                                self.settings)
@@ -1244,9 +1237,9 @@ class AppWindow(tk.Frame):
         self.save_population(new_population)
         self.update_population(new_population)
 
-        self.generator.gencounter += 1
-        self.settings['generation counter'] = self.generator.gencounter
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.generator.gen_counter += 1
+        self.settings['generation counter'] = self.generator.gen_counter
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker("")
         ecc_utility.save_settings(self.settings)
@@ -1280,7 +1273,7 @@ class AppWindow(tk.Frame):
             the rating window and setting the generation counter to the last known value. """
         path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             filename = os.path.join(save_path, "Preset_" + CHILDREN_FILENAME_PREFIX + str(i) + ".vap")
             c = self.chromosome[str(i)]
             self.chromosome[str(i)]['filename'] = filename
@@ -1345,9 +1338,9 @@ class AppWindow(tk.Frame):
             time_string = now.strftime("%d-%m-%Y %H:%M:%S")
             command_dict['time'] = time_string
             command_dict['command'] = command
-            self.generator.lastfivecommands.insert(0, command_dict)
-            if len(self.generator.lastfivecommands) > 5:
-                self.generator.lastfivecommands.pop()
+            self.generator.last_five_commands.insert(0, command_dict)
+            if len(self.generator.last_five_commands) > 5:
+                self.generator.last_five_commands.pop()
             self.update_overview_window()
 
         # parse rate child commands
@@ -1374,13 +1367,13 @@ class AppWindow(tk.Frame):
             self.switch_layout_to_overview()
         elif "generate next population" in commands[0].lower():
             self.generate_next_population(self.settings['method'])
-            self.broadcast_generation_number_to_vam(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gen_counter)
         elif "reset" in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(givewarning=False)
-            self.broadcast_generation_number_to_vam(self.generator.gencounter)
+            self.broadcast_generation_number_to_vam(self.generator.gen_counter)
 
         if self.generator.connected_to_VAM:
             self.update_overview_window()
@@ -1450,13 +1443,13 @@ class AppWindow(tk.Frame):
             reference: https://stackoverflow.com/questions/10324015/fitness-proportionate-selection-roulette-wheel-selection-in-python
             """
 
-        total_ratings = sum([self.chromosome[str(i)]['rating'] for i in range(1, POP_SIZE + 1)])
+        total_ratings = sum([self.chromosome[str(i)]['rating'] for i in range(1, ecc_utility.POP_SIZE + 1)])
         choices = []
 
         while len(choices) < 2:
             pick = random.uniform(0, total_ratings)
             current = 0
-            for i in range(1, POP_SIZE + 1):
+            for i in range(1, ecc_utility.POP_SIZE + 1):
                 chromosome = self.chromosome[str(i)]
                 current += chromosome['rating']
                 if current > pick:
@@ -1483,7 +1476,7 @@ class AppWindow(tk.Frame):
 
     def reset_ratings(self):
         """ Clear all ratings in the GUI. """
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             self.press_rating_button(i, INITIAL_RATING)
 
     def get_appearance_filenames(self, get_only_favorites):
@@ -1497,9 +1490,9 @@ class AppWindow(tk.Frame):
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
         if 'gender' in self.childtemplate:
-            filenames = self.filter_filenamelist_on_genders(filenames,
-                                                            ecc_logic.matching_genders(self.childtemplate['gender']))
-            filtered = self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+            filenames = self.filter_filename_list_on_genders(filenames,
+                                                             ecc_logic.matching_genders(self.childtemplate['gender']))
+            filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
         return filtered
@@ -1511,9 +1504,9 @@ class AppWindow(tk.Frame):
         return self.get_appearance_filenames(get_only_favorites=True)
 
     def get_selected_appearance_filenames(self):
-        filenames = [self.chromosome[str(i)]['filename'] for i in range(1, POP_SIZE + 1) if
+        filenames = [self.chromosome[str(i)]['filename'] for i in range(1, ecc_utility.POP_SIZE + 1) if
                      self.chromosome[str(i)]['can load']]
-        self.filter_filenamelist_on_morph_threshold_and_min_morphs(filenames)
+        self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
 
 
@@ -1528,12 +1521,12 @@ class AppWindow(tk.Frame):
         print(f"Source files: {source_files} ({len(parent_filenames)} Files)")
 
         new_population = []
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             random_parents = random.sample(parent_filenames, 2)
             child_appearance = ecc_logic.fuse_characters(random_parents[0], random_parents[1], self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
-        self.generator.gencounter += 1
+        self.generator.gen_counter += 1
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
         # to do: why two lines?
@@ -1556,9 +1549,9 @@ class AppWindow(tk.Frame):
 
         print(f"Source files: {source_files} ({len(appearances)} Files)")
 
-        morphlists = [ecc_logic.get_morphlist_from_appearance(appearance) for appearance in appearances]
-        morphnames = ecc_logic.get_all_morphnames_in_morphlists(morphlists)
-        morphlists = ecc_logic.pad_morphnames_to_morphlists(morphlists, morphnames, filenames)
+        morphlists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
+        morphnames = ecc_logic.get_all_morph_names_in_morph_lists(morphlists)
+        morphlists = ecc_logic.pad_morph_names_to_morph_lists(morphlists, morphnames, filenames)
         morphlists = ecc_logic.dedupe_morphs(morphlists)
         means = self.get_means_from_morphlists(morphlists)
         means = list(means.values())
@@ -1568,8 +1561,8 @@ class AppWindow(tk.Frame):
         templatefile = self.settings['child template']
         threshold = self.settings['morph threshold']
 
-        for i in range(1, POP_SIZE + 1):
-            txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(POP_SIZE) + ")"
+        for i in range(1, ecc_utility.POP_SIZE + 1):
+            txt = "Generating Population\n" + "Please be patient!\n" + "(" + str(i) + "/" + str(ecc_utility.POP_SIZE) + ")"
             self.generatechild.configure(text=txt, bg="red")
             self.generatechild.update()
             self.broadcast_message_to_vam_rating_blocker(txt)
@@ -1586,7 +1579,7 @@ class AppWindow(tk.Frame):
             new_population.append(child_appearance)
 
         self.save_population(new_population)
-        self.generator.gencounter += 1
+        self.generator.gen_counter += 1
 
         self.update_population(new_population)
         self.generatechild.configure(bg="lightgreen", text="")
@@ -1642,7 +1635,7 @@ class AppWindow(tk.Frame):
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.titlelabel.configure(text="Generation " + str(self.generator.gencounter))
+        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
         self.columninfo['1'].destroy()
         self.columninfo['2'].destroy()
         self.columninfo['3'].destroy()
@@ -1668,7 +1661,7 @@ class AppWindow(tk.Frame):
         rating_font_size = 13
         self.generatechild.configure(width=27, height=6)
 
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             chromosome = self.chromosome[str(i)]
             chromosome['filebutton'].destroy()
             chromosome['filenamedisplay'].destroy()
@@ -1677,7 +1670,7 @@ class AppWindow(tk.Frame):
             del chromosome['filenamedisplay']
             del chromosome['nmorphdisplay']
 
-        for i in range(1, POP_SIZE + 1):
+        for i in range(1, ecc_utility.POP_SIZE + 1):
             chromosome = self.chromosome[str(i)]
             chromosome['childlabel'] = tk.Label(self.parentselectionframe, text="Child " + str(i),
                                         font=(DEFAULT_FONT, 11, "bold"), width=10, anchor="w",
@@ -1748,4 +1741,4 @@ class AppWindow(tk.Frame):
 
 
 if __name__ == '__main__':
-    print('I am just a module, please launch the main script "VAM Evolutionary Character Creation.py".')
+    print(f'I am just a module, please launch the main script "{ecc_utility.MAIN_SCRIPT_NAME}".')

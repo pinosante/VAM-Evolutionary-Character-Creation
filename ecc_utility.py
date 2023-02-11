@@ -7,6 +7,9 @@ import json
 DATA_PATH = "data"
 SETTINGS_FILENAME = "settings.json"
 
+POP_SIZE = 20
+
+MAIN_SCRIPT_NAME = "VAM Evolutionary Character Creation.py"
 
 def save_settings(settings):
     """ Saves the settings as a json file to DATA_PATH/SETTINGS_FILENAME """
@@ -76,4 +79,4 @@ def generate_list_element(lst):
 
 
 if __name__ == '__main__':
-    print('I am just a module, please launch the main script "VAM Evolutionary Character Creation.py".')
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')
