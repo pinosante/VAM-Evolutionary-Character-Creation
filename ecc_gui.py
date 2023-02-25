@@ -718,7 +718,7 @@ Do you want to continue that session?""")
             messages.append('· Please select the VAM base folder')
         if not self.is_setting_valid('appearance dir'):
             messages.append('· Please select an Appearance folder')
-        if not self.is_setting_valid('appearance dir'):
+        if not self.is_setting_valid('child template'):
             messages.append('· Please select a child template appearance')
         if 'source files' not in self.settings:
             messages.append('· Please have at least 2 Parent files')
