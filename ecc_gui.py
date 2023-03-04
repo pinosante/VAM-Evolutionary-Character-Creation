@@ -675,7 +675,6 @@ Do you want to continue that session?""")
         self.update_initialize_population_button()
         self.update_found_labels()
 
-    @property
     def get_vam_default_appearance_path(self):
         """ Returns the path to the default Appearance directory based on the VAM base path, or returns '' if no base path
             is found in settings. """
@@ -1227,7 +1226,7 @@ Do you want to continue that session?""")
     def continue_last_session(self):
         """ Skip choosing the settings and continue from the last session. This only means switching the layout to
             the rating window and setting the generation counter to the last known value. """
-        path = self.get_vam_default_appearance_path
+        path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
 
         for c in self.population.chromosomes:
@@ -1580,7 +1579,7 @@ Do you want to continue that session?""")
 
     def save_population(self, population):
         """ save a population list of child appearances to files """
-        path = self.get_vam_default_appearance_path
+        path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
@@ -1590,7 +1589,7 @@ Do you want to continue that session?""")
 
     def update_population(self, new_appearances):
         """ update all chromosome appearances with the list of child appearance in population """
-        path = self.get_vam_default_appearance_path
+        path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for chromosome, appearance in zip(self.population.chromosomes, new_appearances):
