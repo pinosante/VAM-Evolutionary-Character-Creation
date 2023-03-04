@@ -25,9 +25,6 @@ from ecc_gui_constants import *
 from ecc_population import Population
 from ecc_select_appearance import SelectAppearanceDialog
 
-FOREGROUND = 'foreground'
-BACKGROUND = 'background'
-
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
 CHOOSE_ALL_TEXT = "Choose All Appearances"
@@ -744,6 +741,7 @@ Do you want to continue that session?""")
 
         dialog = SelectAppearanceDialog(self.settings, self.generator)
         filename = dialog.file_selection_with_thumbnails(genderlist, title, filteronmorphcount=False)
+        dialog.destroy()
 
         if filename == "":  # user did not select files
             self.child_template['label'].configure(text=NO_FILE_SELECTED_TEXT)
@@ -753,7 +751,6 @@ Do you want to continue that session?""")
             if 'child template' in self.settings:
                 del self.settings['child template']
             self.update_initialize_population_button()
-            self.file_selection_popup.destroy()
             self.update_found_labels()
             return
         self.child_template['label'].configure(text=self.create_template_labeltext(filename))
@@ -1309,7 +1306,7 @@ Do you want to continue that session?""")
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
         if 'gender' in self.child_template:
-            filenames = self.filter_filename_list_on_genders(filenames,
+            filenames = self.generator.filter_filename_list_on_genders(filenames,
                                                              ecc_logic.matching_genders(self.child_template['gender']))
             filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:

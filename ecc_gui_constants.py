@@ -30,5 +30,9 @@ MIN_RATING = 1
 MAX_RATING = 5
 RATING_FONT_SIZE = 13
 
+FOREGROUND = 'foreground'
+BACKGROUND = 'background'
+
+
 if __name__ == '__main__':
     print(f'I am just a module, please launch the main script "{ecc_utility.MAIN_SCRIPT_NAME}".')

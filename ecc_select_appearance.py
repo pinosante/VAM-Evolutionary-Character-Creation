@@ -1,3 +1,4 @@
+import pathlib
 import tkinter as tk
 from collections import defaultdict
 from datetime import datetime
@@ -37,7 +38,7 @@ class SelectAppearanceDialog(tk.Frame):
         filenames = list(self.generator.appearances.keys())
         if filteronmorphcount:
             filenames = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
-        filenames = self.filter_filename_list_on_genders(filenames, genderlist)
+        filenames = self.generator.filter_filename_list_on_genders(filenames, genderlist)
 
         # create popup window
         self.file_selection_popup = tk.Toplevel()
@@ -116,17 +117,6 @@ class SelectAppearanceDialog(tk.Frame):
         self.file_selection_popup.geometry(geometry)
         self.show_all_appearance_buttons(self.appearancesframe, filenames, self.thumbnails_per_row)
 
-    def filter_filename_list_on_genders(self, filenames, genderlist):
-        """ For a give list of filenames, filters on gender. """
-        # todo: to logic
-        filtered = []
-        for f in filenames:
-            gender = self.generator.gender[f]
-            if gender:
-                if gender in genderlist:
-                    filtered.append(f)
-        return filtered
-
     def show_all_appearance_buttons(self, window, filenames, thumbnails_per_row):
         """ Show all appearance files as image buttons, in the given window. """
         self.all_appearance_widgets = list()
@@ -141,6 +131,7 @@ class SelectAppearanceDialog(tk.Frame):
                 button, label = self.make_appearance_button(window, filenames[file_index], row, column, file_index)
                 self.all_appearance_widgets.extend((button, label))
                 file_index += 1
+
     def make_appearance_button(self, window, file_name, row, column, index):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
         self.appearancebutton[index] = self.make_appearance_button_sub(window, file_name, row, column, index)
@@ -178,7 +169,6 @@ class SelectAppearanceDialog(tk.Frame):
         self.appearancebutton[index][BACKGROUND] = BG_COLOR
         self.appearancelabel[index][BACKGROUND] = BG_COLOR
         self.appearancelabel[index][FOREGROUND] = FG_COLOR
-
 
 
 if __name__ == '__main__':

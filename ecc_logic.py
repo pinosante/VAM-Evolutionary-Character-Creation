@@ -90,6 +90,17 @@ class Generator:
         thumbnail = ImageTk.PhotoImage(image)
         return thumbnail
 
+    def filter_filename_list_on_genders(self, filenames, genderlist):
+        """ For a give list of filenames, filters on gender. """
+        # todo: to logic
+        filtered = []
+        for f in filenames:
+            gender = self.gender[f]
+            if gender:
+                if gender in genderlist:
+                    filtered.append(f)
+        return filtered
+
 
 def load_appearance(filename):
     """ Loads appearance from filename and returns it, or returns False if the appearance couldn't be loaded """
