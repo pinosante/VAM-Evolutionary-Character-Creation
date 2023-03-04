@@ -18,6 +18,7 @@ THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
 
+
 class Generator:
     def __init__(self, settings):
         self.settings = settings
@@ -92,7 +93,6 @@ class Generator:
 
     def filter_filename_list_on_genders(self, filenames, genderlist):
         """ For a give list of filenames, filters on gender. """
-        # todo: to logic
         filtered = []
         for f in filenames:
             gender = self.gender[f]

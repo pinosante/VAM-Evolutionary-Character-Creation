@@ -4,8 +4,6 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
 import copy
-import json
-import os
 import pathlib
 import random
 import tkinter as tk
@@ -14,16 +12,14 @@ from datetime import datetime
 from fnmatch import fnmatch
 from tkinter import filedialog
 from tkinter import messagebox
-from tkinter import ttk
-
 
 import numpy as np
 
 import ecc_logic
-from ecc_utility import *
 from ecc_gui_constants import *
 from ecc_population import Population
 from ecc_select_appearance import SelectAppearanceDialog
+from ecc_utility import *
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"

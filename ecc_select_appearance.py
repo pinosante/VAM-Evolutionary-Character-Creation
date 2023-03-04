@@ -1,14 +1,9 @@
 import pathlib
 import tkinter as tk
-from collections import defaultdict
-from datetime import datetime
-from fnmatch import fnmatch
-from tkinter import filedialog
-from tkinter import messagebox
 from tkinter import ttk
 
-from ecc_utility import *
 from ecc_gui_constants import *
+from ecc_utility import *
 
 
 class SelectAppearanceDialog(tk.Frame):
