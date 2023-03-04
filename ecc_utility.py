@@ -15,34 +15,37 @@ MAIN_SCRIPT_NAME = "VAM Evolutionary Character Creation.py"
 STORABLES = 'storables'
 
 
-def save_settings(settings):
-    """ Saves the settings as a json file to DATA_PATH/SETTINGS_FILENAME """
-    dir_path = ''
-    if getattr(sys, 'frozen', False):
-        dir_path = os.path.dirname(sys.executable)
-    elif __file__:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-    filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
-    with open(filename, 'w') as json_file:
-        print("Writing settings to:", filename)
-        json.dump(settings, json_file, indent=3)
+class Settings(dict):
+    def __init__(self):
+        super().__init__()
+        self.load()
 
+    def save(self):
+        """ Saves the settings as a json file to DATA_PATH/SETTINGS_FILENAME """
+        dir_path = ''
+        if getattr(sys, 'frozen', False):
+            dir_path = os.path.dirname(sys.executable)
+        elif __file__:
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+        filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
+        with open(filename, 'w') as json_file:
+            print("Writing settings to:", filename)
+            json.dump(self, json_file, indent=3)
 
-def load_settings():
-    """ Fills settings with the settings in the DATA_PATH/SETTINGS_FILENAME json_file """
-    dir_path = ''
-    settings = {}
-    if getattr(sys, 'frozen', False):
-        dir_path = os.path.dirname(sys.executable)
-    elif __file__:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-    filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
-    if os.path.isfile(filename):
-        with open(filename) as json_file:
-            print("Reading settings from:", filename)
-            settings = json.load(json_file)
-    return settings
-
+    def load(self):
+        """ Fills settings with the settings in the DATA_PATH/SETTINGS_FILENAME json_file """
+        dir_path = ''
+        settings = dict()
+        if getattr(sys, 'frozen', False):
+            dir_path = os.path.dirname(sys.executable)
+        elif __file__:
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+        filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
+        if os.path.isfile(filename):
+            with open(filename) as json_file:
+                print("Reading settings from:", filename)
+                data = json.load(json_file)
+                self.update(data)
 
 def strip_dir_string_to_max_length(dir_string, length):
     """ Takes a string directory, and cuts it at the '/' in the string such that the

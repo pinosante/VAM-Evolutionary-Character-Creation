@@ -21,8 +21,7 @@ def main():
     """
     create the business logic and the main window and launch them
     """
-    settings = ecc_utility.load_settings()
-
+    settings = ecc_utility.Settings()
     generator = ecc_logic.Generator(settings)
 
     main_window = tk.Tk()
@@ -31,11 +30,10 @@ def main():
     main_window.iconbitmap(os.path.join(ecc_utility.DATA_PATH, ICON_FILENAME))
 
     app = ecc_gui.AppWindow(settings, generator)
-
     app.initialize()
     main_window.mainloop()
 
-    ecc_utility.save_settings(settings)
+    settings.save()
 
 
 if __name__ == '__main__':
