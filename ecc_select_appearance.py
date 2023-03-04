@@ -5,10 +5,12 @@ from fnmatch import fnmatch
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
+
 from ecc_utility import *
+from ecc_gui_constants import *
 
 
-class SelectAppearance(tk.Frame):
+class SelectAppearanceDialog(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
         self.file_selection_popup = None
@@ -96,6 +98,87 @@ class SelectAppearance(tk.Frame):
         self.my_canvas.unbind_all('<MouseWheel>')
         self.my_canvas.unbind_all('<Escape>')
         return self._file_selection
+
+    def end_file_selection_with_thumbnails(self, filename="", event=None):
+        """ Saves settings and returns the filename through self._file_selection """
+        self.settings['file selection geometry'] = self.file_selection_popup.winfo_geometry()
+        self.settings['thumbnails per row'] = self.thumbnails_per_row
+        self._file_selection = str(pathlib.Path(filename))  # use uniform filename formatting
+        self.file_selection_popup.destroy()
+
+    def change_popup_width(self, value, filenames):
+        """ Changes the amount of images shown on each row. Value is either +1 or -1 depending on which function calls
+            this. Filenames is the list of filenames to be displayed in the file selection window. """
+        self.remove_all_appearance_widgets()
+        self.thumbnails_per_row += value
+        height = self.file_selection_popup.winfo_height()
+        geometry = str(int(190 * self.thumbnails_per_row + 23)) + "x" + str(height)
+        self.file_selection_popup.geometry(geometry)
+        self.show_all_appearance_buttons(self.appearancesframe, filenames, self.thumbnails_per_row)
+
+    def filter_filename_list_on_genders(self, filenames, genderlist):
+        """ For a give list of filenames, filters on gender. """
+        # todo: to logic
+        filtered = []
+        for f in filenames:
+            gender = self.generator.gender[f]
+            if gender:
+                if gender in genderlist:
+                    filtered.append(f)
+        return filtered
+
+    def show_all_appearance_buttons(self, window, filenames, thumbnails_per_row):
+        """ Show all appearance files as image buttons, in the given window. """
+        self.all_appearance_widgets = list()
+        max_vertical = int(len(filenames) / thumbnails_per_row) + 1
+        file_index = 0
+        self.appearancebutton = dict()
+        self.appearancelabel = dict()
+        for row in range(max_vertical):
+            for column in range(thumbnails_per_row):
+                if file_index >= len(filenames):
+                    return
+                button, label = self.make_appearance_button(window, filenames[file_index], row, column, file_index)
+                self.all_appearance_widgets.extend((button, label))
+                file_index += 1
+    def make_appearance_button(self, window, file_name, row, column, index):
+        """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
+        self.appearancebutton[index] = self.make_appearance_button_sub(window, file_name, row, column, index)
+        self.appearancelabel[index] = self.make_appearance_button_label(window, file_name, row, column)
+        return self.appearancebutton[index], self.appearancelabel[index]
+
+    def make_appearance_button_sub(self, window, file_name, row, column, file_index):
+        """ todo """
+        thumbnail = self.generator.thumbnails[file_name]
+        appearance_button = tk.Button(window, relief=tk.FLAT, bg=BG_COLOR,
+                                      command=lambda fn=file_name: self.end_file_selection_with_thumbnails(fn))
+        appearance_button.grid(row=row * 2, column=column, padx=0, pady=0)
+        appearance_button.configure(image=thumbnail)
+        appearance_button.bind("<Enter>", lambda e, index=file_index: self.on_enter_appearancebutton(index, event=e))
+        appearance_button.bind("<Leave>", lambda e, index=file_index: self.on_leave_appearancebutton(index, event=e))
+        appearance_button.image = thumbnail
+        return appearance_button
+
+    def make_appearance_button_label(self, window, file_name, row, column):
+        """ todo """
+        label_name = os.path.basename(file_name)[7:-4]  # remove Preset_ and .vap
+        appearance_label = tk.Label(window, text=label_name, font=FILENAME_FONT, width=26, anchor=tk.W,
+                                    bg=BG_COLOR, fg=FG_COLOR, padx=0, pady=0)
+        appearance_label.grid(row=row * 2 + 1, column=column, sticky=tk.W)
+        return appearance_label
+
+    def on_enter_appearancebutton(self, index, event=None):
+        """ Show hover effect when entering mouse over an image file. """
+        self.appearancebutton[index][BACKGROUND] = HOVER_COLOR
+        self.appearancelabel[index][BACKGROUND] = BG_COLOR
+        self.appearancelabel[index][FOREGROUND] = HOVER_COLOR
+
+    def on_leave_appearancebutton(self, index, event=None):
+        """ Show hover effect when exiting mouse over an image file. """
+        self.appearancebutton[index][BACKGROUND] = BG_COLOR
+        self.appearancelabel[index][BACKGROUND] = BG_COLOR
+        self.appearancelabel[index][FOREGROUND] = FG_COLOR
+
 
 
 if __name__ == '__main__':
