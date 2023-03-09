@@ -886,7 +886,6 @@ Do you want to continue that session?""")
             updated_appearance = ecc_logic.save_morph_to_appearance(morph_list, template_appearance)
             ecc_logic.save_appearance(updated_appearance, c.filename)
 
-
     def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
         """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
             Returns an empty list if neither of these settings are available. """
@@ -906,7 +905,6 @@ Do you want to continue that session?""")
             if len(morph_list) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
-
 
     def remove_all_appearance_widgets(self):
         """ Used by file_selection_with_thumbnails function to clear the popup window if the amount of thumbnails per
@@ -1004,8 +1002,7 @@ Do you want to continue that session?""")
         # todo: split to put stuff ino logic
         print(method)
         if self.generator.gen_counter == 0:
-            save_settings(
-                self.settings)  # in case of a bug we want to have the settings saved before we start the algorithm
+            self.settings.save()  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == 'Gaussian Samples':
                 self.gaussian_initialize_population(source_files=self.settings['source files'])
             elif method == 'Random Crossover':
@@ -1041,7 +1038,7 @@ Do you want to continue that session?""")
         self.titlelabel.configure(text=f'Generation {self.generator.gen_counter}')
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker('')
-        save_settings(self.settings)
+        self.settings.save()
 
     def change_gui_to_show_user_to_start_vam(self):
         """ After initialization this method is called, to remove all the setup widgets and replace them with a window
@@ -1303,7 +1300,8 @@ Do you want to continue that session?""")
 
         if 'gender' in self.child_template:
             filenames = self.generator.filter_filename_list_on_genders(filenames,
-                                                             ecc_logic.matching_genders(self.child_template['gender']))
+                                                                       ecc_logic.matching_genders(
+                                                                           self.child_template['gender']))
             filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
