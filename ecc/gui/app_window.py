@@ -15,11 +15,11 @@ from tkinter import messagebox
 
 import numpy as np
 
-import ecc_logic
-from ecc_gui_constants import *
-from ecc_population import Population
-from ecc_select_appearance import SelectAppearanceDialog
-from ecc_utility import *
+from ..logic.generator import Generator
+from ..logic.tools import *
+from .constants import *
+from .population import Population
+from .select_appearance import SelectAppearanceDialog
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
@@ -329,8 +329,8 @@ class AppWindow(tk.Frame):
             if os.path.isfile(self.settings['child template']):
                 self.child_template['label'].configure(
                     text=self.create_template_labeltext(self.settings['child template']))
-                self.child_template['gender'] = ecc_logic.get_appearance_gender(
-                    ecc_logic.load_appearance(self.settings['child template']))
+                self.child_template['gender'] = get_appearance_gender(
+                    load_appearance(self.settings['child template']))
                 self.press_childtemplate_button(self.child_template['gender'])
 
         if 'morph threshold' in self.settings:
@@ -430,7 +430,8 @@ Do you want to continue that session?""")
     def create_template_labeltext(self, filename):
         """ Returns a formatted label text for a given Appearance file with
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
-        template_gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
+
+        template_gender = get_appearance_gender(load_appearance(filename))
         # labeltxt = os.path.basename(filename)[7:-4] + " (" + template_gender + " Template)"
         labeltxt = os.path.basename(filename)[7:-4]
         self.child_template['gender'] = template_gender
@@ -580,7 +581,7 @@ Do you want to continue that session?""")
             show a file selection window filtered for matching genders. Updates the GUI with choices and saves to
             settings. """
         if 'gender' in self.child_template:
-            match = ecc_logic.matching_genders(self.child_template['gender'])
+            match = matching_genders(self.child_template['gender'])
         else:
             return
 
@@ -762,7 +763,7 @@ Do you want to continue that session?""")
         """ Called by the change template button in the rating windows. Opens a file selection dialogue which
             specifically filters for the gender of the template which is currently being used. If user does not
             select a valid new template file, the old template file is used. """
-        filename = self.file_selection_with_thumbnails(ecc_logic.matching_genders(self.child_template['gender']), title,
+        filename = self.file_selection_with_thumbnails(matching_genders(self.child_template['gender']), title,
                                                        filteronmorphcount=False)
         if filename == "":  # user did not select files
             return
@@ -775,9 +776,9 @@ Do you want to continue that session?""")
         self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
-        gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(filename))
-        if not ecc_logic.is_compatible_gender(gender, self.child_template['gender']):
-            matches = ecc_logic.matching_genders(self.child_template['gender'])
+        gender = get_appearance_gender(load_appearance(filename))
+        if not is_compatible_gender(gender, self.child_template['gender']):
+            matches = matching_genders(self.child_template['gender'])
             if len(matches) > 1:  # Female and Futa
                 selectmsg = "Please select a Female or Futa as template."
             else:
@@ -865,26 +866,26 @@ Do you want to continue that session?""")
         for filename in filename_generator:
             if len(appearance_templates) >= POP_SIZE:
                 break
-            appearance = ecc_logic.load_appearance(filename)
-            gender = ecc_logic.get_appearance_gender(appearance)
+            appearance = load_appearance(filename)
+            gender = get_appearance_gender(appearance)
             if gender == self.child_template['gender']:
                 appearance_templates.append(appearance)
 
         for c in self.population.chromosomes:
-            morph_list = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(c.filename))
-            updated_appearance = ecc_logic.save_morph_to_appearance(morph_list, appearance_templates[c.index])
-            nude_appearance = ecc_logic.remove_clothing_from_appearance(updated_appearance)
-            ecc_logic.save_appearance(nude_appearance, c.filename)
+            morph_list = get_morph_list_from_appearance(load_appearance(c.filename))
+            updated_appearance = save_morph_to_appearance(morph_list, appearance_templates[c.index])
+            nude_appearance = remove_clothing_from_appearance(updated_appearance)
+            save_appearance(nude_appearance, c.filename)
 
         self.broadcast_message_to_vam_rating_blocker('')
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
-        template_appearance = ecc_logic.load_appearance(self.settings['child template'])
+        template_appearance = load_appearance(self.settings['child template'])
         for c in self.population.chromosomes:
-            morph_list = ecc_logic.get_morph_list_from_appearance(ecc_logic.load_appearance(c.filename))
-            updated_appearance = ecc_logic.save_morph_to_appearance(morph_list, template_appearance)
-            ecc_logic.save_appearance(updated_appearance, c.filename)
+            morph_list = get_morph_list_from_appearance(load_appearance(c.filename))
+            updated_appearance = save_morph_to_appearance(morph_list, template_appearance)
+            save_appearance(updated_appearance, c.filename)
 
     def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
         """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
@@ -900,8 +901,8 @@ Do you want to continue that session?""")
         filtered = list()
         for f in filenames:
             appearance = self.generator.appearances[f]
-            morph_list = ecc_logic.get_morph_list_from_appearance(appearance)
-            morph_list = ecc_logic.filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
+            morph_list = get_morph_list_from_appearance(appearance)
+            morph_list = filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
             if len(morph_list) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
@@ -937,14 +938,14 @@ Do you want to continue that session?""")
 
         c = self.population.get_chromosome(number)
         if c.filename != '':
-            gender = ecc_logic.get_appearance_gender(ecc_logic.load_appearance(c.filename))
-            if not ecc_logic.is_compatible_gender(gender, template_gender):
+            gender = get_appearance_gender(load_appearance(c.filename))
+            if not is_compatible_gender(gender, template_gender):
                 self.hide_parent_file_from_view(
                     number)  # hide, but don't delete, in case template later has matching gender
                 return
 
-            morph_list_tmp = copy.deepcopy(ecc_logic.get_morph_list_from_appearance(c.appearance))
-            morph_list_tmp = ecc_logic.filter_morphs_below_threshold(morph_list_tmp, threshold)
+            morph_list_tmp = copy.deepcopy(get_morph_list_from_appearance(c.appearance))
+            morph_list_tmp = filter_morphs_below_threshold(morph_list_tmp, threshold)
             number_of_morphs = str(len(morph_list_tmp))
             if int(number_of_morphs) < self.settings['min morph threshold']:
                 if self.generator.gen_counter == 0:  # only do this in the initialization selection step
@@ -1020,14 +1021,14 @@ Do you want to continue that session?""")
         elites = self.get_elites_from_population()
 
         # Save elite appearances over child template (we do this, because the user might have changed the template file)
-        elite_morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in elites]
-        template_appearance = ecc_logic.load_appearance(self.settings['child template'])
-        new_population = [ecc_logic.save_morph_to_appearance(elite_morph_list, template_appearance)
+        elite_morph_lists = [get_morph_list_from_appearance(appearance) for appearance in elites]
+        template_appearance = load_appearance(self.settings['child template'])
+        new_population = [save_morph_to_appearance(elite_morph_list, template_appearance)
                           for elite_morph_list in elite_morph_lists]
 
         for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
-            child_appearance = ecc_logic.fuse_characters(random_parents[0].filename, random_parents[1].filename,
+            child_appearance = fuse_characters(random_parents[0].filename, random_parents[1].filename,
                                                          self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
@@ -1073,7 +1074,7 @@ Do you want to continue that session?""")
         for c in self.population.chromosomes:
             filename = os.path.join(save_path, f'Preset_{CHILDREN_FILENAME_PREFIX}{c.index}.vap')
             c.filename = filename
-            c.appearance = ecc_logic.load_appearance(filename)
+            c.appearance = load_appearance(filename)
 
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
@@ -1109,7 +1110,7 @@ Do you want to continue that session?""")
                     raise IOError(f'Not enough lines ({len(lines)}) in the file ')
                 # f.seek(0) # back to start of file
                 command_json = json.loads(linestring)
-                command = ecc_logic.value_from_id_in_dict_list(command_json['storables'], 'Text', 'text')
+                command = value_from_id_in_dict_list(command_json['storables'], 'Text', 'text')
                 if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
@@ -1220,7 +1221,7 @@ Do you want to continue that session?""")
         try:
             with open(path, encoding='utf-8') as f:
                 text_json = json.load(f)
-            text_json['storables'] = ecc_logic.replace_value_from_id_in_dict_list(text_json[STORABLES], id_string,
+            text_json['storables'] = replace_value_from_id_in_dict_list(text_json[STORABLES], id_string,
                                                                                   needed_key,
                                                                                   replacement_string)
             with open(path, 'w', encoding='utf-8') as json_file:
@@ -1300,7 +1301,7 @@ Do you want to continue that session?""")
 
         if 'gender' in self.child_template:
             filenames = self.generator.filter_filename_list_on_genders(filenames,
-                                                                       ecc_logic.matching_genders(
+                                                                       matching_genders(
                                                                            self.child_template['gender']))
             filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
@@ -1333,7 +1334,7 @@ Do you want to continue that session?""")
         new_population = list()
         for i in range(1, POP_SIZE + 1):
             random_parents = random.sample(parent_filenames, 2)
-            child_appearance = ecc_logic.fuse_characters(random_parents[0], random_parents[1], self.settings)
+            child_appearance = fuse_characters(random_parents[0], random_parents[1], self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
         self.generator.gen_counter += 1
@@ -1356,10 +1357,10 @@ Do you want to continue that session?""")
         filenames = self.select_appearances_strategies[source_files]()
         appearances = [self.generator.appearances[f] for f in filenames]
         print(f"Source files: {source_files} ({len(appearances)} Files)")
-        morph_lists = [ecc_logic.get_morph_list_from_appearance(appearance) for appearance in appearances]
-        morph_names = ecc_logic.get_all_morph_names_in_morph_lists(morph_lists)
-        morph_lists = ecc_logic.pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
-        morph_lists = ecc_logic.dedupe_morphs(morph_lists)
+        morph_lists = [get_morph_list_from_appearance(appearance) for appearance in appearances]
+        morph_names = get_all_morph_names_in_morph_lists(morph_lists)
+        morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
+        morph_lists = dedupe_morphs(morph_lists)
         means = self.get_means_from_morphlists(morph_lists)
         means = list(means.values())
         covariances = self.get_cov_from_morph_lists(morph_lists)
@@ -1379,10 +1380,10 @@ Do you want to continue that session?""")
             new_morph_list = copy.deepcopy(morph_lists[0])
             for j, morph in enumerate(new_morph_list):
                 morph['value'] = sample[j]
-            new_morph_list = ecc_logic.filter_morphs_below_threshold(new_morph_list, threshold)
-            child_appearance = ecc_logic.load_appearance(template_file)
+            new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
+            child_appearance = load_appearance(template_file)
             print('Using as appearance template:', template_file)
-            child_appearance = ecc_logic.save_morph_to_appearance(new_morph_list, child_appearance)
+            child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
             new_population.append(child_appearance)
 
         self.save_population(new_population)
@@ -1426,7 +1427,7 @@ Do you want to continue that session?""")
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
             save_filename = os.path.join(save_path, 'Preset_' + CHILDREN_FILENAME_PREFIX + str(i + 1) + '.vap')
-            ecc_logic.save_appearance(child_appearance, save_filename)
+            save_appearance(child_appearance, save_filename)
         return True
 
     def update_population(self, new_appearances):

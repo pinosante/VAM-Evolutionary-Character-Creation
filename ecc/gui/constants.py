@@ -1,6 +1,3 @@
-import ecc_utility
-
-
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
 NO_FILE_SELECTED_TEXT = "…"

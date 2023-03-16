@@ -1,7 +1,7 @@
 """todo"""
 import tkinter as tk
-from ecc_gui_constants import *
-from ecc_utility import *
+from .constants import *
+from ..common.utility import *
 
 
 class Chromosome:

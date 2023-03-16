@@ -4,8 +4,8 @@ import os
 import sys
 import json
 
-DATA_PATH = "data"
-SETTINGS_FILENAME = "settings.json"
+DATA_PATH = 'data'
+SETTINGS_FILENAME = '..\\..\\..\\data\\settings.json'
 POP_SIZE = 20
 INITIAL_RATING = 3
 MALE = 'Male'
@@ -13,6 +13,10 @@ FEMALE = 'Female'
 FUTA = 'Futa'
 MAIN_SCRIPT_NAME = "VAM Evolutionary Character Creation.py"
 STORABLES = 'storables'
+
+THUMBNAIL_SIZE = 184, 184
+NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
+CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
 
 
 class Settings(dict):

@@ -2,8 +2,8 @@ import pathlib
 import tkinter as tk
 from tkinter import ttk
 
-from ecc_gui_constants import *
-from ecc_utility import *
+from .constants import *
+from ..common.utility import *
 
 
 class SelectAppearanceDialog(tk.Frame):
