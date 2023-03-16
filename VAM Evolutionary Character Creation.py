@@ -9,6 +9,8 @@ Please credit me if you change, use or adapt this file.
 import os
 import tkinter as tk
 
+from ecc.common.utility import settings
+
 import ecc_gui
 import ecc_logic
 import ecc_utility
