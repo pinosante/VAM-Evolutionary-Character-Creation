@@ -1,4 +1,8 @@
-"""some helpers"""
+"""
+Business logic for VAM Evolutionary Character Creation
+By Pino Sante
+Please credit me if you change, use or adapt this file.
+"""
 
 import os
 import sys

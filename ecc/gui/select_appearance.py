@@ -1,3 +1,9 @@
+"""
+Business logic for VAM Evolutionary Character Creation
+By Pino Sante
+Please credit me if you change, use or adapt this file.
+"""
+
 import pathlib
 import tkinter as tk
 from tkinter import ttk

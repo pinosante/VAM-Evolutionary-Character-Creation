@@ -93,7 +93,6 @@ def intuitive_crossover(morph_list1, morph_list2):
         be selected
         reference: https://towardsdatascience.com/unit-3-genetic-algorithms-part-1-986e3b4666d7
         """
-    # for zip check this: https://www.programiz.com/python-programming/methods/built-in/zip
     zipped_morphs = zip(morph_list1, morph_list2)
     return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
@@ -279,11 +278,19 @@ def save_morph_to_appearance(morph_list, appearance):
 def dedupe_morphs(morph_lists):
     """ removes duplicate morphs from each morph_list in morph_lists """
 
-    # suggestion from ChatGPT -- do not understand yet. :) todo: test
+    # suggestion from GPT-3.5 -- do not understand yet. :) todo: test
     # return [
     #     [morph for i, morph in enumerate(morph_list) if morph['name'] not in morph_list[:i]]
     #     for morph_list in morph_lists
     # ]
+
+    # another suggestion by GPT-4
+    # new_morph_lists = []
+    # for morph_list in morph_lists:
+    #     found_morphs = {morph['name']: morph for morph in morph_list if morph['name'] not in found_morphs}
+    #     new_morph = list(found_morphs.values())
+    #     new_morph_lists.append(new_morph)
+    # return new_morph_lists
 
     new_morph_lists = list()
     for morph_list in morph_lists:
@@ -313,10 +320,6 @@ def count_morph_values_below_threshold(morph_list, threshold):
 def filter_morphs_below_threshold(morph_list, threshold):
     """ goes through each morph in each morph_list in the list of morph_lists and only keeps morphs with values above
         threshold """
-
-    # suggestion ChatGPT: todo test
-    # return [morph for morph in morph_list if "value" in morph and abs(float(morph['value'])) >= threshold]
-
     new_morph_list = []
     for morph in morph_list:
         if 'value' in morph and abs(float(morph['value'])) >= threshold:

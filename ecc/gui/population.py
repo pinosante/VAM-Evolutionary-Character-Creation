@@ -1,4 +1,9 @@
-"""todo"""
+"""
+Business logic for VAM Evolutionary Character Creation
+By Pino Sante
+Please credit me if you change, use or adapt this file.
+"""
+
 import tkinter as tk
 from .constants import *
 from ..common.utility import *

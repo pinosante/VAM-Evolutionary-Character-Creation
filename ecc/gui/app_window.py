@@ -3,9 +3,8 @@ GUI for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
-import copy
+
 import pathlib
-import random
 import tkinter as tk
 from collections import defaultdict
 from datetime import datetime
@@ -15,11 +14,10 @@ from tkinter import messagebox
 
 import numpy as np
 
-from ..logic.generator import Generator
-from ..logic.tools import *
 from .constants import *
 from .population import Population
 from .select_appearance import SelectAppearanceDialog
+from ..logic.tools import *
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
