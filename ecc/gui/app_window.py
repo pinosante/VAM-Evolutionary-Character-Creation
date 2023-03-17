@@ -49,6 +49,8 @@ class AppWindow(tk.Frame):
         super().__init__()
         self.settings = settings
         self.generator = generator
+        self.subtitlefont = (DEFAULT_FONT, 11, "bold")
+        self.subtitlepadding = 1
 
         # create a dictionary to select appearances
         self.select_appearances_strategies = {
@@ -59,209 +61,81 @@ class AppWindow(tk.Frame):
 
         self.master.title(APP_TITLE)
 
-        subtitlefont = (DEFAULT_FONT, 11, "bold")
-        subtitlepadding = 1
+        self.init_title_frame()
+        self.init_vam_dir_frame()
+        self.init_appearance_dir_frame()
+        self.init_child_template_frame()
+        self.init_parent_files_frame()
+        self.init_chromosome_list_frame(settings)
+        self.init_alternative_appearances_frame()
+        self.init_intialization_method()
+        self.init_options_frame()
+        self.init_generate_button()
 
-        ###
-        ### TITLE
-        ###
-        self.titleframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.titleframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
-        self.titleframe.grid_columnconfigure(0, weight=1)
-        self.titlelabel = tk.Label(self.titleframe, text="Initialization",
-                                   font=(DEFAULT_FONT, 14, "bold"),
-                                   bg=BG_COLOR, fg=FG_COLOR)
-        self.titlelabel.grid(row=0, column=0, sticky=tk.W)
+        self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
+        self.filler_bottom.grid(row=0, column=1)
 
+    def init_generate_button(self):
         ###
-        ### VAM DIRECTORY
+        ### GENERATE CHILD BUTTON
         ###
-        self.vamdirframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.vamdirframe.grid(row=1, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.vamdirtitlelabel = tk.Label(self.vamdirframe,
-                                         text="Step 1: Select VAM Base Folder (with VaM.exe)",
-                                         font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.vamdirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
-                                      fg=BUTTON_FG_COLOR,
-                                      activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                      command=lambda: self.select_vamdir())
-        self.vamdirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT,
-                                    font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
-                                    bg=BG_COLOR, fg=FG_COLOR)
-        self.vamdirlabel.grid(row=1, column=1, sticky=tk.W)
+        self.bottomframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.bottomframe.grid(row=8, column=1, padx=(10, 0), pady=0, sticky=tk.W)
+        self.generatechild = tk.Button(
+            self.bottomframe, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+            activebackground=BUTTON_ACTIVE_COLOR,
+            command=lambda: self.generate_next_population(self.settings['method']),
+            relief="flat", font=(DEFAULT_FONT, 15, "bold")
+        )
+        self.generatechild.grid(row=0, column=0, sticky=tk.W)
 
-        ###
-        ### APPEARANCE DIRECTORY
-        ###
-        self.appearancedirframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.appearancedirframe.grid(row=2, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.appearancedirtitlelabel = tk.Label(self.appearancedirframe,
-                                                text="Step 2: Select Appearance folder to use",
-                                                font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.appearancedirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder",
-                                             bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                             activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                             command=lambda: self.select_appearancedir())
-        self.appearancedirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT,
-                                           font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
-                                           bg=BG_COLOR, fg=FG_COLOR)
-        self.appearancedirlabel.grid(row=1, column=1, sticky=tk.W)
-
-        ###
-        ### CHILD TEMPLATE
-        ###
-        self.childtemplateframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.childtemplateframe.grid(row=3, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.childtemplatelabel = tk.Label(self.childtemplateframe,
-                                           text="Step 3: Select Child Template Appearance", font=subtitlefont,
-                                           bg=BG_COLOR, fg=FG_COLOR)
-        self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
-
-        self.child_template_button = {
-            FEMALE: self.create_child_template_button(FEMALE, 0),
-            MALE: self.create_child_template_button(MALE, 1),
-            FUTA: self.create_child_template_button(FUTA, 2)
-        }
-        self.child_template = dict()
-        self.child_template['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
-                                                font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        self.child_template['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
-
-        ###
-        ### PARENT FILES
-        ###
-        self.sourcefilesframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.sourcefilesframe.grid(row=4, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.sourcefileslabel = tk.Label(self.sourcefilesframe, text="Step 4: Select Parent File Source",
-                                         font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.sourcefileslabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.allappearancesbutton = tk.Button(self.sourcefilesframe, text="All Appearances", bg=BUTTON_BG_COLOR,
-                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                              command=lambda: self.choose_all_appearances())
-        self.allappearancesbutton.grid(row=1, column=0, sticky=tk.W)
-        self.allfavoritesbutton = tk.Button(self.sourcefilesframe, text="All Favorited Appearances", bg=BUTTON_BG_COLOR,
-                                            fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                            command=lambda: self.choose_all_favorites())
-        self.allfavoritesbutton.grid(row=1, column=1, sticky=tk.W)
-        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
-                                           fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                           command=lambda: self.choose_files())
-        self.choosefilesbutton.grid(row=1, column=2, sticky=tk.W)
-
-        ###
-        ### CHROMOSOMELIST
-        ###
-        self.parentselectionframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.parentselectionframe.grid(row=5, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.chromosomelabel = tk.Label(self.parentselectionframe, text="Step 5: Select Parent Files",
-                                        font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.chromosomelabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-
-        self.columninfo = dict()
-        self.columninfo['1'] = tk.Label(self.parentselectionframe, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
-        self.columninfo['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
-        self.columninfo['2'] = tk.Label(self.parentselectionframe, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
-        self.columninfo['2'].grid(row=1, column=1, sticky=tk.W)
-        self.columninfo['3'] = tk.Label(self.parentselectionframe, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
-        self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
-
-        # initialize population and chromosomes
-        self.population = Population(POP_SIZE, settings)
-        for chromo in self.population.chromosomes:
-            chromo.initialize_ui(self.parentselectionframe, self.select_file)
-
-        ###
-        ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
-        ###
-        self.favoritesframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.favoritesframe.grid(row=5, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.favoriteslabel = tk.Label(self.favoritesframe, text="Step 5: Favorited Appearances Chosen",
-                                       font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.favoriteslabel.grid(row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.favoritesinfo = tk.Label(self.favoritesframe, text="", bg=BG_COLOR, fg=FG_COLOR)
-        self.favoritesinfo.grid(row=1, column=0, sticky=tk.W, pady=(0, 0))
-        self.favoritesframe.grid_remove()  # will be shown when needed
-
-        ###
-        ### INITIALIZATION METHOD
-        ###
-        self.methodframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.methodframe.grid(row=6, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-        self.methodlabel = tk.Label(self.methodframe, text="Step 6: Initialization Method", font=subtitlefont,
-                                    bg=BG_COLOR, fg=FG_COLOR)
-        self.methodlabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.gaussianbutton = tk.Button(self.methodframe, text="Gaussian Samples", bg=BUTTON_BG_COLOR,
-                                        fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                        command=lambda: self.choose_gaussian_samples())
-        self.gaussianbutton.grid(row=1, column=0, sticky=tk.W)
-        self.randomcrossoverbutton = tk.Button(self.methodframe, text="Random Crossover", bg=BUTTON_BG_COLOR,
-                                               fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                               command=lambda: self.choose_random_crossover())
-        self.randomcrossoverbutton.grid(row=1, column=1, sticky=tk.W)
-
+    def init_options_frame(self):
         ###
         ### OPTIONS
         ###
         self.optionsframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.optionsframe.grid(row=7, column=1, padx=10, pady=subtitlepadding, sticky=tk.W)
-
+        self.optionsframe.grid(row=7, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
         option_row_number = 1
-        options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
         options_label.grid(columnspan=9, row=option_row_number, sticky=tk.W, pady=(0, 0))
-
         option_row_number += 1  # go to next row of the options menu
         self.threshold_label = tk.Label(self.optionsframe, text="A) Remove morphs with absolute value below:",
                                         anchor='w', bg=BG_COLOR, fg=FG_COLOR)
         self.threshold_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
-
         # track if the threshold values are changed by the user and if so, update the morph info based on the setting
         self.threshold_var = tk.DoubleVar()
         self.threshold_var.set(0.01)
         self.threshold_var.trace_add("write", self.track_threshold_change)
-
         self.threshold_entry = tk.Entry(self.optionsframe, textvariable=self.threshold_var, fg=BUTTON_FG_COLOR,
                                         bg=BUTTON_BG_COLOR, width=7)
         self.threshold_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-
         self.threshold_label = tk.Label(self.optionsframe, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
         self.threshold_label.grid(row=option_row_number, column=12, sticky=tk.W)
-
         # minimum morphs needed in appearance to be available in file selection
         option_row_number += 1  # go to next row of the options menu
         self.minmorph_label = tk.Label(self.optionsframe, text="B) Only show appearances with morph count above:",
                                        anchor='w', bg=BG_COLOR, fg=FG_COLOR)
         self.minmorph_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
-
         # track if the threshold values are changed by the user and if so, update the morph info based on the setting
         self.minmorph_var = tk.IntVar()
         self.minmorph_var.set(0)
         self.minmorph_var.trace_add("write", self.track_minmorph_change)
-
         self.minmorph_entry = tk.Entry(self.optionsframe, textvariable=self.minmorph_var, fg=BUTTON_FG_COLOR,
                                        bg=BUTTON_BG_COLOR, width=7)
         self.minmorph_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-
         self.minmorph_infolabel = tk.Label(self.optionsframe, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
         self.minmorph_infolabel.grid(row=option_row_number, column=12, sticky=tk.W)
-
         option_row_number += 1  # go to next row of the options menu
         self.maxkeptelites_label = tk.Label(self.optionsframe, text="C) Max kept elites (highest rated):", anchor='w',
                                             bg=BG_COLOR, fg=FG_COLOR)
         self.maxkeptelites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
-
         # track if the maxkeptelites values are changed by the user
         self.maxkeptelites_var = tk.IntVar()
         self.maxkeptelites_var.set(DEFAULT_MAX_KEPT_ELITES)
         self.maxkeptelites_var.trace_add("write", self.track_maxkeptelites_change)
-
         self.maxkeptelites_entry = tk.Entry(self.optionsframe, textvariable=self.maxkeptelites_var, fg=BUTTON_FG_COLOR,
                                             bg=BUTTON_BG_COLOR, width=7)
         self.maxkeptelites_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-
         option_row_number += 1  # go to next row of the options menu
         self.recursivedirectorysearch_label = tk.Label(self.optionsframe,
                                                        text="D) Also read subdirectories in file selection:",
@@ -276,22 +150,151 @@ class AppWindow(tk.Frame):
                                                            command=lambda: self.use_recursive_directory_search(False))
         self.recursivedirectorysearch_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
 
+    def init_intialization_method(self):
         ###
-        ### GENERATE CHILD BUTTON
+        ### INITIALIZATION METHOD
         ###
-        self.bottomframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.bottomframe.grid(row=8, column=1, padx=(10, 0), pady=0, sticky=tk.W)
+        self.methodframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.methodframe.grid(row=6, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.methodlabel = tk.Label(self.methodframe, text="Step 6: Initialization Method", font=self.subtitlefont,
+                                    bg=BG_COLOR, fg=FG_COLOR)
+        self.methodlabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.gaussianbutton = tk.Button(self.methodframe, text="Gaussian Samples", bg=BUTTON_BG_COLOR,
+                                        fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                        command=lambda: self.choose_gaussian_samples())
+        self.gaussianbutton.grid(row=1, column=0, sticky=tk.W)
+        self.randomcrossoverbutton = tk.Button(self.methodframe, text="Random Crossover", bg=BUTTON_BG_COLOR,
+                                               fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                               command=lambda: self.choose_random_crossover())
+        self.randomcrossoverbutton.grid(row=1, column=1, sticky=tk.W)
 
-        self.generatechild = tk.Button(
-            self.bottomframe, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-            activebackground=BUTTON_ACTIVE_COLOR,
-            command=lambda: self.generate_next_population(self.settings['method']),
-            relief="flat", font=(DEFAULT_FONT, 15, "bold")
-        )
-        self.generatechild.grid(row=0, column=0, sticky=tk.W)
+    def init_alternative_appearances_frame(self):
+        ###
+        ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
+        ###
+        self.favoritesframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.favoritesframe.grid(row=5, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.favoriteslabel = tk.Label(self.favoritesframe, text="Step 5: Favorited Appearances Chosen",
+                                       font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.favoriteslabel.grid(row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.favoritesinfo = tk.Label(self.favoritesframe, text="", bg=BG_COLOR, fg=FG_COLOR)
+        self.favoritesinfo.grid(row=1, column=0, sticky=tk.W, pady=(0, 0))
+        self.favoritesframe.grid_remove()  # will be shown when needed
 
-        self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
-        self.filler_bottom.grid(row=0, column=1)
+    def init_chromosome_list_frame(self, settings):
+        ###
+        ### CHROMOSOMELIST
+        ###
+        self.parentselectionframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.parentselectionframe.grid(row=5, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.chromosomelabel = tk.Label(self.parentselectionframe, text="Step 5: Select Parent Files",
+                                        font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.chromosomelabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.columninfo = dict()
+        self.columninfo['1'] = tk.Label(self.parentselectionframe, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
+        self.columninfo['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
+        self.columninfo['2'] = tk.Label(self.parentselectionframe, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
+        self.columninfo['2'].grid(row=1, column=1, sticky=tk.W)
+        self.columninfo['3'] = tk.Label(self.parentselectionframe, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
+        self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
+        # initialize population and chromosomes
+        self.population = Population(POP_SIZE, settings)
+        for chromo in self.population.chromosomes:
+            chromo.initialize_ui(self.parentselectionframe, self.select_file)
+
+    def init_parent_files_frame(self):
+        ###
+        ### PARENT FILES
+        ###
+        self.sourcefilesframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.sourcefilesframe.grid(row=4, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.sourcefileslabel = tk.Label(self.sourcefilesframe, text="Step 4: Select Parent File Source",
+                                         font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.sourcefileslabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.allappearancesbutton = tk.Button(self.sourcefilesframe, text="All Appearances", bg=BUTTON_BG_COLOR,
+                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                              command=lambda: self.choose_all_appearances())
+        self.allappearancesbutton.grid(row=1, column=0, sticky=tk.W)
+        self.allfavoritesbutton = tk.Button(self.sourcefilesframe, text="All Favorited Appearances", bg=BUTTON_BG_COLOR,
+                                            fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                            command=lambda: self.choose_all_favorites())
+        self.allfavoritesbutton.grid(row=1, column=1, sticky=tk.W)
+        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
+                                           fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                           command=lambda: self.choose_files())
+        self.choosefilesbutton.grid(row=1, column=2, sticky=tk.W)
+
+    def init_child_template_frame(self):
+        ###
+        ### CHILD TEMPLATE
+        ###
+        self.childtemplateframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.childtemplateframe.grid(row=3, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.childtemplatelabel = tk.Label(self.childtemplateframe,
+                                           text="Step 3: Select Child Template Appearance", font=self.subtitlefont,
+                                           bg=BG_COLOR, fg=FG_COLOR)
+        self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.child_template_button = {
+            FEMALE: self.create_child_template_button(FEMALE, 0),
+            MALE: self.create_child_template_button(MALE, 1),
+            FUTA: self.create_child_template_button(FUTA, 2)
+        }
+        self.child_template = dict()
+        self.child_template['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
+                                                font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
+        self.child_template['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
+
+    def init_appearance_dir_frame(self):
+        ###
+        ### APPEARANCE DIRECTORY
+        ###
+        self.appearancedirframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.appearancedirframe.grid(row=2, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.appearancedirtitlelabel = tk.Label(self.appearancedirframe,
+                                                text="Step 2: Select Appearance folder to use",
+                                                font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.appearancedirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
+        self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder",
+                                             bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                             activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                                             command=lambda: self.select_appearancedir())
+        self.appearancedirbutton.grid(row=1, column=0, sticky=tk.W)
+        self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT,
+                                           font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
+                                           bg=BG_COLOR, fg=FG_COLOR)
+        self.appearancedirlabel.grid(row=1, column=1, sticky=tk.W)
+
+    def init_vam_dir_frame(self):
+        ###
+        ### VAM DIRECTORY
+        ###
+        self.vamdirframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.vamdirframe.grid(row=1, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.vamdirtitlelabel = tk.Label(self.vamdirframe,
+                                         text="Step 1: Select VAM Base Folder (with VaM.exe)",
+                                         font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        self.vamdirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
+        self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
+                                      fg=BUTTON_FG_COLOR,
+                                      activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                                      command=lambda: self.select_vamdir())
+        self.vamdirbutton.grid(row=1, column=0, sticky=tk.W)
+        self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT,
+                                    font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
+                                    bg=BG_COLOR, fg=FG_COLOR)
+        self.vamdirlabel.grid(row=1, column=1, sticky=tk.W)
+
+    def init_title_frame(self):
+        ###
+        ### TITLE
+        ###
+        self.titleframe = tk.Frame(self.master, bg=BG_COLOR)
+        self.titleframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
+        self.titleframe.grid_columnconfigure(0, weight=1)
+        self.titlelabel = tk.Label(self.titleframe, text="Initialization",
+                                   font=(DEFAULT_FONT, 14, "bold"),
+                                   bg=BG_COLOR, fg=FG_COLOR)
+        self.titlelabel.grid(row=0, column=0, sticky=tk.W)
 
     def create_child_template_button(self, gender_text, column):
         button = tk.Button(self.childtemplateframe, text=gender_text,
