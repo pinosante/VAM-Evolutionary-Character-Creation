@@ -18,7 +18,9 @@ from .constants import *
 from .population import Population
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
+from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.method_frame import MethodFrame
+from .app_window_frames.generate_children_frame import GenerateChildrenFrame
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
@@ -75,13 +77,12 @@ class AppWindow(tk.Frame):
         self.threshold_entry = None
         self.threshold_var = None
         self.options_frame = None
-        self.generate_child_button = None
-        self.bottom_frame = None
+        self.generate_children_button = None
+        self.generate_children_frame = None
         self.settings = settings
         self.generator = generator
         self.subtitle_font = (DEFAULT_FONT, 11, "bold")
         self.subtitle_padding = 1
-
 
         # create a dictionary to select appearances
         self.select_appearances_strategies = {
@@ -90,9 +91,14 @@ class AppWindow(tk.Frame):
             CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
         }
 
-        self.master.title(APP_TITLE)
+        # self.master.title(APP_TITLE)
 
-        self.init_title_frame()
+        self.title_frame = TitleFrame()
+        self.title_frame.grid(row=0, column=0, sticky=tk.W)
+
+        self.generate_children_frame = GenerateChildrenFrame(settings, self.generate_next_population)
+        self.generate_children_frame.grid(row=8, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+
         self.init_vam_dir_frame()
         self.init_appearance_dir_frame()
         self.init_child_template_frame()
@@ -100,26 +106,15 @@ class AppWindow(tk.Frame):
         self.init_chromosome_list_frame(settings)
         self.init_alternative_appearances_frame()
 
-        self.init_generate_button()
-
         self.method_frame = MethodFrame(self.subtitle_font, settings, self.update_initialize_population_button)
         self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.init_options_frame()
 
-        self.filler_bottom = tk.Label(self.bottom_frame, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
-        self.filler_bottom.grid(row=0, column=1)
 
-    def init_generate_button(self):
-        self.bottom_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.bottom_frame.grid(row=8, column=1, padx=(10, 0), pady=0, sticky=tk.W)
-        self.generate_child_button = tk.Button(
-            self.bottom_frame, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-            activebackground=BUTTON_ACTIVE_COLOR,
-            command=lambda: self.generate_next_population(self.settings['method']),
-            relief="flat", font=(DEFAULT_FONT, 15, "bold")
-        )
-        self.generate_child_button.grid(row=0, column=0, sticky=tk.W)
+        self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
+                                      fg=FG_COLOR)
+        self.filler_bottom.grid(row=0, column=1)
 
     def init_options_frame(self):
         self.options_frame = tk.Frame(self.master, bg=BG_COLOR)
@@ -283,15 +278,6 @@ class AppWindow(tk.Frame):
                                       bg=BG_COLOR, fg=FG_COLOR)
         self.vam_dir_label.grid(row=1, column=1, sticky=tk.W)
 
-    def init_title_frame(self):
-        self.title_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.title_frame.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
-        self.title_frame.grid_columnconfigure(0, weight=1)
-        self.title_label = tk.Label(self.title_frame, text="Initialization",
-                                    font=(DEFAULT_FONT, 14, "bold"),
-                                    bg=BG_COLOR, fg=FG_COLOR)
-        self.title_label.grid(row=0, column=0, sticky=tk.W)
-
     def create_child_template_button(self, gender_text, column):
         button = tk.Button(self.child_template_frame, text=gender_text,
                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
@@ -361,8 +347,6 @@ class AppWindow(tk.Frame):
             elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 self.choose_all_appearances()
 
-
-
         if 'thumbnails per row' not in self.settings:
             self.settings['thumbnails per row'] = 5
 
@@ -386,7 +370,7 @@ Do you want to continue that session?""")
                 appearance_dir = NO_FILE_SELECTED_TEXT
             else:
                 appearance_dir = strip_dir_string_to_max_length(self.settings['appearance dir'],
-                                                               MAX_APPEARANCEDIR_STRING_LENGTH)
+                                                                MAX_APPEARANCEDIR_STRING_LENGTH)
                 self.appearance_dir_button.configure(relief=tk.SUNKEN)
         else:
             appearance_dir = NO_FILE_SELECTED_TEXT
@@ -661,21 +645,23 @@ Do you want to continue that session?""")
             color is changed to green and button functionality is restored. """
         missing_messages = self.can_generate_new_population()
         if len(missing_messages) == 0:
-            self.generate_child_button.configure(relief="raised",
-                                                 bg="lightgreen", font=(DEFAULT_FONT, 12, "bold"),
-                                                 text="Initialize Population",
-                                                 width=52, height=6,
-                                                 state='normal',
-                                                 command=lambda: self.generate_next_population(self.settings['method']))
+            self.generate_children_frame.generate_children_button.configure(relief="raised",
+                                                                            bg="lightgreen",
+                                                                            font=(DEFAULT_FONT, 12, "bold"),
+                                                                            text="Initialize Population",
+                                                                            width=52, height=6,
+                                                                            state='normal',
+                                                                            command=lambda: self.generate_next_population(
+                                                                                self.settings['method']))
         else:
             messages = '\n'.join(missing_messages)
             txt = f'Cannot Initialize Population:\n{messages}'
-            self.generate_child_button.configure(relief=tk.RAISED, bg="#D0D0D0",
-                                                 font=(DEFAULT_FONT, 12, "bold"),
-                                                 width=52, height=6,
-                                                 activebackground="#D0D0D0",
-                                                 text=txt,
-                                                 state='disabled')
+            self.generate_children_frame.generate_children_button.configure(relief=tk.RAISED, bg="#D0D0D0",
+                                                                            font=(DEFAULT_FONT, 12, "bold"),
+                                                                            width=52, height=6,
+                                                                            activebackground="#D0D0D0",
+                                                                            text=txt,
+                                                                            state='disabled')
 
     def is_setting_valid(self, setting_name):
         return setting_name in self.settings and len(self.settings[setting_name]) != 0
@@ -1056,7 +1042,7 @@ Do you want to continue that session?""")
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
-        self.generate_child_button.configure(text='Generate Next Population')
+        self.generate_children_button.configure(text='Generate Next Population')
         self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
 
@@ -1316,10 +1302,10 @@ Do you want to continue that session?""")
         self.save_population(new_population)
         self.generator.gen_counter += 1
         self.update_population(new_population)
-        self.generate_child_button.configure(bg='lightgreen', text='')
+        self.generate_children_button.configure(bg='lightgreen', text='')
         # to do: why two lines?
-        self.generate_child_button.configure(text='Generate Next Population')
-        self.generate_child_button.update()
+        self.generate_children_button.configure(text='Generate Next Population')
+        self.generate_children_button.update()
         return
 
     def gaussian_initialize_population(self, source_files):
@@ -1327,8 +1313,8 @@ Do you want to continue that session?""")
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print('Using random samples from multivariate gaussian distribution for initialization.')
-        self.generate_child_button.configure(text="Generating Population\n Please be patient!\n", bg="red")
-        self.generate_child_button.update()
+        self.generate_children_button.configure(text="Generating Population\n Please be patient!\n", bg="red")
+        self.generate_children_button.update()
 
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
@@ -1348,8 +1334,8 @@ Do you want to continue that session?""")
         for i in range(1, POP_SIZE + 1):
             txt = 'Generating Population\n' + 'Please be patient!\n' + '(' + str(i) + "/" + str(
                 POP_SIZE) + ")"
-            self.generate_child_button.configure(text=txt, bg='red')
-            self.generate_child_button.update()
+            self.generate_children_button.configure(text=txt, bg='red')
+            self.generate_children_button.update()
             self.broadcast_message_to_vam_rating_blocker(txt)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
@@ -1367,9 +1353,9 @@ Do you want to continue that session?""")
         self.generator.gen_counter += 1
 
         self.update_population(new_population)
-        self.generate_child_button.configure(bg='lightgreen', text='')
-        self.generate_child_button.configure(text='Generate Next Population')
-        self.generate_child_button.update()
+        self.generate_children_button.configure(bg='lightgreen', text='')
+        self.generate_children_button.configure(text='Generate Next Population')
+        self.generate_children_button.update()
         return
 
     @staticmethod
@@ -1431,14 +1417,14 @@ Do you want to continue that session?""")
         self.change_template_button = tk.Button(self.change_template_frame, text='Change template', anchor=tk.W,
                                                 bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED,
                                                 command=lambda: self.press_change_template_file(
-                                                  'Please Select Parent Template'))
+                                                    'Please Select Parent Template'))
         self.change_template_button.grid(row=0, column=0, sticky=tk.W)
 
         label_txt = os.path.basename(self.settings['child template'])[7:-4]
         self.change_template_button_label = tk.Label(self.change_template_frame, text=label_txt, width=14, anchor='w',
                                                      font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.change_template_button_label.grid(row=0, column=1, sticky=tk.W, padx=0)
-        self.generate_child_button.configure(width=27, height=6)
+        self.generate_children_button.configure(width=27, height=6)
         for c in self.population.chromosomes:
             c.destroy_ui()
             c.initialize_rating_buttons(self.parent_selection_frame)
