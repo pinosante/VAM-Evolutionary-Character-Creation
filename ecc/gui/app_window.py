@@ -47,10 +47,62 @@ CHOOSE_FILES_TEXT = "Choose Files"
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
+        self.change_template_button = None
+        self.title_restart_button = None
+        self.change_template_frame = None
+        self.change_template_button_label = None
+        self.overview_frame = None
+        self.vam_dir_label = None
+        self.vam_dir_title_label = None
+        self.vam_dir_frame = None
+        self.appearance_dir_label = None
+        self.appearance_dir_button = None
+        self.appearance_dir_title_label = None
+        self.appearance_dir_frame = None
+        self.choose_files_button = None
+        self.child_template_label = None
+        self.child_template_frame = None
+        self.all_favorites_button = None
+        self.child_template = None
+        self.vam_dir_button = None
+        self.child_template_button = None
+        self.all_appearances_button = None
+        self.source_files_label = None
+        self.title_label = None
+        self.title_frame = None
+        self.source_files_frame = None
+        self.population = None
+        self.column_info = None
+        self.chromosome_label = None
+        self.parent_selection_frame = None
+        self.favorites_info = None
+        self.favorites_label = None
+        self.favorites_frame = None
+        self.random_cross_over_button = None
+        self.gaussian_button = None
+        self.method_label = None
+        self.method_frame = None
+        self.recursive_directory_search_no_button = None
+        self.recursive_directory_search_yes_button = None
+        self.recursive_directory_search_label = None
+        self.max_kept_elites_entry = None
+        self.max_kept_elites_var = None
+        self.min_morph_entry = None
+        self.max_kept_elites_label = None
+        self.min_morph_info_label = None
+        self.min_morph_var = None
+        self.min_morph_label = None
+        self.threshold_label = None
+        self.threshold_entry = None
+        self.threshold_entry = None
+        self.threshold_var = None
+        self.options_frame = None
+        self.generate_child_button = None
+        self.bottom_frame = None
         self.settings = settings
         self.generator = generator
-        self.subtitlefont = (DEFAULT_FONT, 11, "bold")
-        self.subtitlepadding = 1
+        self.subtitle_font = (DEFAULT_FONT, 11, "bold")
+        self.subtitle_padding = 1
 
         # create a dictionary to select appearances
         self.select_appearances_strategies = {
@@ -68,236 +120,212 @@ class AppWindow(tk.Frame):
         self.init_parent_files_frame()
         self.init_chromosome_list_frame(settings)
         self.init_alternative_appearances_frame()
-        self.init_intialization_method()
+        self.init_initialization_method()
         self.init_options_frame()
         self.init_generate_button()
 
-        self.filler_bottom = tk.Label(self.bottomframe, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
+        self.filler_bottom = tk.Label(self.bottom_frame, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
 
     def init_generate_button(self):
-        ###
-        ### GENERATE CHILD BUTTON
-        ###
-        self.bottomframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.bottomframe.grid(row=8, column=1, padx=(10, 0), pady=0, sticky=tk.W)
-        self.generatechild = tk.Button(
-            self.bottomframe, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+        self.bottom_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.bottom_frame.grid(row=8, column=1, padx=(10, 0), pady=0, sticky=tk.W)
+        self.generate_child_button = tk.Button(
+            self.bottom_frame, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
             activebackground=BUTTON_ACTIVE_COLOR,
             command=lambda: self.generate_next_population(self.settings['method']),
             relief="flat", font=(DEFAULT_FONT, 15, "bold")
         )
-        self.generatechild.grid(row=0, column=0, sticky=tk.W)
+        self.generate_child_button.grid(row=0, column=0, sticky=tk.W)
 
     def init_options_frame(self):
-        ###
-        ### OPTIONS
-        ###
-        self.optionsframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.optionsframe.grid(row=7, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
+        self.options_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.options_frame.grid(row=7, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
         option_row_number = 1
-        options_label = tk.Label(self.optionsframe, text="Step 7: Options", font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
+        options_label = tk.Label(self.options_frame, text="Step 7: Options", font=self.subtitle_font, bg=BG_COLOR,
+                                 fg=FG_COLOR)
         options_label.grid(columnspan=9, row=option_row_number, sticky=tk.W, pady=(0, 0))
         option_row_number += 1  # go to next row of the options menu
-        self.threshold_label = tk.Label(self.optionsframe, text="A) Remove morphs with absolute value below:",
+        self.threshold_label = tk.Label(self.options_frame, text="A) Remove morphs with absolute value below:",
                                         anchor='w', bg=BG_COLOR, fg=FG_COLOR)
         self.threshold_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
         # track if the threshold values are changed by the user and if so, update the morph info based on the setting
         self.threshold_var = tk.DoubleVar()
         self.threshold_var.set(0.01)
         self.threshold_var.trace_add("write", self.track_threshold_change)
-        self.threshold_entry = tk.Entry(self.optionsframe, textvariable=self.threshold_var, fg=BUTTON_FG_COLOR,
+        self.threshold_entry = tk.Entry(self.options_frame, textvariable=self.threshold_var, fg=BUTTON_FG_COLOR,
                                         bg=BUTTON_BG_COLOR, width=7)
         self.threshold_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-        self.threshold_label = tk.Label(self.optionsframe, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
+        self.threshold_label = tk.Label(self.options_frame, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
         self.threshold_label.grid(row=option_row_number, column=12, sticky=tk.W)
         # minimum morphs needed in appearance to be available in file selection
         option_row_number += 1  # go to next row of the options menu
-        self.minmorph_label = tk.Label(self.optionsframe, text="B) Only show appearances with morph count above:",
-                                       anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.minmorph_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
+        self.min_morph_label = tk.Label(self.options_frame, text="B) Only show appearances with morph count above:",
+                                        anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.min_morph_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
         # track if the threshold values are changed by the user and if so, update the morph info based on the setting
-        self.minmorph_var = tk.IntVar()
-        self.minmorph_var.set(0)
-        self.minmorph_var.trace_add("write", self.track_minmorph_change)
-        self.minmorph_entry = tk.Entry(self.optionsframe, textvariable=self.minmorph_var, fg=BUTTON_FG_COLOR,
-                                       bg=BUTTON_BG_COLOR, width=7)
-        self.minmorph_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-        self.minmorph_infolabel = tk.Label(self.optionsframe, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.minmorph_infolabel.grid(row=option_row_number, column=12, sticky=tk.W)
+        self.min_morph_var = tk.IntVar()
+        self.min_morph_var.set(0)
+        self.min_morph_var.trace_add("write", self.track_minmorph_change)
+        self.min_morph_entry = tk.Entry(self.options_frame, textvariable=self.min_morph_var, fg=BUTTON_FG_COLOR,
+                                        bg=BUTTON_BG_COLOR, width=7)
+        self.min_morph_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
+        self.min_morph_info_label = tk.Label(self.options_frame, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
+        self.min_morph_info_label.grid(row=option_row_number, column=12, sticky=tk.W)
         option_row_number += 1  # go to next row of the options menu
-        self.maxkeptelites_label = tk.Label(self.optionsframe, text="C) Max kept elites (highest rated):", anchor='w',
-                                            bg=BG_COLOR, fg=FG_COLOR)
-        self.maxkeptelites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
+        self.max_kept_elites_label = tk.Label(self.options_frame, text="C) Max kept elites (highest rated):",
+                                              anchor='w',
+                                              bg=BG_COLOR, fg=FG_COLOR)
+        self.max_kept_elites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
         # track if the maxkeptelites values are changed by the user
-        self.maxkeptelites_var = tk.IntVar()
-        self.maxkeptelites_var.set(DEFAULT_MAX_KEPT_ELITES)
-        self.maxkeptelites_var.trace_add("write", self.track_maxkeptelites_change)
-        self.maxkeptelites_entry = tk.Entry(self.optionsframe, textvariable=self.maxkeptelites_var, fg=BUTTON_FG_COLOR,
-                                            bg=BUTTON_BG_COLOR, width=7)
-        self.maxkeptelites_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
+        self.max_kept_elites_var = tk.IntVar()
+        self.max_kept_elites_var.set(DEFAULT_MAX_KEPT_ELITES)
+        self.max_kept_elites_var.trace_add("write", self.track_max_kept_elites_change)
+        self.max_kept_elites_entry = tk.Entry(self.options_frame, textvariable=self.max_kept_elites_var,
+                                              fg=BUTTON_FG_COLOR,
+                                              bg=BUTTON_BG_COLOR, width=7)
+        self.max_kept_elites_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
         option_row_number += 1  # go to next row of the options menu
-        self.recursivedirectorysearch_label = tk.Label(self.optionsframe,
-                                                       text="D) Also read subdirectories in file selection:",
-                                                       anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.recursivedirectorysearch_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
-        self.recursivedirectorysearch_yesbutton = tk.Button(self.optionsframe, text="Yes", bg=BUTTON_BG_COLOR,
-                                                            fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                            command=lambda: self.use_recursive_directory_search(True))
-        self.recursivedirectorysearch_yesbutton.grid(row=option_row_number, column=10, sticky=tk.W)
-        self.recursivedirectorysearch_nobutton = tk.Button(self.optionsframe, text="No", bg=BUTTON_BG_COLOR,
-                                                           fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                           command=lambda: self.use_recursive_directory_search(False))
-        self.recursivedirectorysearch_nobutton.grid(row=option_row_number, column=11, sticky=tk.W)
+        self.recursive_directory_search_label = tk.Label(self.options_frame,
+                                                         text="D) Also read subdirectories in file selection:",
+                                                         anchor='w', bg=BG_COLOR, fg=FG_COLOR)
+        self.recursive_directory_search_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
+        self.recursive_directory_search_yes_button = tk.Button(self.options_frame, text="Yes", bg=BUTTON_BG_COLOR,
+                                                               fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                                               command=lambda: self.use_recursive_directory_search(
+                                                                   True))
+        self.recursive_directory_search_yes_button.grid(row=option_row_number, column=10, sticky=tk.W)
+        self.recursive_directory_search_no_button = tk.Button(self.options_frame, text="No", bg=BUTTON_BG_COLOR,
+                                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                                              command=lambda: self.use_recursive_directory_search(
+                                                                  False))
+        self.recursive_directory_search_no_button.grid(row=option_row_number, column=11, sticky=tk.W)
 
-    def init_intialization_method(self):
-        ###
-        ### INITIALIZATION METHOD
-        ###
-        self.methodframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.methodframe.grid(row=6, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.methodlabel = tk.Label(self.methodframe, text="Step 6: Initialization Method", font=self.subtitlefont,
-                                    bg=BG_COLOR, fg=FG_COLOR)
-        self.methodlabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.gaussianbutton = tk.Button(self.methodframe, text="Gaussian Samples", bg=BUTTON_BG_COLOR,
-                                        fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                        command=lambda: self.choose_gaussian_samples())
-        self.gaussianbutton.grid(row=1, column=0, sticky=tk.W)
-        self.randomcrossoverbutton = tk.Button(self.methodframe, text="Random Crossover", bg=BUTTON_BG_COLOR,
-                                               fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                               command=lambda: self.choose_random_crossover())
-        self.randomcrossoverbutton.grid(row=1, column=1, sticky=tk.W)
+    def init_initialization_method(self):
+        self.method_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.method_label = tk.Label(self.method_frame, text="Step 6: Initialization Method", font=self.subtitle_font,
+                                     bg=BG_COLOR, fg=FG_COLOR)
+        self.method_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.gaussian_button = tk.Button(self.method_frame, text="Gaussian Samples", bg=BUTTON_BG_COLOR,
+                                         fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                         command=lambda: self.choose_gaussian_samples())
+        self.gaussian_button.grid(row=1, column=0, sticky=tk.W)
+        self.random_cross_over_button = tk.Button(self.method_frame, text="Random Crossover", bg=BUTTON_BG_COLOR,
+                                                  fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                                  command=lambda: self.choose_random_crossover())
+        self.random_cross_over_button.grid(row=1, column=1, sticky=tk.W)
 
     def init_alternative_appearances_frame(self):
-        ###
-        ### ALTERNATIVE SHOW FAVORITE APPEARANCES FILE INFORMATION (AT SAME ROW AS CHROMOSOMELIST)
-        ###
-        self.favoritesframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.favoritesframe.grid(row=5, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.favoriteslabel = tk.Label(self.favoritesframe, text="Step 5: Favorited Appearances Chosen",
-                                       font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.favoriteslabel.grid(row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.favoritesinfo = tk.Label(self.favoritesframe, text="", bg=BG_COLOR, fg=FG_COLOR)
-        self.favoritesinfo.grid(row=1, column=0, sticky=tk.W, pady=(0, 0))
-        self.favoritesframe.grid_remove()  # will be shown when needed
+        self.favorites_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.favorites_label = tk.Label(self.favorites_frame, text="Step 5: Favorited Appearances Chosen",
+                                        font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+        self.favorites_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.favorites_info = tk.Label(self.favorites_frame, text="", bg=BG_COLOR, fg=FG_COLOR)
+        self.favorites_info.grid(row=1, column=0, sticky=tk.W, pady=(0, 0))
+        self.favorites_frame.grid_remove()  # will be shown when needed
 
     def init_chromosome_list_frame(self, settings):
-        ###
-        ### CHROMOSOMELIST
-        ###
-        self.parentselectionframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.parentselectionframe.grid(row=5, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.chromosomelabel = tk.Label(self.parentselectionframe, text="Step 5: Select Parent Files",
-                                        font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.chromosomelabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.columninfo = dict()
-        self.columninfo['1'] = tk.Label(self.parentselectionframe, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
-        self.columninfo['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
-        self.columninfo['2'] = tk.Label(self.parentselectionframe, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
-        self.columninfo['2'].grid(row=1, column=1, sticky=tk.W)
-        self.columninfo['3'] = tk.Label(self.parentselectionframe, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
-        self.columninfo['3'].grid(row=1, column=2, sticky=tk.W)
+        self.parent_selection_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.chromosome_label = tk.Label(self.parent_selection_frame, text="Step 5: Select Parent Files",
+                                         font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+        self.chromosome_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.column_info = dict()
+        self.column_info['1'] = tk.Label(self.parent_selection_frame, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
+        self.column_info['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
+        self.column_info['2'] = tk.Label(self.parent_selection_frame, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
+        self.column_info['2'].grid(row=1, column=1, sticky=tk.W)
+        self.column_info['3'] = tk.Label(self.parent_selection_frame, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
+        self.column_info['3'].grid(row=1, column=2, sticky=tk.W)
         # initialize population and chromosomes
         self.population = Population(POP_SIZE, settings)
         for chromo in self.population.chromosomes:
-            chromo.initialize_ui(self.parentselectionframe, self.select_file)
+            chromo.initialize_ui(self.parent_selection_frame, self.select_file)
 
     def init_parent_files_frame(self):
-        ###
-        ### PARENT FILES
-        ###
-        self.sourcefilesframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.sourcefilesframe.grid(row=4, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.sourcefileslabel = tk.Label(self.sourcefilesframe, text="Step 4: Select Parent File Source",
-                                         font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.sourcefileslabel.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.allappearancesbutton = tk.Button(self.sourcefilesframe, text="All Appearances", bg=BUTTON_BG_COLOR,
+        self.source_files_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.source_files_frame.grid(row=4, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.source_files_label = tk.Label(self.source_files_frame, text="Step 4: Select Parent File Source",
+                                           font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+        self.source_files_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.all_appearances_button = tk.Button(self.source_files_frame, text="All Appearances", bg=BUTTON_BG_COLOR,
+                                                fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                                command=lambda: self.choose_all_appearances())
+        self.all_appearances_button.grid(row=1, column=0, sticky=tk.W)
+        self.all_favorites_button = tk.Button(self.source_files_frame, text="All Favorited Appearances",
+                                              bg=BUTTON_BG_COLOR,
                                               fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                              command=lambda: self.choose_all_appearances())
-        self.allappearancesbutton.grid(row=1, column=0, sticky=tk.W)
-        self.allfavoritesbutton = tk.Button(self.sourcefilesframe, text="All Favorited Appearances", bg=BUTTON_BG_COLOR,
-                                            fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                            command=lambda: self.choose_all_favorites())
-        self.allfavoritesbutton.grid(row=1, column=1, sticky=tk.W)
-        self.choosefilesbutton = tk.Button(self.sourcefilesframe, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
-                                           fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                           command=lambda: self.choose_files())
-        self.choosefilesbutton.grid(row=1, column=2, sticky=tk.W)
+                                              command=lambda: self.choose_all_favorites())
+        self.all_favorites_button.grid(row=1, column=1, sticky=tk.W)
+        self.choose_files_button = tk.Button(self.source_files_frame, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
+                                             fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
+                                             command=lambda: self.choose_files())
+        self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
 
     def init_child_template_frame(self):
-        ###
-        ### CHILD TEMPLATE
-        ###
-        self.childtemplateframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.childtemplateframe.grid(row=3, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.childtemplatelabel = tk.Label(self.childtemplateframe,
-                                           text="Step 3: Select Child Template Appearance", font=self.subtitlefont,
-                                           bg=BG_COLOR, fg=FG_COLOR)
-        self.childtemplatelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
+        self.child_template_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.child_template_frame.grid(row=3, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.child_template_label = tk.Label(self.child_template_frame,
+                                             text="Step 3: Select Child Template Appearance", font=self.subtitle_font,
+                                             bg=BG_COLOR, fg=FG_COLOR)
+        self.child_template_label.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
         self.child_template_button = {
             FEMALE: self.create_child_template_button(FEMALE, 0),
             MALE: self.create_child_template_button(MALE, 1),
             FUTA: self.create_child_template_button(FUTA, 2)
         }
         self.child_template = dict()
-        self.child_template['label'] = tk.Label(self.childtemplateframe, text=NO_FILE_SELECTED_TEXT,
+        self.child_template['label'] = tk.Label(self.child_template_frame, text=NO_FILE_SELECTED_TEXT,
                                                 font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.child_template['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
 
     def init_appearance_dir_frame(self):
-        ###
-        ### APPEARANCE DIRECTORY
-        ###
-        self.appearancedirframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.appearancedirframe.grid(row=2, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.appearancedirtitlelabel = tk.Label(self.appearancedirframe,
-                                                text="Step 2: Select Appearance folder to use",
-                                                font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.appearancedirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.appearancedirbutton = tk.Button(self.appearancedirframe, text="Select Folder",
-                                             bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                             activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                             command=lambda: self.select_appearancedir())
-        self.appearancedirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.appearancedirlabel = tk.Label(self.appearancedirframe, text=NO_FILE_SELECTED_TEXT,
-                                           font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
-                                           bg=BG_COLOR, fg=FG_COLOR)
-        self.appearancedirlabel.grid(row=1, column=1, sticky=tk.W)
+        self.appearance_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.appearance_dir_title_label = tk.Label(self.appearance_dir_frame,
+                                                   text="Step 2: Select Appearance folder to use",
+                                                   font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+        self.appearance_dir_title_label.grid(columnspan=50, row=0, column=0, sticky=tk.W)
+        self.appearance_dir_button = tk.Button(self.appearance_dir_frame, text="Select Folder",
+                                               bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+                                               activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                                               command=lambda: self.select_appearance_dir())
+        self.appearance_dir_button.grid(row=1, column=0, sticky=tk.W)
+        self.appearance_dir_label = tk.Label(self.appearance_dir_frame, text=NO_FILE_SELECTED_TEXT,
+                                             font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
+                                             bg=BG_COLOR, fg=FG_COLOR)
+        self.appearance_dir_label.grid(row=1, column=1, sticky=tk.W)
 
     def init_vam_dir_frame(self):
-        ###
-        ### VAM DIRECTORY
-        ###
-        self.vamdirframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.vamdirframe.grid(row=1, column=1, padx=10, pady=self.subtitlepadding, sticky=tk.W)
-        self.vamdirtitlelabel = tk.Label(self.vamdirframe,
-                                         text="Step 1: Select VAM Base Folder (with VaM.exe)",
-                                         font=self.subtitlefont, bg=BG_COLOR, fg=FG_COLOR)
-        self.vamdirtitlelabel.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.vamdirbutton = tk.Button(self.vamdirframe, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
-                                      fg=BUTTON_FG_COLOR,
-                                      activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                      command=lambda: self.select_vamdir())
-        self.vamdirbutton.grid(row=1, column=0, sticky=tk.W)
-        self.vamdirlabel = tk.Label(self.vamdirframe, text=NO_FILE_SELECTED_TEXT,
-                                    font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
-                                    bg=BG_COLOR, fg=FG_COLOR)
-        self.vamdirlabel.grid(row=1, column=1, sticky=tk.W)
+        self.vam_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.vam_dir_title_label = tk.Label(self.vam_dir_frame,
+                                            text="Step 1: Select VAM Base Folder (with VaM.exe)",
+                                            font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+        self.vam_dir_title_label.grid(columnspan=50, row=0, column=0, sticky=tk.W)
+        self.vam_dir_button = tk.Button(self.vam_dir_frame, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
+                                        fg=BUTTON_FG_COLOR,
+                                        activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+                                        command=lambda: self.select_vam_dir())
+        self.vam_dir_button.grid(row=1, column=0, sticky=tk.W)
+        self.vam_dir_label = tk.Label(self.vam_dir_frame, text=NO_FILE_SELECTED_TEXT,
+                                      font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
+                                      bg=BG_COLOR, fg=FG_COLOR)
+        self.vam_dir_label.grid(row=1, column=1, sticky=tk.W)
 
     def init_title_frame(self):
-        ###
-        ### TITLE
-        ###
-        self.titleframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.titleframe.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
-        self.titleframe.grid_columnconfigure(0, weight=1)
-        self.titlelabel = tk.Label(self.titleframe, text="Initialization",
-                                   font=(DEFAULT_FONT, 14, "bold"),
-                                   bg=BG_COLOR, fg=FG_COLOR)
-        self.titlelabel.grid(row=0, column=0, sticky=tk.W)
+        self.title_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.title_frame.grid(row=0, column=1, padx=10, pady=0, sticky="nsew")
+        self.title_frame.grid_columnconfigure(0, weight=1)
+        self.title_label = tk.Label(self.title_frame, text="Initialization",
+                                    font=(DEFAULT_FONT, 14, "bold"),
+                                    bg=BG_COLOR, fg=FG_COLOR)
+        self.title_label.grid(row=0, column=0, sticky=tk.W)
 
     def create_child_template_button(self, gender_text, column):
-        button = tk.Button(self.childtemplateframe, text=gender_text,
+        button = tk.Button(self.child_template_frame, text=gender_text,
                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                            activebackground=BUTTON_ACTIVE_COLOR,
                            command=lambda: self.select_template_file([gender_text],
@@ -317,14 +345,14 @@ class AppWindow(tk.Frame):
 
         if 'VAM base dir' in self.settings:
             if len(self.settings['VAM base dir']) < 1:
-                vamdir = NO_FILE_SELECTED_TEXT
+                vam_dir = NO_FILE_SELECTED_TEXT
             else:
-                vamdir = strip_dir_string_to_max_length(self.settings['VAM base dir'],
-                                                        MAX_VAMDIR_STRING_LENGTH)
-                self.vamdirbutton.configure(relief=tk.SUNKEN)
+                vam_dir = strip_dir_string_to_max_length(self.settings['VAM base dir'],
+                                                         MAX_VAMDIR_STRING_LENGTH)
+                self.vam_dir_button.configure(relief=tk.SUNKEN)
         else:
-            vamdir = NO_FILE_SELECTED_TEXT
-        self.vamdirlabel.configure(text=vamdir)
+            vam_dir = NO_FILE_SELECTED_TEXT
+        self.vam_dir_label.configure(text=vam_dir)
 
         if 'child template' in self.settings:
             if os.path.isfile(self.settings['child template']):
@@ -332,7 +360,7 @@ class AppWindow(tk.Frame):
                     text=self.create_template_labeltext(self.settings['child template']))
                 self.child_template['gender'] = get_appearance_gender(
                     load_appearance(self.settings['child template']))
-                self.press_childtemplate_button(self.child_template['gender'])
+                self.press_child_template_button(self.child_template['gender'])
 
         if 'morph threshold' in self.settings:
             self.threshold_var.set(self.settings['morph threshold'])
@@ -340,13 +368,13 @@ class AppWindow(tk.Frame):
             self.settings['morph threshold'] = 0.01
 
         if 'min morph threshold' in self.settings:
-            self.minmorph_var.set(self.settings['min morph threshold'])
+            self.min_morph_var.set(self.settings['min morph threshold'])
         else:
             self.settings['min morph threshold'] = 150
-            self.minmorph_var.set(150)
+            self.min_morph_var.set(150)
 
         if 'max kept elites' in self.settings:
-            self.maxkeptelites_var.set(self.settings['max kept elites'])
+            self.max_kept_elites_var.set(self.settings['max kept elites'])
         else:
             self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
 
@@ -393,33 +421,33 @@ Do you want to continue that session?""")
     def investigate_appearance_directory(self):
         if 'appearance dir' in self.settings:
             if len(self.settings['appearance dir']) < 1:
-                appearancedir = NO_FILE_SELECTED_TEXT
+                appearance_dir = NO_FILE_SELECTED_TEXT
             else:
-                appearancedir = strip_dir_string_to_max_length(self.settings['appearance dir'],
+                appearance_dir = strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                                MAX_APPEARANCEDIR_STRING_LENGTH)
-                self.appearancedirbutton.configure(relief=tk.SUNKEN)
+                self.appearance_dir_button.configure(relief=tk.SUNKEN)
         else:
-            appearancedir = NO_FILE_SELECTED_TEXT
+            appearance_dir = NO_FILE_SELECTED_TEXT
             self.settings['appearance dir'] = ""
-        self.appearancedirlabel.configure(text=appearancedir)
+        self.appearance_dir_label.configure(text=appearance_dir)
 
     def use_recursive_directory_search(self, choice):
         """ Called by the use recursive directory button in the app. Depending on the choice, sinks the GUI button
             pressed and raises the other and keeps track of the choice in settings. """
         self.settings['recursive directory search'] = choice
         if choice:
-            self.recursivedirectorysearch_yesbutton.configure(relief=tk.SUNKEN)
-            self.recursivedirectorysearch_nobutton.configure(relief=tk.RAISED)
+            self.recursive_directory_search_yes_button.configure(relief=tk.SUNKEN)
+            self.recursive_directory_search_no_button.configure(relief=tk.RAISED)
         else:
-            self.recursivedirectorysearch_yesbutton.configure(relief=tk.RAISED)
-            self.recursivedirectorysearch_nobutton.configure(relief=tk.SUNKEN)
-        self.recursivedirectorysearch_yesbutton.update()
-        self.recursivedirectorysearch_nobutton.update()
+            self.recursive_directory_search_yes_button.configure(relief=tk.RAISED)
+            self.recursive_directory_search_no_button.configure(relief=tk.SUNKEN)
+        self.recursive_directory_search_yes_button.update()
+        self.recursive_directory_search_no_button.update()
         self.generator.clear_data_with_all_appearances()
         self.generator.fill_data_with_all_appearances()
         self.update_found_labels()
 
-    def press_childtemplate_button(self, gender):
+    def press_child_template_button(self, gender):
         """ Sinks the GUI button for the gender chosen/pressed (female, male, futa) and raises the other buttons. """
         all_genders = ['Female', 'Male', 'Futa']
         remaining_genders = [g for g in all_genders if g != gender]
@@ -433,10 +461,9 @@ Do you want to continue that session?""")
             PATH_TO/NAME_OF_APPEARANCE.vap as format """
 
         template_gender = get_appearance_gender(load_appearance(filename))
-        # labeltxt = os.path.basename(filename)[7:-4] + " (" + template_gender + " Template)"
-        labeltxt = os.path.basename(filename)[7:-4]
+        label_txt = os.path.basename(filename)[7:-4]
         self.child_template['gender'] = template_gender
-        return labeltxt
+        return label_txt
 
     def track_threshold_change(self, var, index, mode):
         """ Keeps track if the user changes the morph threshold value in the GUI.
@@ -469,7 +496,7 @@ Do you want to continue that session?""")
         """ Keeps track if the user changes the min morph value in the GUI.
             If so, validity of the entry is checked. GUI is also updated depending
             on validity, using update_XYZ calls """
-        string = self.minmorph_entry.get()
+        string = self.min_morph_entry.get()
         try:
             value = int(string)
             self.settings['min morph threshold'] = value
@@ -487,11 +514,11 @@ Do you want to continue that session?""")
             self.update_initialize_population_button()
             return
 
-    def track_maxkeptelites_change(self, var, index, mode):
+    def track_max_kept_elites_change(self, var, index, mode):
         """ Keeps track if the user changes the 'max kept elites' value in the GUI.
             If an invalid value is chosen, then we use the default value.
             """
-        string = self.maxkeptelites_entry.get()
+        string = self.max_kept_elites_entry.get()
         try:
             value = int(string)
 
@@ -515,64 +542,64 @@ Do you want to continue that session?""")
     def update_all_appearances_found_label(self):
         """ Counts the amount of appearance available in the default VAM directory and updates the GUI """
         filenames = self.get_all_appearance_filenames()
-        self.favoritesinfo.configure(text=f'{len(filenames)} appearances found')
+        self.favorites_info.configure(text=f'{len(filenames)} appearances found')
         self.update_initialize_population_button()
-        self.favoriteslabel.configure(text="Step 5: All Appearances Chosen")
+        self.favorites_label.configure(text="Step 5: All Appearances Chosen")
 
     def update_favorites_found_label(self):
         """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
         # filenames = self.get_favorited_appearance_files()
         filenames = self.get_fav_appearance_filenames()
-        self.favoritesinfo.configure(text=f'{len(filenames)} favorite appearances found')
-        self.favoriteslabel.configure(text="Step 5: All Favorited Appearances Chosen")
+        self.favorites_info.configure(text=f'{len(filenames)} favorite appearances found')
+        self.favorites_label.configure(text="Step 5: All Favorited Appearances Chosen")
         self.update_initialize_population_button()
 
     def choose_all_appearances(self):
         """ Called when the "choose all appearances" button is pressed. Sinks the corresponding GUI button and raises
             the other options. Updates GUI. Saves choice in settings. """
-        self.parentselectionframe.grid_remove()
-        self.favoritesframe.grid()
-        self.allappearancesbutton.configure(relief=tk.SUNKEN)
-        self.allfavoritesbutton.configure(relief=tk.RAISED)
-        self.choosefilesbutton.configure(relief=tk.RAISED)
+        self.parent_selection_frame.grid_remove()
+        self.favorites_frame.grid()
+        self.all_appearances_button.configure(relief=tk.SUNKEN)
+        self.all_favorites_button.configure(relief=tk.RAISED)
+        self.choose_files_button.configure(relief=tk.RAISED)
         self.settings['source files'] = CHOOSE_ALL_TEXT
         self.update_found_labels()
 
     def choose_all_favorites(self):
         """ Called when the "choose all favorite" appearances button is pressed. Sinks the corresponding GUI button and
             raises the other options. Updates GUI. Saves choice in settings. """
-        self.parentselectionframe.grid_remove()
-        self.favoritesframe.grid()
-        self.allappearancesbutton.configure(relief=tk.RAISED)
-        self.allfavoritesbutton.configure(relief=tk.SUNKEN)
-        self.choosefilesbutton.configure(relief=tk.RAISED)
+        self.parent_selection_frame.grid_remove()
+        self.favorites_frame.grid()
+        self.all_appearances_button.configure(relief=tk.RAISED)
+        self.all_favorites_button.configure(relief=tk.SUNKEN)
+        self.choose_files_button.configure(relief=tk.RAISED)
         self.settings['source files'] = CHOOSE_ALL_FAVORITES_TEXT
         self.update_found_labels()
 
     def choose_files(self):
         """ Called when the choose files button is pressed. Sinks the corresponding GUI button and raises
             the other options. Updates GUI. Saves choice in settings. """
-        self.parentselectionframe.grid()
-        self.favoritesframe.grid_remove()
-        self.allappearancesbutton.configure(relief=tk.RAISED)
-        self.allfavoritesbutton.configure(relief=tk.RAISED)
-        self.choosefilesbutton.configure(relief=tk.SUNKEN)
+        self.parent_selection_frame.grid()
+        self.favorites_frame.grid_remove()
+        self.all_appearances_button.configure(relief=tk.RAISED)
+        self.all_favorites_button.configure(relief=tk.RAISED)
+        self.choose_files_button.configure(relief=tk.SUNKEN)
         self.settings['source files'] = CHOOSE_FILES_TEXT
         self.update_initialize_population_button()
 
     def choose_gaussian_samples(self):
         """ Called when the Gaussian Samples button is pressed. Raises the random crossover button. Saves choice in
             settings. """
-        self.gaussianbutton.configure(relief=tk.SUNKEN)
-        self.randomcrossoverbutton.configure(relief=tk.RAISED)
+        self.gaussian_button.configure(relief=tk.SUNKEN)
+        self.random_cross_over_button.configure(relief=tk.RAISED)
         self.settings['method'] = 'Gaussian Samples'
         self.update_initialize_population_button()
 
     def choose_random_crossover(self):
         """ Called when the random crossover button is pressed. Raises the Gaussian Samples  button. Saves choice in
             settings. """
-        self.gaussianbutton.configure(relief=tk.RAISED)
-        self.randomcrossoverbutton.configure(relief=tk.SUNKEN)
+        self.gaussian_button.configure(relief=tk.RAISED)
+        self.random_cross_over_button.configure(relief=tk.SUNKEN)
         self.settings['method'] = 'Random Crossover'
         self.update_initialize_population_button()
 
@@ -617,55 +644,55 @@ Do you want to continue that session?""")
         self.update_morph_info(number)
         self.update_initialize_population_button()
 
-    def select_vamdir(self):
+    def select_vam_dir(self):
         """ Shows filedialog to find the location of the VAM.exe. Choice is validated, GUI updated and settings
             saved. """
         # try to open the file dialog in the last known location
-        vamdir = ''
+        vam_dir = ''
         if 'VAM base dir' in self.settings:
             if len(self.settings['VAM base dir']) > 0:
-                vamdir = self.settings['VAM base dir']
+                vam_dir = self.settings['VAM base dir']
 
-        folder_path = tk.filedialog.askdirectory(initialdir=vamdir,
+        folder_path = tk.filedialog.askdirectory(initialdir=vam_dir,
                                                  title="Please select the folder which has the VAM.exe file")
         if os.path.exists(os.path.join(folder_path, 'vam.exe')):
             self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
-            self.vamdirlabel.configure(
+            self.vam_dir_label.configure(
                 text=strip_dir_string_to_max_length(self.settings['VAM base dir'],
                                                     MAX_VAMDIR_STRING_LENGTH))
-            self.vamdirbutton.configure(relief=tk.SUNKEN)
+            self.vam_dir_button.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
             self.generator.fill_data_with_all_appearances()
         else:
             self.settings['VAM base dir'] = ""
-            self.vamdirlabel.configure(text=NO_FILE_SELECTED_TEXT)
-            self.vamdirbutton.configure(relief=tk.RAISED)
+            self.vam_dir_label.configure(text=NO_FILE_SELECTED_TEXT)
+            self.vam_dir_button.configure(relief=tk.RAISED)
             self.generator.clear_data_with_all_appearances()
         self.update_initialize_population_button()
         self.update_found_labels()
 
-    def select_appearancedir(self):
+    def select_appearance_dir(self):
         """ Shows filedialog to select the appearance directory, GUI updated and settings saved. """
         # try to open the file dialog in the last known location
-        appearancedir = ''
+        appearance_dir = ''
         if 'appearance dir' in self.settings:
             if len(self.settings['appearance dir']) > 0:
-                appearancedir = self.settings['appearance dir']
+                appearance_dir = self.settings['appearance dir']
 
-        folder_path = tk.filedialog.askdirectory(initialdir=appearancedir,
+        folder_path = tk.filedialog.askdirectory(initialdir=appearance_dir,
                                                  title="Please select the appearance folder you would like to use.")
         if folder_path == "":
             self.settings['appearance dir'] = ""
-            self.appearancedirlabel.configure(text=NO_FILE_SELECTED_TEXT)
-            self.appearancedirbutton.configure(relief=tk.RAISED)
+            self.appearance_dir_label.configure(text=NO_FILE_SELECTED_TEXT)
+            self.appearance_dir_button.configure(relief=tk.RAISED)
             self.generator.clear_data_with_all_appearances()
         else:
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
-            self.appearancedirlabel.configure(
+            self.appearance_dir_label.configure(
                 text=strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                     MAX_APPEARANCEDIR_STRING_LENGTH))
-            self.appearancedirbutton.configure(relief=tk.SUNKEN)
+            self.appearance_dir_button.configure(relief=tk.SUNKEN)
             self.track_minmorph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
             self.generator.fill_data_with_all_appearances()
@@ -688,20 +715,21 @@ Do you want to continue that session?""")
             color is changed to green and button functionality is restored. """
         missing_messages = self.can_generate_new_population()
         if len(missing_messages) == 0:
-            self.generatechild.configure(relief="raised",
-                                         bg="lightgreen", font=(DEFAULT_FONT, 12, "bold"), text="Initialize Population",
-                                         width=52, height=6,
-                                         state='normal',
-                                         command=lambda: self.generate_next_population(self.settings['method']))
+            self.generate_child_button.configure(relief="raised",
+                                                 bg="lightgreen", font=(DEFAULT_FONT, 12, "bold"),
+                                                 text="Initialize Population",
+                                                 width=52, height=6,
+                                                 state='normal',
+                                                 command=lambda: self.generate_next_population(self.settings['method']))
         else:
             messages = '\n'.join(missing_messages)
             txt = f'Cannot Initialize Population:\n{messages}'
-            self.generatechild.configure(relief=tk.RAISED, bg="#D0D0D0",
-                                         font=(DEFAULT_FONT, 12, "bold"),
-                                         width=52, height=6,
-                                         activebackground="#D0D0D0",
-                                         text=txt,
-                                         state='disabled')
+            self.generate_child_button.configure(relief=tk.RAISED, bg="#D0D0D0",
+                                                 font=(DEFAULT_FONT, 12, "bold"),
+                                                 width=52, height=6,
+                                                 activebackground="#D0D0D0",
+                                                 text=txt,
+                                                 state='disabled')
 
     def is_setting_valid(self, setting_name):
         return setting_name in self.settings and len(self.settings[setting_name]) != 0
@@ -732,18 +760,18 @@ Do you want to continue that session?""")
         if filename in self.generator.appearances:
             self.population.get_chromosome(number).update_gui_file(filename, self.generator.appearances[filename])
 
-    def select_template_file(self, genderlist, title):
+    def select_template_file(self, gender_list, title):
         """ Called by the Female, Male and Futa load template file buttons. Opens a file selection dialogue which
             specifically filters for the gender of the button clicked. The genderlist only has the chosen gender
             as an item. Updates GUI and settings after (un)succesful template selection. """
 
         dialog = SelectAppearanceDialog(self.settings, self.generator)
-        filename = dialog.file_selection_with_thumbnails(genderlist, title, filteronmorphcount=False)
+        filename = dialog.file_selection_with_thumbnails(gender_list, title, filteronmorphcount=False)
         dialog.destroy()
 
         if filename == "":  # user did not select files
             self.child_template['label'].configure(text=NO_FILE_SELECTED_TEXT)
-            self.press_childtemplate_button(None)
+            self.press_child_template_button(None)
             if 'gender' in self.child_template:
                 del self.child_template['gender']
             if 'child template' in self.settings:
@@ -753,7 +781,7 @@ Do you want to continue that session?""")
             return
         self.child_template['label'].configure(text=self.create_template_labeltext(filename))
         self.child_template['gender'] = self.generator.gender[filename]
-        self.press_childtemplate_button(self.child_template['gender'])
+        self.press_child_template_button(self.child_template['gender'])
         self.settings['child template'] = filename
         for i in range(1, POP_SIZE + 1):
             self.update_morph_info(i)
@@ -781,12 +809,12 @@ Do you want to continue that session?""")
         if not is_compatible_gender(gender, self.child_template['gender']):
             matches = matching_genders(self.child_template['gender'])
             if len(matches) > 1:  # Female and Futa
-                selectmsg = "Please select a Female or Futa as template."
+                select_msg = "Please select a Female or Futa as template."
             else:
-                selectmsg = "Please select a Male as template."
-            self.broadcast_message_to_vam_rating_blocker("Failure: Gender does not match population.\n\n" + selectmsg)
+                select_msg = "Please select a Male as template."
+            self.broadcast_message_to_vam_rating_blocker("Failure: Gender does not match population.\n\n" + select_msg)
             return
-        self.changetemplatebuttonlabel.configure(text=os.path.basename(filename)[7:-4])
+        self.change_template_button_label.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
         self.update_population_with_new_template()
         self.broadcast_message_to_vam_rating_blocker("")
@@ -800,34 +828,36 @@ Do you want to continue that session?""")
         print("Switching view")
         for widget in self.master.winfo_children():
             widget.grid_forget()
-        self.overviewframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.overviewframe.grid(row=0, column=0, padx=10, pady=0, sticky="nsew")
-        self.warninglabel = tk.Label(self.overviewframe, text="Important: do NOT close this window!",
-                                     font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
-        self.warninglabel.grid(row=0, columnspan=2, column=0, padx=(10, 10), pady=(10, 0), sticky="w")
-        self.overviewlabel = tk.Label(self.overviewframe, text="Overview:", font=(DEFAULT_FONT, 14, "bold"),
-                                      bg=BG_COLOR, fg=FG_COLOR)
-        self.overviewlabel.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
-        self.generationlabel = tk.Label(self.overviewframe, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
-        self.generationlabel.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.generationnumberlabel = tk.Label(self.overviewframe, text=self.generator.gen_counter, font=FILENAME_FONT,
-                                              bg=BG_COLOR,
-                                              fg=FG_COLOR, anchor="w", justify=tk.LEFT)
-        self.generationnumberlabel.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
-        self.templatelabel = tk.Label(self.overviewframe, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
-        self.templatelabel.grid(row=3, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.templatefilelabel = tk.Label(self.overviewframe, text="", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR,
-                                          anchor="w", justify=tk.LEFT)
-        self.templatefilelabel.grid(row=3, column=1, padx=0, pady=(0, 0), sticky="w")
-        self.templatefilelabel.configure(text=self.create_template_labeltext(self.settings['child template']))
-        self.lastcommandsframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.lastcommandsframe.grid(row=1, column=0, padx=10, pady=(10, 0), sticky="nsew")
-        self.lastcommandslabel = tk.Label(self.lastcommandsframe, text="Last five commands:",
-                                          font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
-        self.lastcommandslabel.grid(row=0, column=0, padx=10, pady=0, sticky="w")
-        self.commandslabel = tk.Label(self.lastcommandsframe, text="...", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR,
-                                      justify=tk.LEFT, anchor="w")
-        self.commandslabel.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
+        self.overview_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.overview_frame.grid(row=0, column=0, padx=10, pady=0, sticky="nsew")
+        self.warning_label = tk.Label(self.overview_frame, text="Important: do NOT close this window!",
+                                      font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
+        self.warning_label.grid(row=0, columnspan=2, column=0, padx=(10, 10), pady=(10, 0), sticky="w")
+        self.overview_label = tk.Label(self.overview_frame, text="Overview:", font=(DEFAULT_FONT, 14, "bold"),
+                                       bg=BG_COLOR, fg=FG_COLOR)
+        self.overview_label.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
+        self.generation_label = tk.Label(self.overview_frame, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
+        self.generation_label.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
+        self.generation_number_label = tk.Label(self.overview_frame, text=self.generator.gen_counter,
+                                                font=FILENAME_FONT,
+                                                bg=BG_COLOR,
+                                                fg=FG_COLOR, anchor="w", justify=tk.LEFT)
+        self.generation_number_label.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
+        self.template_label = tk.Label(self.overview_frame, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
+        self.template_label.grid(row=3, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
+        self.template_file_label = tk.Label(self.overview_frame, text="", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR,
+                                            anchor="w", justify=tk.LEFT)
+        self.template_file_label.grid(row=3, column=1, padx=0, pady=(0, 0), sticky="w")
+        self.template_file_label.configure(text=self.create_template_labeltext(self.settings['child template']))
+        self.last_commands_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.last_commands_frame.grid(row=1, column=0, padx=10, pady=(10, 0), sticky="nsew")
+        self.last_commands_label = tk.Label(self.last_commands_frame, text="Last five commands:",
+                                            font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
+        self.last_commands_label.grid(row=0, column=0, padx=10, pady=0, sticky="w")
+        self.commands_label = tk.Label(self.last_commands_frame, text="...", font=FILENAME_FONT, bg=BG_COLOR,
+                                       fg=FG_COLOR,
+                                       justify=tk.LEFT, anchor="w")
+        self.commands_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
@@ -836,9 +866,9 @@ Do you want to continue that session?""")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
-        self.generationnumberlabel.config(text=self.generator.gen_counter)
-        self.templatefilelabel.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commandslabel.config(text=self.last_given_commands_to_string(self.generator.last_five_commands))
+        self.generation_number_label.config(text=self.generator.gen_counter)
+        self.template_file_label.config(text=self.create_template_labeltext(self.settings['child template']))
+        self.commands_label.config(text=self.last_given_commands_to_string(self.generator.last_five_commands))
 
     @staticmethod
     def last_given_commands_to_string(list_of_commands):
@@ -994,7 +1024,7 @@ Do you want to continue that session?""")
         elif method == "Random Crossover":
             self.crossover_initialize_population(self.settings['source files'])
         self.generator.gen_counter = 1
-        self.titlelabel.configure(text="Generation " + str(self.generator.gen_counter))
+        self.title_label.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker("")
 
@@ -1030,14 +1060,14 @@ Do you want to continue that session?""")
         for i in range(POP_SIZE - len(new_population)):
             random_parents = self.weighted_random_selection()
             child_appearance = fuse_characters(random_parents[0].filename, random_parents[1].filename,
-                                                         self.settings)
+                                               self.settings)
             new_population.append(child_appearance)
         self.save_population(new_population)
         self.update_population(new_population)
 
         self.generator.gen_counter += 1
         self.settings['generation counter'] = self.generator.gen_counter
-        self.titlelabel.configure(text=f'Generation {self.generator.gen_counter}')
+        self.title_label.configure(text=f'Generation {self.generator.gen_counter}')
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker('')
         self.settings.save()
@@ -1058,9 +1088,9 @@ Do you want to continue that session?""")
         self.messagelabel = tk.Label(self.messageframe, text='save, and click on "Connect to App"',
                                      font=(DEFAULT_FONT, 14, ''), bg=BG_COLOR, fg=FG_COLOR)
         self.messagelabel.pack(side=tk.TOP)
-        self.warninglabel = tk.Label(self.messageframe, text='\nImportant: do NOT close this window.\n ',
-                                     font=(DEFAULT_FONT, 14, 'bold'), bg=BG_COLOR, fg='red')
-        self.warninglabel.pack(side=tk.TOP)
+        self.warning_label = tk.Label(self.messageframe, text='\nImportant: do NOT close this window.\n ',
+                                      font=(DEFAULT_FONT, 14, 'bold'), bg=BG_COLOR, fg='red')
+        self.warning_label.pack(side=tk.TOP)
         self.lastmessagelabel = tk.Label(self.messageframe,
                                          text='This app needs to stay active to communicate with VAM.',
                                          font=(DEFAULT_FONT, 14, ''), bg=BG_COLOR, fg=FG_COLOR)
@@ -1080,7 +1110,7 @@ Do you want to continue that session?""")
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
-        self.generatechild.configure(text='Generate Next Population')
+        self.generate_child_button.configure(text='Generate Next Population')
         self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
 
@@ -1174,7 +1204,7 @@ Do you want to continue that session?""")
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
-            self.press_restart_button(givewarning=False)
+            self.press_restart_button(give_warning=False)
             self.broadcast_generation_number_to_vam(self.generator.gen_counter)
 
         if self.generator.connected_to_VAM:
@@ -1223,8 +1253,8 @@ Do you want to continue that session?""")
             with open(path, encoding='utf-8') as f:
                 text_json = json.load(f)
             text_json['storables'] = replace_value_from_id_in_dict_list(text_json[STORABLES], id_string,
-                                                                                  needed_key,
-                                                                                  replacement_string)
+                                                                        needed_key,
+                                                                        replacement_string)
             with open(path, 'w', encoding='utf-8') as json_file:
                 json.dump(text_json, json_file, indent=3)
         except IOError as e:
@@ -1233,15 +1263,15 @@ Do you want to continue that session?""")
     def switch_layout_to_rating(self):
         """ Switches the layout from the GUI from the Initialization Choices layout to the rate children layout. Called
             by generate_next_population when called for the first time. """
-        self.vamdirframe.grid_remove()
-        self.appearancedirframe.grid_remove()
-        self.childtemplateframe.grid_remove()
-        self.sourcefilesframe.grid_remove()
-        self.methodframe.grid_remove()
-        self.parentselectionframe.grid()
-        self.chromosomelabel.configure(text='Rate Children')
-        self.favoritesframe.grid_remove()
-        self.optionsframe.grid_remove()
+        self.vam_dir_frame.grid_remove()
+        self.appearance_dir_frame.grid_remove()
+        self.child_template_frame.grid_remove()
+        self.source_files_frame.grid_remove()
+        self.method_frame.grid_remove()
+        self.parent_selection_frame.grid()
+        self.chromosome_label.configure(text='Rate Children')
+        self.favorites_frame.grid_remove()
+        self.options_frame.grid_remove()
 
     def weighted_random_selection(self):
         """ using roulette wheel selection, returns a randomly (weighted by rating) chosen appearance from the
@@ -1340,10 +1370,10 @@ Do you want to continue that session?""")
         self.save_population(new_population)
         self.generator.gen_counter += 1
         self.update_population(new_population)
-        self.generatechild.configure(bg='lightgreen', text='')
+        self.generate_child_button.configure(bg='lightgreen', text='')
         # to do: why two lines?
-        self.generatechild.configure(text='Generate Next Population')
-        self.generatechild.update()
+        self.generate_child_button.configure(text='Generate Next Population')
+        self.generate_child_button.update()
         return
 
     def gaussian_initialize_population(self, source_files):
@@ -1351,8 +1381,8 @@ Do you want to continue that session?""")
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print('Using random samples from multivariate gaussian distribution for initialization.')
-        self.generatechild.configure(text="Generating Population\n Please be patient!\n", bg="red")
-        self.generatechild.update()
+        self.generate_child_button.configure(text="Generating Population\n Please be patient!\n", bg="red")
+        self.generate_child_button.update()
 
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
@@ -1372,8 +1402,8 @@ Do you want to continue that session?""")
         for i in range(1, POP_SIZE + 1):
             txt = 'Generating Population\n' + 'Please be patient!\n' + '(' + str(i) + "/" + str(
                 POP_SIZE) + ")"
-            self.generatechild.configure(text=txt, bg='red')
-            self.generatechild.update()
+            self.generate_child_button.configure(text=txt, bg='red')
+            self.generate_child_button.update()
             self.broadcast_message_to_vam_rating_blocker(txt)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
@@ -1391,9 +1421,9 @@ Do you want to continue that session?""")
         self.generator.gen_counter += 1
 
         self.update_population(new_population)
-        self.generatechild.configure(bg='lightgreen', text='')
-        self.generatechild.configure(text='Generate Next Population')
-        self.generatechild.update()
+        self.generate_child_button.configure(bg='lightgreen', text='')
+        self.generate_child_button.configure(text='Generate Next Population')
+        self.generate_child_button.update()
         return
 
     @staticmethod
@@ -1441,34 +1471,34 @@ Do you want to continue that session?""")
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.titlelabel.configure(text='Generation ' + str(self.generator.gen_counter))
+        self.title_label.configure(text='Generation ' + str(self.generator.gen_counter))
         for i in [1, 2, 3]:
-            self.columninfo[str(i)].destroy()
+            self.column_info[str(i)].destroy()
 
-        self.titlerestartbutton = tk.Button(self.titleframe, text='Restart', anchor=tk.E, bg=BUTTON_BG_COLOR,
-                                            fg=BUTTON_FG_COLOR, relief=tk.RAISED,
-                                            command=lambda: self.press_restart_button())
-        self.titlerestartbutton.grid(columnspan=10, row=0, column=1, sticky=tk.E)
+        self.title_restart_button = tk.Button(self.titleframe, text='Restart', anchor=tk.E, bg=BUTTON_BG_COLOR,
+                                              fg=BUTTON_FG_COLOR, relief=tk.RAISED,
+                                              command=lambda: self.press_restart_button())
+        self.title_restart_button.grid(columnspan=10, row=0, column=1, sticky=tk.E)
 
-        self.changetemplateframe = tk.Frame(self.master, bg=BG_COLOR)
-        self.changetemplateframe.grid(row=7, column=1, padx=(10, 0), pady=(5, 0), sticky=tk.W)
-        self.changetemplatebutton = tk.Button(self.changetemplateframe, text='Change template', anchor=tk.W,
-                                              bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED,
-                                              command=lambda: self.press_change_template_file(
+        self.change_template_frame = tk.Frame(self.master, bg=BG_COLOR)
+        self.change_template_frame.grid(row=7, column=1, padx=(10, 0), pady=(5, 0), sticky=tk.W)
+        self.change_template_button = tk.Button(self.change_template_frame, text='Change template', anchor=tk.W,
+                                                bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR, relief=tk.RAISED,
+                                                command=lambda: self.press_change_template_file(
                                                   'Please Select Parent Template'))
-        self.changetemplatebutton.grid(row=0, column=0, sticky=tk.W)
+        self.change_template_button.grid(row=0, column=0, sticky=tk.W)
 
         label_txt = os.path.basename(self.settings['child template'])[7:-4]
-        self.changetemplatebuttonlabel = tk.Label(self.changetemplateframe, text=label_txt, width=14, anchor='w',
-                                                  font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        self.changetemplatebuttonlabel.grid(row=0, column=1, sticky=tk.W, padx=0)
-        self.generatechild.configure(width=27, height=6)
+        self.change_template_button_label = tk.Label(self.change_template_frame, text=label_txt, width=14, anchor='w',
+                                                     font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
+        self.change_template_button_label.grid(row=0, column=1, sticky=tk.W, padx=0)
+        self.generate_child_button.configure(width=27, height=6)
         for c in self.population.chromosomes:
             c.destroy_ui()
-            c.initialize_rating_buttons(self.parentselectionframe)
+            c.initialize_rating_buttons(self.parent_selection_frame)
 
-    def press_restart_button(self, givewarning=True):
-        if givewarning:
+    def press_restart_button(self, give_warning=True):
+        if give_warning:
             answer = messagebox.askquestion('Warning!',
                                             'Warning! This will reset all your current progress, ' +
                                             'reinitialize the app and restart with a (newly generated) Generation 1. ' +
