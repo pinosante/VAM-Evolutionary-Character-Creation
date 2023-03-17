@@ -18,47 +18,12 @@ from .constants import *
 from .population import Population
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
+from .app_window_frames.method_frame import MethodFrame
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
 CHOOSE_ALL_TEXT = "Choose All Appearances"
 CHOOSE_FILES_TEXT = "Choose Files"
-
-
-###
-### Below are the settings for a dark theme
-###
-# BG_COLOR = "black"
-# FG_COLOR = "white"
-# BUTTON_BG_COLOR = "#fc84ff"
-# BUTTON_FG_COLOR = "black"
-# BUTTON_ACTIVE_COLOR = BUTTON_BG_COLOR
-# HOVER_COLOR = "#fc84ff"
-# RATING_SUNKEN_BG_COLOR = BUTTON_BG_COLOR
-# RATING_SUNKEN_FG_COLOR = BUTTON_FG_COLOR
-# RATING_RAISED_BG_COLOR = "#F9F9F9"
-# RATING_RAISED_FG_COLOR = "black"
-# RATING_HOVER_BG_COLOR = BUTTON_BG_COLOR
-# RATING_HOVER_FG_COLOR = BUTTON_FG_COLOR
-# RATING_ACTIVE_BG_COLOR = BUTTON_BG_COLOR
-# RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
-
-class MethodFrame(tk.Frame):
-    def __init__(self, padding, font, gaussian_strategy, random_crossover_strategy):
-        super().__init__()
-
-        #self.method_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.method_label = tk.Label(self, text="Step 6: Initialization Method", font=font,
-                                     bg=BG_COLOR, fg=FG_COLOR)
-        self.method_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.gaussian_button = tk.Button(self, text="Gaussian Samples", bg=BUTTON_BG_COLOR,
-                                         fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                         command=lambda: gaussian_strategy())
-        self.gaussian_button.grid(row=1, column=0, sticky=tk.W)
-        self.random_cross_over_button = tk.Button(self, text="Random Crossover", bg=BUTTON_BG_COLOR,
-                                                  fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                  command=lambda: random_crossover_strategy())
-        self.random_cross_over_button.grid(row=1, column=1, sticky=tk.W)
 
 
 class AppWindow(tk.Frame):
@@ -134,13 +99,13 @@ class AppWindow(tk.Frame):
         self.init_parent_files_frame()
         self.init_chromosome_list_frame(settings)
         self.init_alternative_appearances_frame()
-        self.method_frame = MethodFrame(self.subtitle_font, self.subtitle_padding,
-                                        self.choose_gaussian_samples, self.choose_random_crossover)
+
+        self.init_generate_button()
+
+        self.method_frame = MethodFrame(self.subtitle_font, settings, self.update_initialize_population_button)
         self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        #self.init_initialization_method()
         self.init_options_frame()
-        self.init_generate_button()
 
         self.filler_bottom = tk.Label(self.bottom_frame, text="", width=1, height=10, bg=BG_COLOR, fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
@@ -218,21 +183,6 @@ class AppWindow(tk.Frame):
                                                               command=lambda: self.use_recursive_directory_search(
                                                                   False))
         self.recursive_directory_search_no_button.grid(row=option_row_number, column=11, sticky=tk.W)
-
-    def init_initialization_method(self):
-        self.method_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.method_label = tk.Label(self.method_frame, text="Step 6: Initialization Method", font=self.subtitle_font,
-                                     bg=BG_COLOR, fg=FG_COLOR)
-        self.method_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.gaussian_button = tk.Button(self.method_frame, text="Gaussian Samples", bg=BUTTON_BG_COLOR,
-                                         fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                         command=lambda: self.choose_gaussian_samples())
-        self.gaussian_button.grid(row=1, column=0, sticky=tk.W)
-        self.random_cross_over_button = tk.Button(self.method_frame, text="Random Crossover", bg=BUTTON_BG_COLOR,
-                                                  fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                  command=lambda: self.choose_random_crossover())
-        self.random_cross_over_button.grid(row=1, column=1, sticky=tk.W)
 
     def init_alternative_appearances_frame(self):
         self.favorites_frame = tk.Frame(self.master, bg=BG_COLOR)
@@ -411,13 +361,7 @@ class AppWindow(tk.Frame):
             elif self.settings['source files'] == CHOOSE_ALL_TEXT:
                 self.choose_all_appearances()
 
-        if 'method' in self.settings:
-            if self.settings['method'] == "Gaussian Samples":
-                self.choose_gaussian_samples()
-            elif self.settings['method'] == "Random Crossover":
-                self.choose_random_crossover()
-        else:
-            self.choose_random_crossover()
+
 
         if 'thumbnails per row' not in self.settings:
             self.settings['thumbnails per row'] = 5
@@ -603,22 +547,6 @@ Do you want to continue that session?""")
         self.all_favorites_button.configure(relief=tk.RAISED)
         self.choose_files_button.configure(relief=tk.SUNKEN)
         self.settings['source files'] = CHOOSE_FILES_TEXT
-        self.update_initialize_population_button()
-
-    def choose_gaussian_samples(self):
-        """ Called when the Gaussian Samples button is pressed. Raises the random crossover button. Saves choice in
-            settings. """
-        self.method_frame.gaussian_button.configure(relief=tk.SUNKEN)
-        self.method_frame.random_cross_over_button.configure(relief=tk.RAISED)
-        self.settings['method'] = 'Gaussian Samples'
-        self.update_initialize_population_button()
-
-    def choose_random_crossover(self):
-        """ Called when the random crossover button is pressed. Raises the Gaussian Samples  button. Saves choice in
-            settings. """
-        self.method_frame.gaussian_button.configure(relief=tk.RAISED)
-        self.method_frame.random_cross_over_button.configure(relief=tk.SUNKEN)
-        self.settings['method'] = 'Random Crossover'
         self.update_initialize_population_button()
 
     def select_file(self, number):
@@ -1493,7 +1421,7 @@ Do you want to continue that session?""")
         for i in [1, 2, 3]:
             self.column_info[str(i)].destroy()
 
-        self.title_restart_button = tk.Button(self.titleframe, text='Restart', anchor=tk.E, bg=BUTTON_BG_COLOR,
+        self.title_restart_button = tk.Button(self.title_frame, text='Restart', anchor=tk.E, bg=BUTTON_BG_COLOR,
                                               fg=BUTTON_FG_COLOR, relief=tk.RAISED,
                                               command=lambda: self.press_restart_button())
         self.title_restart_button.grid(columnspan=10, row=0, column=1, sticky=tk.E)
