@@ -22,6 +22,7 @@ from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.vam_dir_frame import VamDirFrame
 from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
 from .app_window_frames.alternative_appearance_frame import AlternativeAppearanceFrame
+from .app_window_frames.chromosome_list_frame import ChromosomeListFrame
 from .app_window_frames.method_frame import MethodFrame
 from .app_window_frames.options_frame import OptionsFrame
 from .app_window_frames.child_template_frame import ChildTemplateFrame
@@ -67,7 +68,8 @@ class AppWindow(tk.Frame):
 
         self.init_parent_files_frame()
 
-        self.init_chromosome_list_frame(settings)
+        self.parent_selection_frame = ChromosomeListFrame(settings, self.select_file)
+        self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.favorites_frame = AlternativeAppearanceFrame()
         self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -85,23 +87,23 @@ class AppWindow(tk.Frame):
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
 
-    def init_chromosome_list_frame(self, settings):
-        self.parent_selection_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.chromosome_label = tk.Label(self.parent_selection_frame, text="Step 5: Select Parent Files",
-                                         font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-        self.chromosome_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.column_info = dict()
-        self.column_info['1'] = tk.Label(self.parent_selection_frame, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
-        self.column_info['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
-        self.column_info['2'] = tk.Label(self.parent_selection_frame, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
-        self.column_info['2'].grid(row=1, column=1, sticky=tk.W)
-        self.column_info['3'] = tk.Label(self.parent_selection_frame, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
-        self.column_info['3'].grid(row=1, column=2, sticky=tk.W)
-        # initialize population and chromosomes
-        self.population = Population(POP_SIZE, settings)
-        for chromo in self.population.chromosomes:
-            chromo.initialize_ui(self.parent_selection_frame, self.select_file)
+    # def init_chromosome_list_frame(self, settings):
+    #     self.parent_selection_frame = tk.Frame(self.master, bg=BG_COLOR)
+    #     self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+    #     self.chromosome_label = tk.Label(self.parent_selection_frame, text="Step 5: Select Parent Files",
+    #                                      font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+    #     self.chromosome_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
+    #     self.column_info = dict()
+    #     self.column_info['1'] = tk.Label(self.parent_selection_frame, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
+    #     self.column_info['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
+    #     self.column_info['2'] = tk.Label(self.parent_selection_frame, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
+    #     self.column_info['2'].grid(row=1, column=1, sticky=tk.W)
+    #     self.column_info['3'] = tk.Label(self.parent_selection_frame, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
+    #     self.column_info['3'].grid(row=1, column=2, sticky=tk.W)
+    #     # initialize population and chromosomes
+    #     self.population = Population(POP_SIZE, settings)
+    #     for chromo in self.population.chromosomes:
+    #         chromo.initialize_ui(self.parent_selection_frame, self.select_file)
 
     def init_parent_files_frame(self):
         self.source_files_frame = tk.Frame(self.master, bg=BG_COLOR)
@@ -500,7 +502,7 @@ Do you want to continue that session?""")
     def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
         if filename in self.generator.appearances:
-            self.population.get_chromosome(number).update_gui_file(filename, self.generator.appearances[filename])
+            self.parent_selection_frame.population.get_chromosome(number).update_gui_file(filename, self.generator.appearances[filename])
 
     def select_template_file(self, gender_list, title):
         """ Called by the Female, Male and Futa load template file buttons. Opens a file selection dialogue which
@@ -648,7 +650,7 @@ Do you want to continue that session?""")
             if gender == self.child_template_frame.child_template['gender']:
                 appearance_templates.append(appearance)
 
-        for c in self.population.chromosomes:
+        for c in self.parent_selection_frame.population.chromosomes:
             morph_list = get_morph_list_from_appearance(load_appearance(c.filename))
             updated_appearance = save_morph_to_appearance(morph_list, appearance_templates[c.index])
             nude_appearance = remove_clothing_from_appearance(updated_appearance)
@@ -659,7 +661,7 @@ Do you want to continue that session?""")
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
         template_appearance = load_appearance(self.settings['child template'])
-        for c in self.population.chromosomes:
+        for c in self.parent_selection_frame.population.chromosomes:
             morph_list = get_morph_list_from_appearance(load_appearance(c.filename))
             updated_appearance = save_morph_to_appearance(morph_list, template_appearance)
             save_appearance(updated_appearance, c.filename)
@@ -698,7 +700,7 @@ Do you want to continue that session?""")
         else:
             template_gender = ""
 
-        c = self.population.get_chromosome(number)
+        c = self.parent_selection_frame.population.get_chromosome(number)
         if c.filename != '':
             gender = get_appearance_gender(load_appearance(c.filename))
             if not is_compatible_gender(gender, template_gender):
@@ -725,7 +727,7 @@ Do you want to continue that session?""")
     def hide_parent_file_from_view(self, number):
         """ Replaces the file label of the parent file #number with '...'  and 'N/A' but keeps the file info
             dictionary """
-        c = self.population.chromosomes[number]
+        c = self.parent_selection_frame.population.chromosomes[number]
         c.file_name_display.configure(text=NO_FILE_SELECTED_TEXT)
         c.n_morph_display.configure(text='N/A')
         c.can_load = False
@@ -744,7 +746,7 @@ Do you want to continue that session?""")
         # they all have a False flag for self.chromosome[str(i)]['can load'] which is used
         # later on in Gaussian and Crossover generation to skip loading them.
         if self.settings['source files'] == CHOOSE_FILES_TEXT:
-            for c in self.population.chromosomes:
+            for c in self.parent_selection_frame.population.chromosomes:
                 filename = f'file {str(c.index)}'
                 if filename in self.settings:
                     if len(self.settings[filename]) > 0:
@@ -833,7 +835,7 @@ Do you want to continue that session?""")
         path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
 
-        for c in self.population.chromosomes:
+        for c in self.parent_selection_frame.population.chromosomes:
             filename = os.path.join(save_path, f'Preset_{CHILDREN_FILENAME_PREFIX}{c.index}.vap')
             c.filename = filename
             c.appearance = load_appearance(filename)
@@ -914,7 +916,7 @@ Do you want to continue that session?""")
             child = int(child[1])
             rating = commands[1].split(" ")
             rating = int(rating[1])
-            self.population.get_chromosome(child).update_rating(rating)
+            self.parent_selection_frame.population.get_chromosome(child).update_rating(rating)
         # the random number in commands[1] for the if statements below are not used in any way by this script, except
         # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
         # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
@@ -1000,7 +1002,7 @@ Do you want to continue that session?""")
         self.source_files_frame.grid_remove()
         self.method_frame.grid_remove()
         self.parent_selection_frame.grid()
-        self.chromosome_label.configure(text='Rate Children')
+        self.parent_selection_frame.chromosome_label.configure(text='Rate Children')
         self.favorites_frame.grid_remove()
         self.options_frame.grid_remove()
 
@@ -1012,14 +1014,14 @@ Do you want to continue that session?""")
             """
         # todo: candidate for logic
 
-        total_ratings = sum([c.rating for c in self.population.chromosomes])
+        total_ratings = sum([c.rating for c in self.parent_selection_frame.population.chromosomes])
         choices = []
 
         while len(choices) < 2:
             pick = random.uniform(0, total_ratings)
             current = 0
 
-            for c in self.population.chromosomes:
+            for c in self.parent_selection_frame.population.chromosomes:
                 current += c.rating
                 if current > pick:
                     if c not in choices:
@@ -1034,12 +1036,12 @@ Do you want to continue that session?""")
             returned. Returns a maximum of appearances equal to user setting 'max kept elites'. """
         # todo: candidate for logic
 
-        max_selected_rating = max(c.rating for c in self.population.chromosomes)
+        max_selected_rating = max(c.rating for c in self.parent_selection_frame.population.chromosomes)
         if max_selected_rating < MINIMAL_RATING_FOR_KEEP_ELITES:
             return list()
 
         # Select all appearances with maximum rating.
-        appearances_with_maximum_rating = [c.appearance for c in self.population.chromosomes
+        appearances_with_maximum_rating = [c.appearance for c in self.parent_selection_frame.population.chromosomes
                                            if c.rating == max_selected_rating]
 
         # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
@@ -1048,7 +1050,7 @@ Do you want to continue that session?""")
     def reset_ratings(self):
         """ Clear all ratings in the GUI. """
         # todo: candidate for logic
-        for c in self.population.chromosomes:
+        for c in self.parent_selection_frame.population.chromosomes:
             c.update_rating(INITIAL_RATING)
 
     def get_appearance_filenames(self, get_only_favorites):
@@ -1080,7 +1082,7 @@ Do you want to continue that session?""")
         return self.get_appearance_filenames(get_only_favorites=True)
 
     def get_selected_appearance_filenames(self):
-        filenames = [c.filename for c in self.population.chromosomes if c.can_load]
+        filenames = [c.filename for c in self.parent_selection_frame.population.chromosomes if c.can_load]
         self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
 
@@ -1174,14 +1176,14 @@ Do you want to continue that session?""")
         path = self.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
-        for chromosome, appearance in zip(self.population.chromosomes, new_appearances):
+        for chromosome, appearance in zip(self.parent_selection_frame.population.chromosomes, new_appearances):
             chromosome.update_appearance(appearance, save_path)
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
         self.title_frame.title_label.configure(text='Generation ' + str(self.generator.gen_counter))
         for i in [1, 2, 3]:
-            self.column_info[str(i)].destroy()
+            self.parent_selection_frame.column_info[str(i)].destroy()
 
         self.title_restart_button = tk.Button(self.title_frame, text='Restart', anchor=tk.E, bg=BUTTON_BG_COLOR,
                                               fg=BUTTON_FG_COLOR, relief=tk.RAISED,
@@ -1201,7 +1203,7 @@ Do you want to continue that session?""")
                                                      font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.change_template_button_label.grid(row=0, column=1, sticky=tk.W, padx=0)
         self.generate_children_frame.generate_children_button.configure(width=27, height=6)
-        for c in self.population.chromosomes:
+        for c in self.parent_selection_frame.population.chromosomes:
             c.destroy_ui()
             c.initialize_rating_buttons(self.parent_selection_frame)
 
