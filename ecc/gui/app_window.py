@@ -32,38 +32,6 @@ CHOOSE_FILES_TEXT = "Choose Files"
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
-        self.change_template_button = None
-        self.title_restart_button = None
-        self.change_template_frame = None
-        self.change_template_button_label = None
-        self.overview_frame = None
-        self.vam_dir_label = None
-        self.vam_dir_title_label = None
-        self.vam_dir_frame = None
-        self.appearance_dir_label = None
-        self.appearance_dir_button = None
-        self.appearance_dir_title_label = None
-        self.appearance_dir_frame = None
-        self.choose_files_button = None
-        self.child_template_label = None
-        self.child_template_frame = None
-        self.all_favorites_button = None
-        self.child_template = None
-        self.vam_dir_button = None
-        self.child_template_button = None
-        self.all_appearances_button = None
-        self.source_files_label = None
-        self.title_label = None
-        self.title_frame = None
-        self.source_files_frame = None
-        self.population = None
-        self.column_info = None
-        self.chromosome_label = None
-        self.parent_selection_frame = None
-        self.favorites_info = None
-        self.favorites_label = None
-        self.favorites_frame = None
-        self.generate_children_frame = None
 
         self.settings = settings
         self.generator = generator
@@ -99,14 +67,14 @@ class AppWindow(tk.Frame):
 
         self.options_frame = OptionsFrame(settings, self.subtitle_font,
                                           self.track_threshold_change,
-                                          self.track_minmorph_change,
+                                          self.track_min_morph_change,
                                           self.use_recursive_directory_search)
         self.options_frame.grid(row=7, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-
 
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
+
     def init_alternative_appearances_frame(self):
         self.favorites_frame = tk.Frame(self.master, bg=BG_COLOR)
         self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -340,7 +308,7 @@ Do you want to continue that session?""")
         for i in range(1, POP_SIZE + 1):
             self.update_morph_info(i)
 
-    def track_minmorph_change(self, var, index, mode):
+    def track_min_morph_change(self, var, index, mode):
         """ Keeps track if the user changes the min morph value in the GUI.
             If so, validity of the entry is checked. GUI is also updated depending
             on validity, using update_XYZ calls """
@@ -362,7 +330,6 @@ Do you want to continue that session?""")
             self.update_initialize_population_button()
             return
 
-
     def update_found_labels(self):
         """ Depending on the choice for the source files, updates the GUI """
         if 'source files' in self.settings:
@@ -379,11 +346,10 @@ Do you want to continue that session?""")
         self.favorites_label.configure(text="Step 5: All Appearances Chosen")
 
     def update_favorites_found_label(self):
-        """ Counts the amount of favorited appearances available in the default VAM directory and updates the GUI """
-        # filenames = self.get_favorited_appearance_files()
+        """ Counts the amount of favorite appearances available in the default VAM directory and updates the GUI """
         filenames = self.get_fav_appearance_filenames()
         self.favorites_info.configure(text=f'{len(filenames)} favorite appearances found')
-        self.favorites_label.configure(text="Step 5: All Favorited Appearances Chosen")
+        self.favorites_label.configure(text="Step 5: All Favorite Appearances Chosen")
         self.update_initialize_population_button()
 
     def choose_all_appearances(self):
@@ -430,9 +396,9 @@ Do you want to continue that session?""")
             return
 
         dialog = SelectAppearanceDialog(self.settings, self.generator)
-        filename = dialog.file_selection_with_thumbnails(match, "Please select a parent Appearance", filteronmorphcount=False)
+        filename = dialog.file_selection_with_thumbnails(match, "Please select a parent Appearance",
+                                                         filteronmorphcount=False)
         dialog.destroy()
-        #filename = self.file_selection_with_thumbnails(match, "Please select a parent Appearance")
 
         if filename == '':  # user did not select files
             self.remove_parent_file_from_gui(number)
@@ -480,7 +446,7 @@ Do you want to continue that session?""")
                 text=strip_dir_string_to_max_length(self.settings['VAM base dir'],
                                                     MAX_VAMDIR_STRING_LENGTH))
             self.vam_dir_button.configure(relief=tk.SUNKEN)
-            self.track_minmorph_change("", "", "")  # update
+            self.track_min_morph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
             self.generator.fill_data_with_all_appearances()
         else:
@@ -512,7 +478,7 @@ Do you want to continue that session?""")
                 text=strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                     MAX_APPEARANCEDIR_STRING_LENGTH))
             self.appearance_dir_button.configure(relief=tk.SUNKEN)
-            self.track_minmorph_change("", "", "")  # update
+            self.track_min_morph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
             self.generator.fill_data_with_all_appearances()
         self.update_initialize_population_button()
@@ -591,18 +557,18 @@ Do you want to continue that session?""")
         dialog.destroy()
 
         if filename == "":  # user did not select files
-            self.child_template['label'].configure(text=NO_FILE_SELECTED_TEXT)
+            self.child_template_frame.child_template['label'].configure(text=NO_FILE_SELECTED_TEXT)
             self.press_child_template_button(None)
-            if 'gender' in self.child_template:
-                del self.child_template['gender']
+            if 'gender' in self.child_template_frame.child_template:
+                del self.child_template_frame.child_template['gender']
             if 'child template' in self.settings:
                 del self.settings['child template']
             self.update_initialize_population_button()
             self.update_found_labels()
             return
-        self.child_template['label'].configure(text=self.create_template_labeltext(filename))
-        self.child_template['gender'] = self.generator.gender[filename]
-        self.press_child_template_button(self.child_template['gender'])
+        self.child_template_frame.child_template['label'].configure(text=self.create_template_labeltext(filename))
+        self.child_template_frame.child_template['gender'] = self.generator.gender[filename]
+        self.press_child_template_button(self.child_template_frame.child_template['gender'])
         self.settings['child template'] = filename
         for i in range(1, POP_SIZE + 1):
             self.update_morph_info(i)
@@ -613,8 +579,11 @@ Do you want to continue that session?""")
         """ Called by the change template button in the rating windows. Opens a file selection dialogue which
             specifically filters for the gender of the template which is currently being used. If user does not
             select a valid new template file, the old template file is used. """
-        filename = self.file_selection_with_thumbnails(matching_genders(self.child_template['gender']), title,
-                                                       filteronmorphcount=False)
+        dialog = SelectAppearanceDialog(self.settings, self.generator)
+        filename = dialog.file_selection_with_thumbnails(matching_genders(self.child_template_frame.child_template['gender']), title,
+                                                         filteronmorphcount=False)
+        dialog.destroy()
+
         if filename == "":  # user did not select files
             return
         self.change_template_file(filename)
@@ -758,21 +727,6 @@ Do you want to continue that session?""")
             if len(morph_list) > self.settings['min morph threshold']:
                 filtered.append(f)
         return filtered
-
-    def remove_all_appearance_widgets(self):
-        """ Used by file_selection_with_thumbnails function to clear the popup window if the amount of thumbnails per
-            row is changed. After clearing, builds the images up again with the new thumbnails per row settings. """
-        for widget in self.all_appearance_widgets:
-            widget.destroy()
-
-    def apply_file_filter(self, filenames):
-        """ Applies file filter to file selection window. """
-        self.my_canvas.yview_moveto('0.0')  # scroll to top
-        filtertxt = self.filefilter.get()
-        globfilter = "*preset_*" + filtertxt + "*.vap"
-        filtered = [file for file in filenames if fnmatch(file.lower(), globfilter)]
-        self.remove_all_appearance_widgets()
-        self.show_all_appearance_buttons(self.appearancesframe, filtered, self.thumbnails_per_row)
 
     def update_morph_info(self, number):
         """ Updates morph info in the GUI for Parent file 'number'. """
@@ -1154,7 +1108,8 @@ Do you want to continue that session?""")
         if 'gender' in self.child_template_frame.child_template:
             filenames = self.generator.filter_filename_list_on_genders(filenames,
                                                                        matching_genders(
-                                                                           self.child_template_frame.child_template['gender']))
+                                                                           self.child_template_frame.child_template[
+                                                                               'gender']))
             filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
@@ -1202,7 +1157,8 @@ Do you want to continue that session?""")
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print('Using random samples from multivariate gaussian distribution for initialization.')
-        self.generate_children_frame.generate_children_button.configure(text="Generating Population\n Please be patient!\n", bg="red")
+        self.generate_children_frame.generate_children_button.configure(
+            text="Generating Population\n Please be patient!\n", bg="red")
         self.generate_children_frame.generate_children_button.update()
 
         # select source files
@@ -1246,7 +1202,6 @@ Do you want to continue that session?""")
         self.generate_children_frame.generate_children_button.configure(text='Generate Next Population')
         self.generate_children_frame.generate_children_button.update()
         return
-
 
     def save_population(self, population):
         """ save a population list of child appearances to files """

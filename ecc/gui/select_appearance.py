@@ -146,12 +146,13 @@ class SelectAppearanceDialog(tk.Frame):
                                       command=lambda fn=file_name: self.end_file_selection_with_thumbnails(fn))
         appearance_button.grid(row=row * 2, column=column, padx=0, pady=0)
         appearance_button.configure(image=thumbnail)
-        appearance_button.bind("<Enter>", lambda e, index=file_index: self.on_enter_appearancebutton(index, event=e))
-        appearance_button.bind("<Leave>", lambda e, index=file_index: self.on_leave_appearancebutton(index, event=e))
+        appearance_button.bind("<Enter>", lambda e, index=file_index: self.on_enter_appearance_button(index, event=e))
+        appearance_button.bind("<Leave>", lambda e, index=file_index: self.on_leave_appearance_button(index, event=e))
         appearance_button.image = thumbnail
         return appearance_button
 
-    def make_appearance_button_label(self, window, file_name, row, column):
+    @staticmethod
+    def make_appearance_button_label(window, file_name, row, column):
         """ todo """
         label_name = os.path.basename(file_name)[7:-4]  # remove Preset_ and .vap
         appearance_label = tk.Label(window, text=label_name, font=FILENAME_FONT, width=26, anchor=tk.W,
@@ -159,17 +160,32 @@ class SelectAppearanceDialog(tk.Frame):
         appearance_label.grid(row=row * 2 + 1, column=column, sticky=tk.W)
         return appearance_label
 
-    def on_enter_appearancebutton(self, index, event=None):
+    def on_enter_appearance_button(self, index, event=None):
         """ Show hover effect when entering mouse over an image file. """
         self.appearancebutton[index][BACKGROUND] = HOVER_COLOR
         self.appearancelabel[index][BACKGROUND] = BG_COLOR
         self.appearancelabel[index][FOREGROUND] = HOVER_COLOR
 
-    def on_leave_appearancebutton(self, index, event=None):
+    def on_leave_appearance_button(self, index, event=None):
         """ Show hover effect when exiting mouse over an image file. """
         self.appearancebutton[index][BACKGROUND] = BG_COLOR
         self.appearancelabel[index][BACKGROUND] = BG_COLOR
         self.appearancelabel[index][FOREGROUND] = FG_COLOR
+
+    def remove_all_appearance_widgets(self):
+        """ Used by file_selection_with_thumbnails function to clear the popup window if the amount of thumbnails per
+            row is changed. After clearing, builds the images up again with the new thumbnails per row settings. """
+        for widget in self.all_appearance_widgets:
+            widget.destroy()
+
+    def apply_file_filter(self, filenames):
+        """ Applies file filter to file selection window. """
+        self.my_canvas.yview_moveto('0.0')  # scroll to top
+        filter_txt = self.filefilter.get()
+        glob_filter = "*preset_*" + filter_txt + "*.vap"
+        filtered = [file for file in filenames if fnmatch(file.lower(), glob_filter)]
+        self.remove_all_appearance_widgets()
+        self.show_all_appearance_buttons(self.appearancesframe, filtered, self.thumbnails_per_row)
 
 
 if __name__ == '__main__':

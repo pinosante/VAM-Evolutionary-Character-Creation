@@ -11,7 +11,6 @@ import time
 
 from collections import defaultdict
 
-
 import numpy as np
 
 from ..common.utility import *
@@ -411,6 +410,7 @@ def get_means_from_morphlists(morph_lists):
                 means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
     return means
 
+
 def get_cov_from_morph_lists(morphlists):
     """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
     values = defaultdict(lambda: [])
@@ -422,7 +422,6 @@ def get_cov_from_morph_lists(morphlists):
         list_of_values.append(value)
     covariances = np.array(list_of_values)
     return np.cov(covariances)
-
 
 
 if __name__ == '__main__':
