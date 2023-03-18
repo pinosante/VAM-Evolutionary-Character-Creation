@@ -20,6 +20,7 @@ from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
 from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.method_frame import MethodFrame
+from .app_window_frames.options_frame import OptionsFrame
 from .app_window_frames.generate_children_frame import GenerateChildrenFrame
 
 # selection of appearances method texts
@@ -109,7 +110,11 @@ class AppWindow(tk.Frame):
         self.method_frame = MethodFrame(self.subtitle_font, settings, self.update_initialize_population_button)
         self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.init_options_frame()
+        self.options_frame = OptionsFrame(settings, self.subtitle_font,
+                                          self.track_threshold_change,
+                                          self.track_minmorph_change,
+                                          self.use_recursive_directory_search)
+        self.options_frame.grid(row=7, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
 
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
@@ -317,18 +322,18 @@ class AppWindow(tk.Frame):
                 self.press_child_template_button(self.child_template['gender'])
 
         if 'morph threshold' in self.settings:
-            self.threshold_var.set(self.settings['morph threshold'])
+            self.options_frame.threshold_var.set(self.settings['morph threshold'])
         else:
             self.settings['morph threshold'] = 0.01
 
         if 'min morph threshold' in self.settings:
-            self.min_morph_var.set(self.settings['min morph threshold'])
+            self.options_frame.min_morph_var.set(self.settings['min morph threshold'])
         else:
             self.settings['min morph threshold'] = 150
-            self.min_morph_var.set(150)
+            self.options_frame.min_morph_var.set(150)
 
         if 'max kept elites' in self.settings:
-            self.max_kept_elites_var.set(self.settings['max kept elites'])
+            self.options_frame.max_kept_elites_var.set(self.settings['max kept elites'])
         else:
             self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
 
@@ -382,13 +387,13 @@ Do you want to continue that session?""")
             pressed and raises the other and keeps track of the choice in settings. """
         self.settings['recursive directory search'] = choice
         if choice:
-            self.recursive_directory_search_yes_button.configure(relief=tk.SUNKEN)
-            self.recursive_directory_search_no_button.configure(relief=tk.RAISED)
+            self.options_frame.recursive_directory_search_yes_button.configure(relief=tk.SUNKEN)
+            self.options_frame.recursive_directory_search_no_button.configure(relief=tk.RAISED)
         else:
-            self.recursive_directory_search_yes_button.configure(relief=tk.RAISED)
-            self.recursive_directory_search_no_button.configure(relief=tk.SUNKEN)
-        self.recursive_directory_search_yes_button.update()
-        self.recursive_directory_search_no_button.update()
+            self.options_frame.recursive_directory_search_yes_button.configure(relief=tk.RAISED)
+            self.options_frame.recursive_directory_search_no_button.configure(relief=tk.SUNKEN)
+        self.options_frame.recursive_directory_search_yes_button.update()
+        self.options_frame.recursive_directory_search_no_button.update()
         self.generator.clear_data_with_all_appearances()
         self.generator.fill_data_with_all_appearances()
         self.update_found_labels()
@@ -415,7 +420,7 @@ Do you want to continue that session?""")
         """ Keeps track if the user changes the morph threshold value in the GUI.
             If so, validity of the entry is checked. GUI is also updated depending
             on validity, using update_XYZ calls """
-        string = self.threshold_entry.get()
+        string = self.options_frame.threshold_entry.get()
         try:
             value = float(string)
             if 0.0 <= value < 1.0:
@@ -442,7 +447,7 @@ Do you want to continue that session?""")
         """ Keeps track if the user changes the min morph value in the GUI.
             If so, validity of the entry is checked. GUI is also updated depending
             on validity, using update_XYZ calls """
-        string = self.min_morph_entry.get()
+        string = self.options_frame.min_morph_entry.get()
         try:
             value = int(string)
             self.settings['min morph threshold'] = value
@@ -460,22 +465,6 @@ Do you want to continue that session?""")
             self.update_initialize_population_button()
             return
 
-    def track_max_kept_elites_change(self, var, index, mode):
-        """ Keeps track if the user changes the 'max kept elites' value in the GUI.
-            If an invalid value is chosen, then we use the default value.
-            """
-        string = self.max_kept_elites_entry.get()
-        try:
-            value = int(string)
-
-            if 0 <= value <= POP_SIZE:
-                self.settings['max kept elites'] = value
-            else:
-                self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
-
-        except ValueError:
-            self.settings['max kept elites'] = DEFAULT_MAX_KEPT_ELITES
-            return
 
     def update_found_labels(self):
         """ Depending on the choice for the source files, updates the GUI """
