@@ -19,8 +19,10 @@ from ..common.utility import *
 
 
 class VamComm:
-    def __init__(self, settings):
+    def __init__(self, settings, master, execute_vam_command_callback):
+        self.master = master
         self.settings = settings
+        self.execute_vam_command_callback = execute_vam_command_callback
 
     def broadcast_generation_number_to_vam(self, number):
         """ Updates the file
@@ -79,6 +81,46 @@ class VamComm:
                     dictionary[needed_key] = replacement_string
                     return dict_list
         return None
+
+    @staticmethod
+    def value_from_id_in_dict_list(dict_list, id_string, needed_key):
+        for dictionary in dict_list:
+            if id_string in dictionary.values():
+                if needed_key in dictionary:
+                    return dictionary[needed_key]
+        return None
+
+    def scan_vam_for_command_updates(self, lastcommand):
+        """ Continously check if
+            PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_VAM2PythonText.vap
+            has a new command string. If so, try to execute that command by calling execute_VAM_command() """
+        # todo: candidate for logic
+        # try to open file
+        path = self.settings.get_vam_path(
+                r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
+        if not path:
+            return
+        try:
+            with open(path, encoding='utf-8') as f:
+                linestring = f.read()
+                lines = linestring.split('\n')
+                # print(f"Length of lines {len(lines)}")
+                if len(lines) < 70:  # incomplete file
+                    raise IOError(f'Not enough lines ({len(lines)}) in the file ')
+                # f.seek(0) # back to start of file
+                command_json = json.loads(linestring)
+                command = self.value_from_id_in_dict_list(command_json['storables'], 'Text', 'text')
+                if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
+                    lastcommand = command
+                if command != lastcommand:
+                    self.broadcast_last_command_to_vam(command)
+                    self.execute_vam_command_callback(command)
+                    print(f'We have a new command: {command}')
+        except IOError as e:
+            print(e)
+            self.master.after(25, lambda lastcommand=lastcommand: self.scan_vam_for_command_updates(lastcommand))
+        else:
+            self.master.after(25, lambda lastcommand=command: self.scan_vam_for_command_updates(lastcommand))
 
 
 

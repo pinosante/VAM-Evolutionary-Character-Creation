@@ -148,15 +148,6 @@ def get_morph_index_with_character_info_from_appearance(appearance):
     return None
 
 
-def value_from_id_in_dict_list(dict_list, id_string, needed_key):
-    for dictionary in dict_list:
-        if id_string in dictionary.values():
-            if needed_key in dictionary:
-                return dictionary[needed_key]
-    return None
-
-
-
 def uses_female_morphs_on_male(appearance):
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
     return appearance[STORABLES][char_index]['useFemaleMorphsOnMale'] == "true"
@@ -416,7 +407,6 @@ def get_cov_from_morph_lists(morphlists):
         list_of_values.append(value)
     covariances = np.array(list_of_values)
     return np.cov(covariances)
-
 
 
 def last_given_commands_to_string(list_of_commands):
