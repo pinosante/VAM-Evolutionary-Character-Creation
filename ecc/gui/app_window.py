@@ -24,11 +24,6 @@ from .constants import *
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
 
-# selection of appearances method texts
-CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
-CHOOSE_ALL_TEXT = "Choose All Appearances"
-CHOOSE_FILES_TEXT = "Choose Files"
-
 
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
@@ -68,7 +63,7 @@ class AppWindow(tk.Frame):
                                                    self.choose_files)
         self.source_files_frame.grid(row=4, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.parent_selection_frame = ChromosomeListFrame(settings, self.select_file)
+        self.parent_selection_frame = ChromosomeListFrame(settings, self.subtitle_font, self.select_file)
         self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.favorites_frame = AlternativeAppearanceFrame()

@@ -7,7 +7,7 @@ Please credit me if you change, use or adapt this file.
 import tkinter as tk
 
 from ..constants import *
-from ...common.utility import *
+
 
 
 class ParentsFileFrame(tk.Frame):

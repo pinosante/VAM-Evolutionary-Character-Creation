@@ -3,6 +3,10 @@ Business logic for VAM Evolutionary Character Creation
 By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
+# selection of appearances method texts
+CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
+CHOOSE_ALL_TEXT = "Choose All Appearances"
+CHOOSE_FILES_TEXT = "Choose Files"
 
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
