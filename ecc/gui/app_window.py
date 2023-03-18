@@ -1304,8 +1304,8 @@ Do you want to continue that session?""")
         self.update_population(new_population)
         self.generate_children_button.configure(bg='lightgreen', text='')
         # to do: why two lines?
-        self.generate_children_button.configure(text='Generate Next Population')
-        self.generate_children_button.update()
+        self.generate_children_frame.generate_children_button.configure(text='Generate Next Population')
+        self.generate_children_frame.generate_children_button.update()
         return
 
     def gaussian_initialize_population(self, source_files):
@@ -1313,8 +1313,8 @@ Do you want to continue that session?""")
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print('Using random samples from multivariate gaussian distribution for initialization.')
-        self.generate_children_button.configure(text="Generating Population\n Please be patient!\n", bg="red")
-        self.generate_children_button.update()
+        self.generate_children_frame.generate_children_button.configure(text="Generating Population\n Please be patient!\n", bg="red")
+        self.generate_children_frame.generate_children_button.update()
 
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
@@ -1334,8 +1334,8 @@ Do you want to continue that session?""")
         for i in range(1, POP_SIZE + 1):
             txt = 'Generating Population\n' + 'Please be patient!\n' + '(' + str(i) + "/" + str(
                 POP_SIZE) + ")"
-            self.generate_children_button.configure(text=txt, bg='red')
-            self.generate_children_button.update()
+            self.generate_children_frame.generate_children_button.configure(text=txt, bg='red')
+            self.generate_children_frame.generate_children_button.update()
             self.broadcast_message_to_vam_rating_blocker(txt)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
@@ -1353,9 +1353,9 @@ Do you want to continue that session?""")
         self.generator.gen_counter += 1
 
         self.update_population(new_population)
-        self.generate_children_button.configure(bg='lightgreen', text='')
-        self.generate_children_button.configure(text='Generate Next Population')
-        self.generate_children_button.update()
+        self.generate_children_frame.generate_children_button.configure(bg='lightgreen', text='')
+        self.generate_children_frame.generate_children_button.configure(text='Generate Next Population')
+        self.generate_children_frame.generate_children_button.update()
         return
 
     @staticmethod
@@ -1403,7 +1403,7 @@ Do you want to continue that session?""")
 
     def change_parent_to_generation_display(self):
         """ Changes the Parent """
-        self.title_label.configure(text='Generation ' + str(self.generator.gen_counter))
+        self.title_frame.title_label.configure(text='Generation ' + str(self.generator.gen_counter))
         for i in [1, 2, 3]:
             self.column_info[str(i)].destroy()
 
@@ -1424,7 +1424,7 @@ Do you want to continue that session?""")
         self.change_template_button_label = tk.Label(self.change_template_frame, text=label_txt, width=14, anchor='w',
                                                      font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
         self.change_template_button_label.grid(row=0, column=1, sticky=tk.W, padx=0)
-        self.generate_children_button.configure(width=27, height=6)
+        self.generate_children_frame.generate_children_button.configure(width=27, height=6)
         for c in self.population.chromosomes:
             c.destroy_ui()
             c.initialize_rating_buttons(self.parent_selection_frame)
