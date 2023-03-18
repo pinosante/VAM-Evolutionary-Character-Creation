@@ -63,25 +63,11 @@ class AppWindow(tk.Frame):
         self.favorites_info = None
         self.favorites_label = None
         self.favorites_frame = None
-        self.recursive_directory_search_no_button = None
-        self.recursive_directory_search_yes_button = None
-        self.recursive_directory_search_label = None
-        self.max_kept_elites_entry = None
-        self.max_kept_elites_var = None
-        self.min_morph_entry = None
-        self.max_kept_elites_label = None
-        self.min_morph_info_label = None
-        self.min_morph_var = None
-        self.min_morph_label = None
-        self.threshold_label = None
-        self.threshold_entry = None
-        self.threshold_entry = None
-        self.threshold_var = None
-        self.options_frame = None
-        self.generate_children_button = None
         self.generate_children_frame = None
+
         self.settings = settings
         self.generator = generator
+
         self.subtitle_font = (DEFAULT_FONT, 11, "bold")
         self.subtitle_padding = 1
 
@@ -91,8 +77,6 @@ class AppWindow(tk.Frame):
             CHOOSE_ALL_TEXT: lambda: self.get_all_appearance_filenames(),
             CHOOSE_FILES_TEXT: lambda: self.get_selected_appearance_filenames()
         }
-
-        # self.master.title(APP_TITLE)
 
         self.title_frame = TitleFrame()
         self.title_frame.grid(row=0, column=0, sticky=tk.W)
@@ -120,69 +104,6 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
-
-    def init_options_frame(self):
-        self.options_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.options_frame.grid(row=7, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        option_row_number = 1
-        options_label = tk.Label(self.options_frame, text="Step 7: Options", font=self.subtitle_font, bg=BG_COLOR,
-                                 fg=FG_COLOR)
-        options_label.grid(columnspan=9, row=option_row_number, sticky=tk.W, pady=(0, 0))
-        option_row_number += 1  # go to next row of the options menu
-        self.threshold_label = tk.Label(self.options_frame, text="A) Remove morphs with absolute value below:",
-                                        anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.threshold_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
-        # track if the threshold values are changed by the user and if so, update the morph info based on the setting
-        self.threshold_var = tk.DoubleVar()
-        self.threshold_var.set(0.01)
-        self.threshold_var.trace_add("write", self.track_threshold_change)
-        self.threshold_entry = tk.Entry(self.options_frame, textvariable=self.threshold_var, fg=BUTTON_FG_COLOR,
-                                        bg=BUTTON_BG_COLOR, width=7)
-        self.threshold_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-        self.threshold_label = tk.Label(self.options_frame, text="(0 = keep all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.threshold_label.grid(row=option_row_number, column=12, sticky=tk.W)
-        # minimum morphs needed in appearance to be available in file selection
-        option_row_number += 1  # go to next row of the options menu
-        self.min_morph_label = tk.Label(self.options_frame, text="B) Only show appearances with morph count above:",
-                                        anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.min_morph_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
-        # track if the threshold values are changed by the user and if so, update the morph info based on the setting
-        self.min_morph_var = tk.IntVar()
-        self.min_morph_var.set(0)
-        self.min_morph_var.trace_add("write", self.track_minmorph_change)
-        self.min_morph_entry = tk.Entry(self.options_frame, textvariable=self.min_morph_var, fg=BUTTON_FG_COLOR,
-                                        bg=BUTTON_BG_COLOR, width=7)
-        self.min_morph_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-        self.min_morph_info_label = tk.Label(self.options_frame, text="(0 = show all)", bg=BG_COLOR, fg=FG_COLOR)
-        self.min_morph_info_label.grid(row=option_row_number, column=12, sticky=tk.W)
-        option_row_number += 1  # go to next row of the options menu
-        self.max_kept_elites_label = tk.Label(self.options_frame, text="C) Max kept elites (highest rated):",
-                                              anchor='w',
-                                              bg=BG_COLOR, fg=FG_COLOR)
-        self.max_kept_elites_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W, padx=(0, 0))
-        # track if the maxkeptelites values are changed by the user
-        self.max_kept_elites_var = tk.IntVar()
-        self.max_kept_elites_var.set(DEFAULT_MAX_KEPT_ELITES)
-        self.max_kept_elites_var.trace_add("write", self.track_max_kept_elites_change)
-        self.max_kept_elites_entry = tk.Entry(self.options_frame, textvariable=self.max_kept_elites_var,
-                                              fg=BUTTON_FG_COLOR,
-                                              bg=BUTTON_BG_COLOR, width=7)
-        self.max_kept_elites_entry.grid(columnspan=2, row=option_row_number, column=10, sticky=tk.W)
-        option_row_number += 1  # go to next row of the options menu
-        self.recursive_directory_search_label = tk.Label(self.options_frame,
-                                                         text="D) Also read subdirectories in file selection:",
-                                                         anchor='w', bg=BG_COLOR, fg=FG_COLOR)
-        self.recursive_directory_search_label.grid(columnspan=5, row=option_row_number, column=0, sticky=tk.W)
-        self.recursive_directory_search_yes_button = tk.Button(self.options_frame, text="Yes", bg=BUTTON_BG_COLOR,
-                                                               fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                               command=lambda: self.use_recursive_directory_search(
-                                                                   True))
-        self.recursive_directory_search_yes_button.grid(row=option_row_number, column=10, sticky=tk.W)
-        self.recursive_directory_search_no_button = tk.Button(self.options_frame, text="No", bg=BUTTON_BG_COLOR,
-                                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                              command=lambda: self.use_recursive_directory_search(
-                                                                  False))
-        self.recursive_directory_search_no_button.grid(row=option_row_number, column=11, sticky=tk.W)
 
     def init_alternative_appearances_frame(self):
         self.favorites_frame = tk.Frame(self.master, bg=BG_COLOR)
