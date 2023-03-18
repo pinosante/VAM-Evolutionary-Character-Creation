@@ -18,6 +18,7 @@ from .population import Population
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
 from .app_window_frames.title_frame import TitleFrame
+from .app_window_frames.vam_dir_frame import VamDirFrame
 from .app_window_frames.method_frame import MethodFrame
 from .app_window_frames.options_frame import OptionsFrame
 from .app_window_frames.child_template_frame import ChildTemplateFrame
@@ -52,7 +53,9 @@ class AppWindow(tk.Frame):
         self.generate_children_frame = GenerateChildrenFrame(settings, self.generate_next_population)
         self.generate_children_frame.grid(row=8, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.init_vam_dir_frame()
+        self.vam_dir_frame = VamDirFrame(settings, self.subtitle_font, self.select_vam_dir_callback)
+        self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+
         self.init_appearance_dir_frame()
 
         self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
@@ -140,23 +143,6 @@ class AppWindow(tk.Frame):
                                              bg=BG_COLOR, fg=FG_COLOR)
         self.appearance_dir_label.grid(row=1, column=1, sticky=tk.W)
 
-    def init_vam_dir_frame(self):
-        self.vam_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.vam_dir_title_label = tk.Label(self.vam_dir_frame,
-                                            text="Step 1: Select VAM Base Folder (with VaM.exe)",
-                                            font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-        self.vam_dir_title_label.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.vam_dir_button = tk.Button(self.vam_dir_frame, text="VAM Base Folder", bg=BUTTON_BG_COLOR,
-                                        fg=BUTTON_FG_COLOR,
-                                        activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                        command=lambda: self.select_vam_dir())
-        self.vam_dir_button.grid(row=1, column=0, sticky=tk.W)
-        self.vam_dir_label = tk.Label(self.vam_dir_frame, text=NO_FILE_SELECTED_TEXT,
-                                      font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
-                                      bg=BG_COLOR, fg=FG_COLOR)
-        self.vam_dir_label.grid(row=1, column=1, sticky=tk.W)
-
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
             not found """
@@ -173,10 +159,10 @@ class AppWindow(tk.Frame):
             else:
                 vam_dir = strip_dir_string_to_max_length(self.settings['VAM base dir'],
                                                          MAX_VAMDIR_STRING_LENGTH)
-                self.vam_dir_button.configure(relief=tk.SUNKEN)
+                self.vam_dir_frame.vam_dir_button.configure(relief=tk.SUNKEN)
         else:
             vam_dir = NO_FILE_SELECTED_TEXT
-        self.vam_dir_label.configure(text=vam_dir)
+        self.vam_dir_frame.vam_dir_label.configure(text=vam_dir)
 
         if 'child template' in self.settings:
             if os.path.isfile(self.settings['child template']):
@@ -429,7 +415,7 @@ Do you want to continue that session?""")
         self.update_morph_info(number)
         self.update_initialize_population_button()
 
-    def select_vam_dir(self):
+    def select_vam_dir_callback(self):
         """ Shows filedialog to find the location of the VAM.exe. Choice is validated, GUI updated and settings
             saved. """
         # try to open the file dialog in the last known location
@@ -442,18 +428,19 @@ Do you want to continue that session?""")
                                                  title="Please select the folder which has the VAM.exe file")
         if os.path.exists(os.path.join(folder_path, 'vam.exe')):
             self.settings['VAM base dir'] = str(pathlib.Path(folder_path))
-            self.vam_dir_label.configure(
+            self.vam_dir_frame.vam_dir_label.configure(
                 text=strip_dir_string_to_max_length(self.settings['VAM base dir'],
                                                     MAX_VAMDIR_STRING_LENGTH))
-            self.vam_dir_button.configure(relief=tk.SUNKEN)
+            self.vam_dir_frame.vam_dir_button.configure(relief=tk.SUNKEN)
             self.track_min_morph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
             self.generator.fill_data_with_all_appearances()
         else:
             self.settings['VAM base dir'] = ""
-            self.vam_dir_label.configure(text=NO_FILE_SELECTED_TEXT)
-            self.vam_dir_button.configure(relief=tk.RAISED)
+            self.vam_dir_frame.vam_dir_label.configure(text=NO_FILE_SELECTED_TEXT)
+            self.vam_dir_frame.vam_dir_button.configure(relief=tk.RAISED)
             self.generator.clear_data_with_all_appearances()
+
         self.update_initialize_population_button()
         self.update_found_labels()
 
@@ -585,8 +572,8 @@ Do you want to continue that session?""")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = get_appearance_gender(load_appearance(filename))
-        if not is_compatible_gender(gender, self.child_template['gender']):
-            matches = matching_genders(self.child_template['gender'])
+        if not is_compatible_gender(gender, self.child_template_frame.child_template['gender']):
+            matches = matching_genders(self.child_template_frame.child_template['gender'])
             if len(matches) > 1:  # Female and Futa
                 select_msg = "Please select a Female or Futa as template."
             else:
@@ -678,7 +665,7 @@ Do you want to continue that session?""")
                 break
             appearance = load_appearance(filename)
             gender = get_appearance_gender(appearance)
-            if gender == self.child_template['gender']:
+            if gender == self.child_template_frame.child_template['gender']:
                 appearance_templates.append(appearance)
 
         for c in self.population.chromosomes:
@@ -788,7 +775,7 @@ Do you want to continue that session?""")
         elif method == "Random Crossover":
             self.crossover_initialize_population(self.settings['source files'])
         self.generator.gen_counter = 1
-        self.title_label.configure(text="Generation " + str(self.generator.gen_counter))
+        self.title_frame.title_label.configure(text="Generation " + str(self.generator.gen_counter))
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker("")
 
@@ -831,7 +818,7 @@ Do you want to continue that session?""")
 
         self.generator.gen_counter += 1
         self.settings['generation counter'] = self.generator.gen_counter
-        self.title_label.configure(text=f'Generation {self.generator.gen_counter}')
+        self.title_frame.title_label.configure(text=f'Generation {self.generator.gen_counter}')
         self.reset_ratings()
         self.broadcast_message_to_vam_rating_blocker('')
         self.settings.save()

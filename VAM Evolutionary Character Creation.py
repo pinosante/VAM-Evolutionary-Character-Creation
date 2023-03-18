@@ -29,8 +29,10 @@ def main():
     main_window.configure(bg=BG_COLOR)
     main_window.option_add("*font", "Calibri 9")
     main_window.iconbitmap(os.path.join(ecc.common.utility.DATA_PATH, ICON_FILENAME))
+    main_window.title('VAM Evolutionary Character Creation')
 
     app = AppWindow(settings, generator)
+
     app.initialize()
     main_window.mainloop()
 
