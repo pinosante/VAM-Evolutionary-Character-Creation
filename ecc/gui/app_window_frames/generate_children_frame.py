@@ -20,3 +20,12 @@ class GenerateChildrenFrame(tk.Frame):
             relief="flat", font=(DEFAULT_FONT, 15, "bold")
         )
         self.generate_children_button.grid(row=0, column=0, sticky=tk.W)
+
+    def display_ready_for_new_generation(self):
+        self.generate_children_button.configure(bg='lightgreen', text='')
+        self.generate_children_button.configure(text='Generate Next Population')
+        self.generate_children_button.update()
+
+    def display_progress(self, text):
+        self.generate_children_button.configure(text=text, bg='red')
+        self.generate_children_button.update()

@@ -9,7 +9,6 @@ import tkinter as tk
 from ..constants import *
 
 
-
 class ParentsFileFrame(tk.Frame):
     def __init__(self, font, choose_all_appearances_strategy, choose_all_favorites_strategy, choose_files_strategy):
         super().__init__()
@@ -29,5 +28,3 @@ class ParentsFileFrame(tk.Frame):
                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                              command=lambda: choose_files_strategy())
         self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
-
-
