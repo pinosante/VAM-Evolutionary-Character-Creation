@@ -6,9 +6,12 @@ Please credit me if you change, use or adapt this file.
 
 import pathlib
 import tkinter as tk
+
 from datetime import datetime
 from tkinter import filedialog
 from tkinter import messagebox
+
+from .constants import *
 
 from .app_window_frames.alternative_appearance_frame import AlternativeAppearanceFrame
 from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
@@ -22,11 +25,12 @@ from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.vam_dir_frame import VamDirFrame
 from .app_window_frames.overview_frame import OverviewFrame
 from .app_window_frames.last_commands_frame import LastCommandsFrame
-from .constants import *
+
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
 from .population import Population
 
+from ..logic.vam_comm import VamComm
 
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
@@ -36,6 +40,7 @@ class AppWindow(tk.Frame):
 
         self.settings = settings
         self.generator = generator
+        self.vam_comm = VamComm(settings)
 
         self.subtitle_font = (DEFAULT_FONT, 11, 'bold')
         self.subtitle_padding = 1
@@ -418,15 +423,6 @@ Do you want to continue that session?""")
         self.update_initialize_population_button()
         self.update_found_labels()
 
-    def get_vam_default_appearance_path(self):
-        """ Returns the path to the default Appearance directory based on the VAM base path, or returns '' if no base path
-            is found in settings. """
-        path = ''
-        if 'VAM base dir' in self.settings:
-            if len(self.settings['VAM base dir']) > 0:
-                appearance_path = "Custom/Atom/Person/Appearance"
-                path = os.path.join(self.settings['VAM base dir'], appearance_path)
-        return path
 
     def update_initialize_population_button(self):
         """ Updates the Initialize Population button, by checking if all necessary files and settings are correct. If
@@ -515,7 +511,7 @@ Do you want to continue that session?""")
         """ Called by either the GUI or as a VAM command. Checks if the gender of the chosen file matches the
             current template gender. Updates the GUI. """
         # todo: split, move parts to logic
-        self.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
+        self.vam_comm.broadcast_message_to_vam_rating_blocker("Updating...\nPlease Wait")
         # we need to check if the chosen gender matches the gender of the current population (for example:
         # we can't suddenly switch from a male population to a female population or vice versa).
         gender = get_appearance_gender(load_appearance(filename))
@@ -525,18 +521,18 @@ Do you want to continue that session?""")
                 select_msg = "Please select a Female or Futa as template."
             else:
                 select_msg = "Please select a Male as template."
-            self.broadcast_message_to_vam_rating_blocker("Failure: Gender does not match population.\n\n" + select_msg)
+            self.vam_comm.broadcast_message_to_vam_rating_blocker("Failure: Gender does not match population.\n\n" + select_msg)
             return
         self.change_template_button_label.configure(text=os.path.basename(filename)[7:-4])
         self.settings['child template'] = filename
         self.update_population_with_new_template()
-        self.broadcast_message_to_vam_rating_blocker("")
+        self.vam_comm.broadcast_message_to_vam_rating_blocker("")
 
     def switch_layout_to_overview(self):
         """ Called when the user has pressed 'Connect to App' in VAM (resulting in a 'Connect to App' command to this
             app). This method removes the 'please start the vam app' dialogue, and replaces it with an overview window
             showing the user the last five commands received, from the VAM companion save. """
-        self.broadcast_generation_number_to_vam(self.generator.gen_counter)
+        self.vam_comm.broadcast_generation_number_to_vam(self.generator.gen_counter)
         print("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
@@ -550,35 +546,22 @@ Do you want to continue that session?""")
         self.last_commands_frame.grid(row=1, column=0, padx=10, pady=(10, 0), sticky="nsew")
 
         print("Resetting ratings")
-        self.reset_ratings()
+        self.population.reset_ratings()
         print("Sending generation number")
-        self.broadcast_generation_number_to_vam(self.generator.gen_counter)
-        self.broadcast_message_to_vam_rating_blocker("")
+        self.vam_comm.broadcast_generation_number_to_vam(self.generator.gen_counter)
+        self.vam_comm.broadcast_message_to_vam_rating_blocker("")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
         self.overview_frame.generation_number_label.config(text=self.generator.gen_counter)
         self.overview_frame.template_file_label.config(text=self.create_template_labeltext(self.settings['child template']))
-        self.commands_label.config(text=self.last_given_commands_to_string(self.generator.last_five_commands))
-
-    @staticmethod
-    def last_given_commands_to_string(list_of_commands):
-        """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
-            to a string with \n for line separation
-            to do: simplify this"""
-        # todo: to logic
-        string = ''
-        for command_dict in list_of_commands:
-            line = command_dict['time'] + ': ' + command_dict['command'] + "\n"
-            string = string + line
-        string = string[:-1]  # remove the extra \n at the end
-        return string
+        self.last_commands_frame.commands_label.config(text=last_given_commands_to_string(self.generator.last_five_commands))
 
     def variate_population_with_templates(self):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
         print('variate_population_with_templates')
-        self.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
+        self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         filenames = list(self.generator.appearances.keys())
         random.shuffle(filenames)
@@ -599,7 +582,7 @@ Do you want to continue that session?""")
             nude_appearance = remove_clothing_from_appearance(updated_appearance)
             save_appearance(nude_appearance, c.filename)
 
-        self.broadcast_message_to_vam_rating_blocker('')
+        self.vam_comm.broadcast_message_to_vam_rating_blocker('')
 
     def update_population_with_new_template(self):
         """ Replaces the template of all the current Children with the new one but keeps the morphs values the same. """
@@ -680,7 +663,7 @@ Do you want to continue that session?""")
             Generation counter is reset to 1. """
         # todo: split into GUI and BL
         print(f'Restarting, with {method}')
-        self.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
+        self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
         # since the chromosomes now contain the Evolutionary Children files at this stage. Only the
@@ -701,8 +684,8 @@ Do you want to continue that session?""")
             self.crossover_initialize_population(self.settings['source files'])
         self.generator.gen_counter = 1
         self.title_frame.title_label.configure(text="Generation " + str(self.generator.gen_counter))
-        self.reset_ratings()
-        self.broadcast_message_to_vam_rating_blocker("")
+        self.population.reset_ratings()
+        self.vam_comm.broadcast_message_to_vam_rating_blocker("")
 
     def generate_next_population(self, method):
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
@@ -717,24 +700,24 @@ Do you want to continue that session?""")
                 self.crossover_initialize_population(self.settings['source files'])
             self.change_parent_to_generation_display()
             self.switch_layout_to_rating()
-            self.reset_ratings()
+            self.population.reset_ratings()
             self.change_gui_to_show_user_to_start_vam()
             self.scan_vam_for_command_updates('Initialize')
             return
 
-        self.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
+        self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         # Start the new population with the elites from the last generation (depending on settings)
         elites = self.get_elites_from_population()
 
-        # Save elite appearances over child template (we do this, because the user might have changed the template file)
+        # Save elite appearances over child template (we do this, becau^1se the user might have changed the template file)
         elite_morph_lists = [get_morph_list_from_appearance(appearance) for appearance in elites]
         template_appearance = load_appearance(self.settings['child template'])
         new_population = [save_morph_to_appearance(elite_morph_list, template_appearance)
                           for elite_morph_list in elite_morph_lists]
 
         for i in range(POP_SIZE - len(new_population)):
-            random_parents = self.weighted_random_selection()
+            random_parents = self.population.weighted_random_selection()
             child_appearance = fuse_characters(random_parents[0].filename, random_parents[1].filename,
                                                self.settings)
             new_population.append(child_appearance)
@@ -744,8 +727,8 @@ Do you want to continue that session?""")
         self.generator.gen_counter += 1
         self.settings['generation counter'] = self.generator.gen_counter
         self.title_frame.title_label.configure(text=f'Generation {self.generator.gen_counter}')
-        self.reset_ratings()
-        self.broadcast_message_to_vam_rating_blocker('')
+        self.population.reset_ratings()
+        self.vam_comm.broadcast_message_to_vam_rating_blocker('')
         self.settings.save()
 
     def change_gui_to_show_user_to_start_vam(self):
@@ -775,7 +758,7 @@ Do you want to continue that session?""")
     def continue_last_session(self):
         """ Skip choosing the settings and continue from the last session. This only means switching the layout to
             the rating window and setting the generation counter to the last known value. """
-        path = self.get_vam_default_appearance_path()
+        path = self.settings.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
 
         for c in self.population.chromosomes:
@@ -785,19 +768,10 @@ Do you want to continue that session?""")
 
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
-        self.reset_ratings()
+        self.population.reset_ratings()
         self.generate_children_frame.generate_children_button.configure(text='Generate Next Population')
         self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
-
-    def get_vam_path(self, pathstring):
-        """ Returns the full path with VAM_BASE_PATH/pathstring and returns False if there was no VAM base dir. """
-        # todo: candidate for logic
-        if "VAM base dir" not in self.settings:
-            return False
-        if len(self.settings['VAM base dir']) == 0:
-            return False
-        return os.path.join(self.settings['VAM base dir'], pathstring)
 
     def scan_vam_for_command_updates(self, lastcommand):
         """ Continously check if
@@ -805,7 +779,8 @@ Do you want to continue that session?""")
             has a new command string. If so, try to execute that command by calling execute_VAM_command() """
         # todo: candidate for logic
         # try to open file
-        path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
+        path = self.settings.get_vam_path(
+                r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
         if not path:
             return
         try:
@@ -821,7 +796,7 @@ Do you want to continue that session?""")
                 if lastcommand == "Initialize":  # if we Initialize we have to set lastcommand as the file we just read
                     lastcommand = command
                 if command != lastcommand:
-                    self.broadcast_last_command_to_vam(command)
+                    self.vam_comm.broadcast_last_command_to_vam(command)
                     self.execute_vam_command(command)
                     print(f'We have a new command: {command}')
         except IOError as e:
@@ -864,77 +839,29 @@ Do you want to continue that session?""")
         # to make sure that in case the user wants to do the same command twice, the lastcommand != command in
         # scan_vam_for_command_updates() sees the commands as different (due to the random numbers in commands[1])
         elif 'use template' in commands[0].lower():
-            filename = self.get_vam_path(commands[1])
+            filename = self.settings.get_vam_path(commands[1])
             filename = str(pathlib.Path(filename))  # use uniform filename formatting
             self.change_template_file(filename)
         elif 'variate population' in commands[0].lower():
             self.variate_population_with_templates()
         elif 'connect to app' in commands[0].lower():
             self.generator.connected_to_VAM = True
-            self.reset_ratings()
+            self.population.reset_ratings()
             self.switch_layout_to_overview()
         elif 'generate next population' in commands[0].lower():
             self.generate_next_population(self.settings['method'])
-            self.broadcast_generation_number_to_vam(self.generator.gen_counter)
+            self.vam_comm.broadcast_generation_number_to_vam(self.generator.gen_counter)
         elif 'reset' in commands[0].lower():
             # in the case of a reset we immediately send the "Reset" command back to VAM to avoid a
             # "Connection Lost" in VAM, since the initialization of a new generation (with the Gaussian Method)
             # takes more than the 5 second Connection-check-timeout in VAM.
             self.press_restart_button(give_warning=False)
-            self.broadcast_generation_number_to_vam(self.generator.gen_counter)
+            self.vam_comm.broadcast_generation_number_to_vam(self.generator.gen_counter)
 
         if self.generator.connected_to_VAM:
             self.update_overview_window()
 
-    def broadcast_generation_number_to_vam(self, number):
-        # todo: candidate for logic
-        """ Updates the file
-            PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMGeneration.vap
-            with the generation number, so the Vam Evoluationary Character Creation Companion can display the
-            proper generation number. """
-        # try to save file
-        path = self.get_vam_path(
-            r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMGeneration.vap')
-        if not path:
-            return False
-        self.write_value_to_vam_file(path, "Text", "text", "Generation " + str(number))
 
-    def broadcast_last_command_to_vam(self, command):
-        # todo: candidate for logic
-        """ Updates the file
-            PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_Python2VAMText.vap
-            with the last command, so the Vam Evoluationary Character Creation Companion save can check if the python
-            script is still running properly, by comparing the command VAM sent to python, with this broadcast command
-            from python back. """
-        path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_Python2VAMText.vap')
-        if not path:
-            return False
-        self.write_value_to_vam_file(path, 'Text', 'text', command)
-
-    def broadcast_message_to_vam_rating_blocker(self, text):
-        # todo: candidate for logic
-        path = self.get_vam_path(
-            r'Custom\Atom\UIButton\VAM Evolutionary Character Creation\Preset_Python2VAMRatingBlocker.vap')
-        if not path:
-            return False
-        self.write_value_to_vam_file(path, 'Text', 'text', text)
-
-    @staticmethod
-    def write_value_to_vam_file(path, id_string, needed_key, replacement_string):
-        """ Updates the VAM file with path, by loading the storables array inside, and looking for the dictionary with
-            ("id", "id_string") as (key, value) pair. Then, within this dictionary, it will overwrite the (key, value)
-            pair with ("needed_key", "replacement_string"). Then it will overwrite the VAM file. """
-        # todo: candidate for logic
-        try:
-            with open(path, encoding='utf-8') as f:
-                text_json = json.load(f)
-            text_json['storables'] = replace_value_from_id_in_dict_list(text_json[STORABLES], id_string,
-                                                                        needed_key,
-                                                                        replacement_string)
-            with open(path, 'w', encoding='utf-8') as json_file:
-                json.dump(text_json, json_file, indent=3)
-        except IOError as e:
-            print(e)
 
     def switch_layout_to_rating(self):
         """ Switches the layout from the GUI from the Initialization Choices layout to the rate children layout. Called
@@ -948,29 +875,6 @@ Do you want to continue that session?""")
         self.parent_selection_frame.chromosome_label.configure(text='Rate Children')
         self.favorites_frame.grid_remove()
         self.options_frame.grid_remove()
-
-    def weighted_random_selection(self):
-        """ using roulette wheel selection, returns a randomly (weighted by rating) chosen appearance from the
-            population
-
-            reference: https://stackoverflow.com/questions/10324015/fitness-proportionate-selection-roulette-wheel-selection-in-python
-            """
-        # todo: candidate for logic
-
-        total_ratings = sum([c.rating for c in self.population.chromosomes])
-        choices = []
-
-        while len(choices) < 2:
-            pick = random.uniform(0, total_ratings)
-            current = 0
-            for c in self.population.chromosomes:
-                current += c.rating
-                if current > pick:
-                    if c not in choices:
-                        choices.append(c)
-                    break
-
-        return choices
 
     def get_elites_from_population(self):
         """ Returns the children appearances where the rating is the maximum rating that the user selected.
@@ -988,12 +892,6 @@ Do you want to continue that session?""")
 
         # Limit the list of appearances to a maximum of 'max kept elites' elements and return it.
         return appearances_with_maximum_rating[:self.settings['max kept elites']]
-
-    def reset_ratings(self):
-        """ Clear all ratings in the GUI. """
-        # todo: candidate for logic
-        for c in self.population.chromosomes:
-            c.update_rating(INITIAL_RATING)
 
     def get_appearance_filenames(self, get_only_favorites):
         """ Returns a list of all appearance files in the default VAM Appearance directory, after gender and morph
@@ -1069,7 +967,7 @@ Do you want to continue that session?""")
         for i in range(1, POP_SIZE + 1):
             text = f'Generating Population\nPlease be patient!\n({i}/{POP_SIZE})'
             self.generate_children_frame.display_progress(text)
-            self.broadcast_message_to_vam_rating_blocker(text)
+            self.vam_comm.broadcast_message_to_vam_rating_blocker(text)
 
             sample = np.random.default_rng().multivariate_normal(means, covariances)
             sample = [str(x) for x in sample]
@@ -1090,7 +988,7 @@ Do you want to continue that session?""")
 
     def save_population(self, population):
         """ save a population list of child appearances to files """
-        path = self.get_vam_default_appearance_path()
+        path = self.settings.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for i, child_appearance in enumerate(population):
@@ -1100,7 +998,7 @@ Do you want to continue that session?""")
 
     def update_population(self, new_appearances):
         """ update all chromosome appearances with the list of child appearance in population """
-        path = self.get_vam_default_appearance_path()
+        path = self.settings.get_vam_default_appearance_path()
         save_path = os.path.join(path, SAVED_CHILDREN_PATH)
         pathlib.Path(save_path).mkdir(parents=True, exist_ok=True)
         for chromosome, appearance in zip(self.population.chromosomes, new_appearances):

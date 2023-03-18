@@ -18,3 +18,8 @@ class LastCommandsFrame(tk.Frame):
                                        fg=FG_COLOR,
                                        justify=tk.LEFT, anchor="w")
         self.commands_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
+
+
+
+if __name__ == '__main__':
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

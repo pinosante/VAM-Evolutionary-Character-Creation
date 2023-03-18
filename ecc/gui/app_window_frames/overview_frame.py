@@ -32,3 +32,8 @@ class OverviewFrame(tk.Frame):
         self.template_file_label.grid(row=3, column=1, padx=0, pady=(0, 0), sticky="w")
         self.template_file_label.configure(text=label_text)
 
+
+
+if __name__ == '__main__':
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')
+

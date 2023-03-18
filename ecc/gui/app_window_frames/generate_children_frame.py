@@ -29,3 +29,7 @@ class GenerateChildrenFrame(tk.Frame):
     def display_progress(self, text):
         self.generate_children_button.configure(text=text, bg='red')
         self.generate_children_button.update()
+
+
+if __name__ == '__main__':
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

@@ -28,3 +28,7 @@ class ParentsFileFrame(tk.Frame):
                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                              command=lambda: choose_files_strategy())
         self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
+
+
+if __name__ == '__main__':
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

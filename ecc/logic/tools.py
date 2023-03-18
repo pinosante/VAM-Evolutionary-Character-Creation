@@ -156,14 +156,6 @@ def value_from_id_in_dict_list(dict_list, id_string, needed_key):
     return None
 
 
-def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replacement_string):
-    for dictionary in dict_list:
-        if id_string in dictionary.values():
-            if needed_key in dictionary:
-                dictionary[needed_key] = replacement_string
-                return dict_list
-    return None
-
 
 def uses_female_morphs_on_male(appearance):
     char_index = get_morph_index_with_character_info_from_appearance(appearance)
@@ -424,6 +416,21 @@ def get_cov_from_morph_lists(morphlists):
         list_of_values.append(value)
     covariances = np.array(list_of_values)
     return np.cov(covariances)
+
+
+
+def last_given_commands_to_string(list_of_commands):
+    """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
+        to a string with \n for line separation
+        to do: simplify this"""
+    # todo: to logic
+    string = ''
+    for command_dict in list_of_commands:
+        line = command_dict['time'] + ': ' + command_dict['command'] + "\n"
+        string = string + line
+    string = string[:-1]  # remove the extra \n at the end
+    return string
+
 
 
 if __name__ == '__main__':

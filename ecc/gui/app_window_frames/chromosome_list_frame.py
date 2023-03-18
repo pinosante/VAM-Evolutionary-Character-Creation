@@ -28,3 +28,7 @@ class ChromosomeListFrame(tk.Frame):
         # initialize population and chromosomes
         for chromo in self.population.chromosomes:
             chromo.initialize_ui(self, select_file_strategy)
+
+
+if __name__ == '__main__':
+    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

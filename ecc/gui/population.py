@@ -5,6 +5,8 @@ Please credit me if you change, use or adapt this file.
 """
 
 import os
+import random
+
 import tkinter as tk
 from .constants import *
 from ..common.utility import *
@@ -132,6 +134,29 @@ class Population:
         c = self.chromosomes[index - 1]
         assert c.index == index - 1
         return c
+
+    def weighted_random_selection(self):
+        """ using roulette wheel selection, returns a randomly (weighted by rating) chosen appearance from the
+            population
+            reference: https://stackoverflow.com/questions/10324015/fitness-proportionate-selection-roulette-wheel-selection-in-python
+            """
+        total_ratings = sum([c.rating for c in self.chromosomes])
+        choices = []
+        while len(choices) < 2:
+            pick = random.uniform(0, total_ratings)
+            current = 0
+            for c in self.chromosomes:
+                current += c.rating
+                if current > pick:
+                    if c not in choices:
+                        choices.append(c)
+                    break
+        return choices
+
+    def reset_ratings(self):
+        """ Clear all ratings in the GUI. """
+        for c in self.chromosomes:
+            c.update_rating(INITIAL_RATING)
 
 
 if __name__ == '__main__':

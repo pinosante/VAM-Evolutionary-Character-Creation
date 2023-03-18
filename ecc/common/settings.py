@@ -63,3 +63,21 @@ class Settings(dict):
             messages.append('· Please have at least 2 Parent files')
 
         return len(messages) == 0, messages
+
+    def get_vam_path(self, pathstring):
+        """ Returns the full path with VAM_BASE_PATH/pathstring and returns False if there was no VAM base dir. """
+        if "VAM base dir" not in self:
+            return False
+        if len(self['VAM base dir']) == 0:
+            return False
+        return os.path.join(self['VAM base dir'], pathstring)
+
+    def get_vam_default_appearance_path(self):
+        """ Returns the path to the default Appearance directory based on the VAM base path, or returns '' if no base path
+            is found in settings. """
+        path = ''
+        if 'VAM base dir' in self:
+            if len(self['VAM base dir']) > 0:
+                appearance_path = "Custom/Atom/Person/Appearance"
+                path = os.path.join(self['VAM base dir'], appearance_path)
+        return path
