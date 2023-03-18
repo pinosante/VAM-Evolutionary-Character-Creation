@@ -7,26 +7,22 @@ Please credit me if you change, use or adapt this file.
 import pathlib
 import tkinter as tk
 from datetime import datetime
-from fnmatch import fnmatch
 from tkinter import filedialog
 from tkinter import messagebox
 
-import numpy as np
-
-from .constants import *
-from .population import Population
-from .select_appearance import SelectAppearanceDialog
-from ..logic.tools import *
-
-from .app_window_frames.title_frame import TitleFrame
-from .app_window_frames.vam_dir_frame import VamDirFrame
-from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
 from .app_window_frames.alternative_appearance_frame import AlternativeAppearanceFrame
+from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
+from .app_window_frames.child_template_frame import ChildTemplateFrame
 from .app_window_frames.chromosome_list_frame import ChromosomeListFrame
+from .app_window_frames.generate_children_frame import GenerateChildrenFrame
 from .app_window_frames.method_frame import MethodFrame
 from .app_window_frames.options_frame import OptionsFrame
-from .app_window_frames.child_template_frame import ChildTemplateFrame
-from .app_window_frames.generate_children_frame import GenerateChildrenFrame
+from .app_window_frames.parent_files_frame import ParentsFileFrame
+from .app_window_frames.title_frame import TitleFrame
+from .app_window_frames.vam_dir_frame import VamDirFrame
+from .constants import *
+from .select_appearance import SelectAppearanceDialog
+from ..logic.tools import *
 
 # selection of appearances method texts
 CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
@@ -66,7 +62,11 @@ class AppWindow(tk.Frame):
         self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
         self.child_template_frame.grid(row=3, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.init_parent_files_frame()
+        self.source_files_frame = ParentsFileFrame(self.subtitle_font,
+                                                   self.choose_all_appearances,
+                                                   self.choose_all_favorites,
+                                                   self.choose_files)
+        self.source_files_frame.grid(row=4, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.parent_selection_frame = ChromosomeListFrame(settings, self.select_file)
         self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -86,44 +86,6 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
-
-    # def init_chromosome_list_frame(self, settings):
-    #     self.parent_selection_frame = tk.Frame(self.master, bg=BG_COLOR)
-    #     self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-    #     self.chromosome_label = tk.Label(self.parent_selection_frame, text="Step 5: Select Parent Files",
-    #                                      font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-    #     self.chromosome_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-    #     self.column_info = dict()
-    #     self.column_info['1'] = tk.Label(self.parent_selection_frame, text="Parent Number", bg=BG_COLOR, fg=FG_COLOR)
-    #     self.column_info['1'].grid(row=1, column=0, sticky=tk.W, padx=(0, 10))
-    #     self.column_info['2'] = tk.Label(self.parent_selection_frame, text="Filename", bg=BG_COLOR, fg=FG_COLOR)
-    #     self.column_info['2'].grid(row=1, column=1, sticky=tk.W)
-    #     self.column_info['3'] = tk.Label(self.parent_selection_frame, text="Total Morphs", bg=BG_COLOR, fg=FG_COLOR)
-    #     self.column_info['3'].grid(row=1, column=2, sticky=tk.W)
-    #     # initialize population and chromosomes
-    #     self.population = Population(POP_SIZE, settings)
-    #     for chromo in self.population.chromosomes:
-    #         chromo.initialize_ui(self.parent_selection_frame, self.select_file)
-
-    def init_parent_files_frame(self):
-        self.source_files_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.source_files_frame.grid(row=4, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.source_files_label = tk.Label(self.source_files_frame, text="Step 4: Select Parent File Source",
-                                           font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-        self.source_files_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.all_appearances_button = tk.Button(self.source_files_frame, text="All Appearances", bg=BUTTON_BG_COLOR,
-                                                fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                                command=lambda: self.choose_all_appearances())
-        self.all_appearances_button.grid(row=1, column=0, sticky=tk.W)
-        self.all_favorites_button = tk.Button(self.source_files_frame, text="All Favorited Appearances",
-                                              bg=BUTTON_BG_COLOR,
-                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                              command=lambda: self.choose_all_favorites())
-        self.all_favorites_button.grid(row=1, column=1, sticky=tk.W)
-        self.choose_files_button = tk.Button(self.source_files_frame, text=CHOOSE_FILES_TEXT, bg=BUTTON_BG_COLOR,
-                                             fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
-                                             command=lambda: self.choose_files())
-        self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
 
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
@@ -325,9 +287,9 @@ Do you want to continue that session?""")
             the other options. Updates GUI. Saves choice in settings. """
         self.parent_selection_frame.grid_remove()
         self.favorites_frame.grid()
-        self.all_appearances_button.configure(relief=tk.SUNKEN)
-        self.all_favorites_button.configure(relief=tk.RAISED)
-        self.choose_files_button.configure(relief=tk.RAISED)
+        self.source_files_frame.all_appearances_button.configure(relief=tk.SUNKEN)
+        self.source_files_frame.all_favorites_button.configure(relief=tk.RAISED)
+        self.source_files_frame.choose_files_button.configure(relief=tk.RAISED)
         self.settings['source files'] = CHOOSE_ALL_TEXT
         self.update_found_labels()
 
@@ -336,9 +298,9 @@ Do you want to continue that session?""")
             raises the other options. Updates GUI. Saves choice in settings. """
         self.parent_selection_frame.grid_remove()
         self.favorites_frame.grid()
-        self.all_appearances_button.configure(relief=tk.RAISED)
-        self.all_favorites_button.configure(relief=tk.SUNKEN)
-        self.choose_files_button.configure(relief=tk.RAISED)
+        self.source_files_frame.all_appearances_button.configure(relief=tk.RAISED)
+        self.source_files_frame.all_favorites_button.configure(relief=tk.SUNKEN)
+        self.source_files_frame.choose_files_button.configure(relief=tk.RAISED)
         self.settings['source files'] = CHOOSE_ALL_FAVORITES_TEXT
         self.update_found_labels()
 
@@ -347,9 +309,9 @@ Do you want to continue that session?""")
             the other options. Updates GUI. Saves choice in settings. """
         self.parent_selection_frame.grid()
         self.favorites_frame.grid_remove()
-        self.all_appearances_button.configure(relief=tk.RAISED)
-        self.all_favorites_button.configure(relief=tk.RAISED)
-        self.choose_files_button.configure(relief=tk.SUNKEN)
+        self.source_files_frame.all_appearances_button.configure(relief=tk.RAISED)
+        self.source_files_frame.all_favorites_button.configure(relief=tk.RAISED)
+        self.source_files_frame.choose_files_button.configure(relief=tk.SUNKEN)
         self.settings['source files'] = CHOOSE_FILES_TEXT
         self.update_initialize_population_button()
 
