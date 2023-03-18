@@ -34,6 +34,7 @@ class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
 
+
         self.settings = settings
         self.generator = generator
 
