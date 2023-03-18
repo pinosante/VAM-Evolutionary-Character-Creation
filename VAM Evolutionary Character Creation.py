@@ -10,7 +10,7 @@ import os
 import tkinter as tk
 
 import ecc.common.utility
-from ecc.common.utility import Settings
+from ecc.common.settings import Settings
 from ecc.logic.generator import Generator
 from ecc.gui.app_window import AppWindow
 

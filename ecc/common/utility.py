@@ -4,10 +4,6 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
 
-import os
-import sys
-import json
-
 DATA_PATH = 'data'
 SETTINGS_FILENAME = '..\\..\\..\\data\\settings.json'
 POP_SIZE = 20
@@ -23,37 +19,6 @@ NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
 
 
-class Settings(dict):
-    def __init__(self):
-        super().__init__()
-        self.load()
-
-    def save(self):
-        """ Saves the settings as a json file to DATA_PATH/SETTINGS_FILENAME """
-        dir_path = ''
-        if getattr(sys, 'frozen', False):
-            dir_path = os.path.dirname(sys.executable)
-        elif __file__:
-            dir_path = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
-        with open(filename, 'w') as json_file:
-            print("Writing settings to:", filename)
-            json.dump(self, json_file, indent=3)
-
-    def load(self):
-        """ Fills settings with the settings in the DATA_PATH/SETTINGS_FILENAME json_file """
-        dir_path = ''
-        settings = dict()
-        if getattr(sys, 'frozen', False):
-            dir_path = os.path.dirname(sys.executable)
-        elif __file__:
-            dir_path = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
-        if os.path.isfile(filename):
-            with open(filename) as json_file:
-                print("Reading settings from:", filename)
-                data = json.load(json_file)
-                self.update(data)
 
 def strip_dir_string_to_max_length(dir_string, length):
     """ Takes a string directory, and cuts it at the '/' in the string such that the

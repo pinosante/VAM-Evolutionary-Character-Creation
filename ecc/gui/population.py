@@ -4,6 +4,7 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
 
+import os
 import tkinter as tk
 from .constants import *
 from ..common.utility import *

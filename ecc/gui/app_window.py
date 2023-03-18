@@ -498,8 +498,17 @@ Do you want to continue that session?""")
         """ Updates the Initialize Population button, by checking if all necessary files and settings are correct. If
             not, shows in the button what items are missing and makes the button do nothing. If criteria are met, button
             color is changed to green and button functionality is restored. """
-        missing_messages = self.can_generate_new_population()
-        if len(missing_messages) == 0:
+        can_generate, messages = self.can_generate_new_population()
+        if not can_generate:
+            messages = '\n'.join(messages)
+            txt = f'Cannot Initialize Population:\n{messages}'
+            self.generate_children_frame.generate_children_button.configure(relief=tk.RAISED, bg="#D0D0D0",
+                                                                            font=(DEFAULT_FONT, 12, "bold"),
+                                                                            width=52, height=6,
+                                                                            activebackground="#D0D0D0",
+                                                                            text=txt,
+                                                                            state='disabled')
+        else:
             self.generate_children_frame.generate_children_button.configure(relief="raised",
                                                                             bg="lightgreen",
                                                                             font=(DEFAULT_FONT, 12, "bold"),
@@ -508,39 +517,18 @@ Do you want to continue that session?""")
                                                                             state='normal',
                                                                             command=lambda: self.generate_next_population(
                                                                                 self.settings['method']))
-        else:
-            messages = '\n'.join(missing_messages)
-            txt = f'Cannot Initialize Population:\n{messages}'
-            self.generate_children_frame.generate_children_button.configure(relief=tk.RAISED, bg="#D0D0D0",
-                                                                            font=(DEFAULT_FONT, 12, "bold"),
-                                                                            width=52, height=6,
-                                                                            activebackground="#D0D0D0",
-                                                                            text=txt,
-                                                                            state='disabled')
-
-    def is_setting_valid(self, setting_name):
-        return setting_name in self.settings and len(self.settings[setting_name]) != 0
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
             message list with all missing features, or an empty list if all criteria are met. """
-        messages = list()
-        if not self.is_setting_valid('VAM base dir'):
-            messages.append('· Please select the VAM base folder')
-        if not self.is_setting_valid('appearance dir'):
-            messages.append('· Please select an Appearance folder')
-        if not self.is_setting_valid('child template'):
-            messages.append('· Please select a child template appearance')
-        if 'source files' not in self.settings:
-            messages.append('· Please have at least 2 Parent files')
-        else:
+        can_generate, messages = self.settings.are_settings_valid()
+        try:
             if len(self.select_appearances_strategies[self.settings['source files']]()) < 2:
+                can_generate = False
                 messages.append('· Please have at least 2 Parent files')
-        if 'morph threshold' not in self.settings:
-            messages.append('· Please enter a valid value for min morph number')
-        if 'min morph threshold' not in self.settings:
-            messages.append('· Please enter a valid value for min morph threshold')
-        return messages
+        except:
+            pass
+        return can_generate, messages
 
     def update_gui_file(self, number, filename):
         """ Updates the Parent file with 'number' with all information available through the 'filename' """
@@ -580,8 +568,9 @@ Do you want to continue that session?""")
             specifically filters for the gender of the template which is currently being used. If user does not
             select a valid new template file, the old template file is used. """
         dialog = SelectAppearanceDialog(self.settings, self.generator)
-        filename = dialog.file_selection_with_thumbnails(matching_genders(self.child_template_frame.child_template['gender']), title,
-                                                         filteronmorphcount=False)
+        filename = dialog.file_selection_with_thumbnails(
+            matching_genders(self.child_template_frame.child_template['gender']), title,
+            filteronmorphcount=False)
         dialog.destroy()
 
         if filename == "":  # user did not select files
@@ -901,7 +890,7 @@ Do you want to continue that session?""")
     def scan_vam_for_command_updates(self, lastcommand):
         """ Continously check if
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_VAM2PythonText.vap
-            has a new command string. If so, try to execute that command by calling execut_VAM_command() """
+            has a new command string. If so, try to execute that command by calling execute_VAM_command() """
         # todo: candidate for logic
         # try to open file
         path = self.get_vam_path(r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')

@@ -5,6 +5,8 @@ Please credit me if you change, use or adapt this file.
 """
 
 import pathlib
+import os
+
 import tkinter as tk
 from tkinter import ttk
 
