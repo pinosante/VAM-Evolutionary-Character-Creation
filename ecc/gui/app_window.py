@@ -17,9 +17,11 @@ from .constants import *
 from .population import Population
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
+
 from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.vam_dir_frame import VamDirFrame
 from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
+from .app_window_frames.alternative_appearance_frame import AlternativeAppearanceFrame
 from .app_window_frames.method_frame import MethodFrame
 from .app_window_frames.options_frame import OptionsFrame
 from .app_window_frames.child_template_frame import ChildTemplateFrame
@@ -35,11 +37,10 @@ class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
 
-
         self.settings = settings
         self.generator = generator
 
-        self.subtitle_font = (DEFAULT_FONT, 11, "bold")
+        self.subtitle_font = (DEFAULT_FONT, 11, 'bold')
         self.subtitle_padding = 1
 
         # create a dictionary to select appearances
@@ -65,8 +66,11 @@ class AppWindow(tk.Frame):
         self.child_template_frame.grid(row=3, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.init_parent_files_frame()
+
         self.init_chromosome_list_frame(settings)
-        self.init_alternative_appearances_frame()
+
+        self.favorites_frame = AlternativeAppearanceFrame()
+        self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.method_frame = MethodFrame(self.subtitle_font, settings, self.update_initialize_population_button)
         self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -80,16 +84,6 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
-
-    def init_alternative_appearances_frame(self):
-        self.favorites_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.favorites_label = tk.Label(self.favorites_frame, text="Step 5: Favorited Appearances Chosen",
-                                        font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-        self.favorites_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.favorites_info = tk.Label(self.favorites_frame, text="", bg=BG_COLOR, fg=FG_COLOR)
-        self.favorites_info.grid(row=1, column=0, sticky=tk.W, pady=(0, 0))
-        self.favorites_frame.grid_remove()  # will be shown when needed
 
     def init_chromosome_list_frame(self, settings):
         self.parent_selection_frame = tk.Frame(self.master, bg=BG_COLOR)
@@ -128,23 +122,6 @@ class AppWindow(tk.Frame):
                                              fg=BUTTON_FG_COLOR, activebackground=BUTTON_ACTIVE_COLOR,
                                              command=lambda: self.choose_files())
         self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
-
-    # def init_appearance_dir_frame(self):
-    #     self.appearance_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
-    #     self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-    #     self.appearance_dir_title_label = tk.Label(self.appearance_dir_frame,
-    #                                                text="Step 2: Select Appearance folder to use",
-    #                                                font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-    #     self.appearance_dir_title_label.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-    #     self.appearance_dir_button = tk.Button(self.appearance_dir_frame, text="Select Folder",
-    #                                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-    #                                            activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-    #                                            command=lambda: self.select_appearance_dir())
-    #     self.appearance_dir_button.grid(row=1, column=0, sticky=tk.W)
-    #     self.appearance_dir_label = tk.Label(self.appearance_dir_frame, text=NO_FILE_SELECTED_TEXT,
-    #                                          font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
-    #                                          bg=BG_COLOR, fg=FG_COLOR)
-    #     self.appearance_dir_label.grid(row=1, column=1, sticky=tk.W)
 
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
@@ -330,15 +307,15 @@ Do you want to continue that session?""")
     def update_all_appearances_found_label(self):
         """ Counts the amount of appearance available in the default VAM directory and updates the GUI """
         filenames = self.get_all_appearance_filenames()
-        self.favorites_info.configure(text=f'{len(filenames)} appearances found')
+        self.favorites_frame.favorites_info.configure(text=f'{len(filenames)} appearances found')
         self.update_initialize_population_button()
-        self.favorites_label.configure(text="Step 5: All Appearances Chosen")
+        self.favorites_frame.favorites_label.configure(text="Step 5: All Appearances Chosen")
 
     def update_favorites_found_label(self):
         """ Counts the amount of favorite appearances available in the default VAM directory and updates the GUI """
         filenames = self.get_fav_appearance_filenames()
-        self.favorites_info.configure(text=f'{len(filenames)} favorite appearances found')
-        self.favorites_label.configure(text="Step 5: All Favorite Appearances Chosen")
+        self.favorites_frame.favorites_info.configure(text=f'{len(filenames)} favorite appearances found')
+        self.favorites_frame.favorites_label.configure(text="Step 5: All Favorite Appearances Chosen")
         self.update_initialize_population_button()
 
     def choose_all_appearances(self):
