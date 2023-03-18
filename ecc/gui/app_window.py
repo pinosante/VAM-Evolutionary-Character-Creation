@@ -21,6 +21,7 @@ from ..logic.tools import *
 from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.method_frame import MethodFrame
 from .app_window_frames.options_frame import OptionsFrame
+from .app_window_frames.child_template_frame import ChildTemplateFrame
 from .app_window_frames.generate_children_frame import GenerateChildrenFrame
 
 # selection of appearances method texts
@@ -86,7 +87,12 @@ class AppWindow(tk.Frame):
 
         self.init_vam_dir_frame()
         self.init_appearance_dir_frame()
-        self.init_child_template_frame()
+
+
+        #self.init_child_template_frame()
+        self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
+
+
         self.init_parent_files_frame()
         self.init_chromosome_list_frame(settings)
         self.init_alternative_appearances_frame()
@@ -104,7 +110,6 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
-
     def init_alternative_appearances_frame(self):
         self.favorites_frame = tk.Frame(self.master, bg=BG_COLOR)
         self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -236,11 +241,11 @@ class AppWindow(tk.Frame):
 
         if 'child template' in self.settings:
             if os.path.isfile(self.settings['child template']):
-                self.child_template['label'].configure(
+                self.child_template_frame.child_template['label'].configure(
                     text=self.create_template_labeltext(self.settings['child template']))
-                self.child_template['gender'] = get_appearance_gender(
+                self.child_template_frame.child_template['gender'] = get_appearance_gender(
                     load_appearance(self.settings['child template']))
-                self.press_child_template_button(self.child_template['gender'])
+                self.press_child_template_button(self.child_template_frame.child_template['gender'])
 
         if 'morph threshold' in self.settings:
             self.options_frame.threshold_var.set(self.settings['morph threshold'])
@@ -324,9 +329,9 @@ Do you want to continue that session?""")
         all_genders = ['Female', 'Male', 'Futa']
         remaining_genders = [g for g in all_genders if g != gender]
         if gender in all_genders:
-            self.child_template_button[gender].configure(relief=tk.SUNKEN)
+            self.child_template_frame.child_template_button[gender].configure(relief=tk.SUNKEN)
         for remaining in remaining_genders:
-            self.child_template_button[remaining].configure(relief=tk.RAISED)
+            self.child_template_frame.child_template_button[remaining].configure(relief=tk.RAISED)
 
     def create_template_labeltext(self, filename):
         """ Returns a formatted label text for a given Appearance file with
@@ -334,7 +339,7 @@ Do you want to continue that session?""")
 
         template_gender = get_appearance_gender(load_appearance(filename))
         label_txt = os.path.basename(filename)[7:-4]
-        self.child_template['gender'] = template_gender
+        self.child_template_frame.child_template['gender'] = template_gender
         return label_txt
 
     def track_threshold_change(self, var, index, mode):
@@ -448,12 +453,15 @@ Do you want to continue that session?""")
             Will immediately return (do nothing) if there is no child template available. If child is available, will
             show a file selection window filtered for matching genders. Updates the GUI with choices and saves to
             settings. """
-        if 'gender' in self.child_template:
-            match = matching_genders(self.child_template['gender'])
+        if 'gender' in self.child_template_frame.child_template:
+            match = matching_genders(self.child_template_frame.child_template['gender'])
         else:
             return
 
-        filename = self.file_selection_with_thumbnails(match, "Please select a parent Appearance")
+        dialog = SelectAppearanceDialog(self.settings, self.generator)
+        filename = dialog.file_selection_with_thumbnails(match, "Please select a parent Appearance", filteronmorphcount=False)
+        dialog.destroy()
+        #filename = self.file_selection_with_thumbnails(match, "Please select a parent Appearance")
 
         if filename == '':  # user did not select files
             self.remove_parent_file_from_gui(number)
@@ -804,8 +812,8 @@ Do you want to continue that session?""")
         else:
             threshold = float(threshold)
 
-        if 'gender' in self.child_template:
-            template_gender = self.child_template['gender']
+        if 'gender' in self.child_template_frame.child_template:
+            template_gender = self.child_template_frame.child_template['gender']
         else:
             template_gender = ""
 
@@ -1172,10 +1180,10 @@ Do you want to continue that session?""")
             filenames = list(self.generator.appearances.keys())
         filenames = [f for f in filenames if CHILDREN_FILENAME_PREFIX not in f]
 
-        if 'gender' in self.child_template:
+        if 'gender' in self.child_template_frame.child_template:
             filenames = self.generator.filter_filename_list_on_genders(filenames,
                                                                        matching_genders(
-                                                                           self.child_template['gender']))
+                                                                           self.child_template_frame.child_template['gender']))
             filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
@@ -1212,7 +1220,7 @@ Do you want to continue that session?""")
         self.save_population(new_population)
         self.generator.gen_counter += 1
         self.update_population(new_population)
-        self.generate_children_button.configure(bg='lightgreen', text='')
+        self.generate_children_frame.generate_children_button.configure(bg='lightgreen', text='')
         # to do: why two lines?
         self.generate_children_frame.generate_children_button.configure(text='Generate Next Population')
         self.generate_children_frame.generate_children_button.update()
