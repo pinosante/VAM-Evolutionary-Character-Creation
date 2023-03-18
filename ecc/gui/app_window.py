@@ -701,7 +701,7 @@ Do you want to continue that session?""")
             self.switch_layout_to_rating()
             self.population.reset_ratings()
             self.change_gui_to_show_user_to_start_vam()
-            self.scan_vam_for_command_updates('Initialize')
+            self.vam_comm.scan_vam_for_command_updates('Initialize')
             return
 
         self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
