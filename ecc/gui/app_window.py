@@ -20,6 +20,8 @@ from .app_window_frames.options_frame import OptionsFrame
 from .app_window_frames.parent_files_frame import ParentsFileFrame
 from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.vam_dir_frame import VamDirFrame
+from .app_window_frames.overview_frame import OverviewFrame
+from .app_window_frames.last_commands_frame import LastCommandsFrame
 from .constants import *
 from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
@@ -84,6 +86,9 @@ class AppWindow(tk.Frame):
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
         self.filler_bottom.grid(row=0, column=1)
+
+        self.overview_frame = None
+        self.last_commands_frame = None
 
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
@@ -536,36 +541,14 @@ Do you want to continue that session?""")
         print("Switching view")
         for widget in self.master.winfo_children():
             widget.grid_forget()
-        self.overview_frame = tk.Frame(self.master, bg=BG_COLOR)
+
+        self.overview_frame = OverviewFrame(self.generator.gen_counter,
+                                            self.create_template_labeltext(self.settings['child template']))
         self.overview_frame.grid(row=0, column=0, padx=10, pady=0, sticky="nsew")
-        self.warning_label = tk.Label(self.overview_frame, text="Important: do NOT close this window!",
-                                      font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
-        self.warning_label.grid(row=0, columnspan=2, column=0, padx=(10, 10), pady=(10, 0), sticky="w")
-        self.overview_label = tk.Label(self.overview_frame, text="Overview:", font=(DEFAULT_FONT, 14, "bold"),
-                                       bg=BG_COLOR, fg=FG_COLOR)
-        self.overview_label.grid(row=1, columnspan=2, column=0, padx=(10, 0), pady=(10, 0), sticky="w")
-        self.generation_label = tk.Label(self.overview_frame, text="Generation:", bg=BG_COLOR, fg=FG_COLOR)
-        self.generation_label.grid(row=2, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.generation_number_label = tk.Label(self.overview_frame, text=self.generator.gen_counter,
-                                                font=FILENAME_FONT,
-                                                bg=BG_COLOR,
-                                                fg=FG_COLOR, anchor="w", justify=tk.LEFT)
-        self.generation_number_label.grid(row=2, column=1, padx=0, pady=(0, 0), sticky="w")
-        self.template_label = tk.Label(self.overview_frame, text="Current template:", bg=BG_COLOR, fg=FG_COLOR)
-        self.template_label.grid(row=3, column=0, padx=(10, 0), pady=(0, 0), sticky="w")
-        self.template_file_label = tk.Label(self.overview_frame, text="", font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR,
-                                            anchor="w", justify=tk.LEFT)
-        self.template_file_label.grid(row=3, column=1, padx=0, pady=(0, 0), sticky="w")
-        self.template_file_label.configure(text=self.create_template_labeltext(self.settings['child template']))
-        self.last_commands_frame = tk.Frame(self.master, bg=BG_COLOR)
+
+        self.last_commands_frame = LastCommandsFrame()
         self.last_commands_frame.grid(row=1, column=0, padx=10, pady=(10, 0), sticky="nsew")
-        self.last_commands_label = tk.Label(self.last_commands_frame, text="Last five commands:",
-                                            font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
-        self.last_commands_label.grid(row=0, column=0, padx=10, pady=0, sticky="w")
-        self.commands_label = tk.Label(self.last_commands_frame, text="...", font=FILENAME_FONT, bg=BG_COLOR,
-                                       fg=FG_COLOR,
-                                       justify=tk.LEFT, anchor="w")
-        self.commands_label.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="w")
+
         print("Resetting ratings")
         self.reset_ratings()
         print("Sending generation number")
@@ -574,8 +557,8 @@ Do you want to continue that session?""")
 
     def update_overview_window(self):
         """ Updates the overview window with generation, template and last five commands information """
-        self.generation_number_label.config(text=self.generator.gen_counter)
-        self.template_file_label.config(text=self.create_template_labeltext(self.settings['child template']))
+        self.overview_frame.generation_number_label.config(text=self.generator.gen_counter)
+        self.overview_frame.template_file_label.config(text=self.create_template_labeltext(self.settings['child template']))
         self.commands_label.config(text=self.last_given_commands_to_string(self.generator.last_five_commands))
 
     @staticmethod
@@ -1049,12 +1032,8 @@ Do you want to continue that session?""")
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         print('Using random pairwise chromosome crossover for sample initialization.')
-
-        # select source files
         parent_filenames = self.select_appearances_strategies[source_files]()
-
         print(f'Source files: {source_files} ({len(parent_filenames)} Files)')
-
         new_population = list()
         for i in range(1, POP_SIZE + 1):
             random_parents = random.sample(parent_filenames, 2)
@@ -1064,7 +1043,6 @@ Do you want to continue that session?""")
         self.generator.gen_counter += 1
         self.update_population(new_population)
         self.generate_children_frame.display_ready_for_new_generation()
-        return
 
     def gaussian_initialize_population(self, source_files):
         # todo: split the UI and the BL parts
