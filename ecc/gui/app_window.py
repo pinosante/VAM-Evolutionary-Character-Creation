@@ -6,7 +6,6 @@ Please credit me if you change, use or adapt this file.
 
 import pathlib
 import tkinter as tk
-from collections import defaultdict
 from datetime import datetime
 from fnmatch import fnmatch
 from tkinter import filedialog
@@ -88,10 +87,8 @@ class AppWindow(tk.Frame):
         self.init_vam_dir_frame()
         self.init_appearance_dir_frame()
 
-
-        #self.init_child_template_frame()
         self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
-
+        self.child_template_frame.grid(row=3, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.init_parent_files_frame()
         self.init_chromosome_list_frame(settings)
@@ -158,23 +155,6 @@ class AppWindow(tk.Frame):
                                              command=lambda: self.choose_files())
         self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
 
-    def init_child_template_frame(self):
-        self.child_template_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.child_template_frame.grid(row=3, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.child_template_label = tk.Label(self.child_template_frame,
-                                             text="Step 3: Select Child Template Appearance", font=self.subtitle_font,
-                                             bg=BG_COLOR, fg=FG_COLOR)
-        self.child_template_label.grid(columnspan=50, row=0, column=0, sticky=tk.W, pady=(0, 0))
-        self.child_template_button = {
-            FEMALE: self.create_child_template_button(FEMALE, 0),
-            MALE: self.create_child_template_button(MALE, 1),
-            FUTA: self.create_child_template_button(FUTA, 2)
-        }
-        self.child_template = dict()
-        self.child_template['label'] = tk.Label(self.child_template_frame, text=NO_FILE_SELECTED_TEXT,
-                                                font=FILENAME_FONT, bg=BG_COLOR, fg=FG_COLOR)
-        self.child_template['label'].grid(row=1, column=3, sticky=tk.W, padx=0)
-
     def init_appearance_dir_frame(self):
         self.appearance_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
         self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -208,15 +188,6 @@ class AppWindow(tk.Frame):
                                       font=FILENAME_FONT, anchor=tk.W, width=MAX_VAMDIR_STRING_LENGTH,
                                       bg=BG_COLOR, fg=FG_COLOR)
         self.vam_dir_label.grid(row=1, column=1, sticky=tk.W)
-
-    def create_child_template_button(self, gender_text, column):
-        button = tk.Button(self.child_template_frame, text=gender_text,
-                           bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                           activebackground=BUTTON_ACTIVE_COLOR,
-                           command=lambda: self.select_template_file([gender_text],
-                                                                     'Please Select Parent Template'))
-        button.grid(row=1, column=column, sticky=tk.W, padx=0)
-        return button
 
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
@@ -960,7 +931,7 @@ Do you want to continue that session?""")
         self.change_parent_to_generation_display()
         self.switch_layout_to_rating()
         self.reset_ratings()
-        self.generate_children_button.configure(text='Generate Next Population')
+        self.generate_children_frame.generate_children_button.configure(text='Generate Next Population')
         self.change_gui_to_show_user_to_start_vam()
         self.scan_vam_for_command_updates("Initialize")
 
@@ -1242,9 +1213,9 @@ Do you want to continue that session?""")
         morph_names = get_all_morph_names_in_morph_lists(morph_lists)
         morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
         morph_lists = dedupe_morphs(morph_lists)
-        means = self.get_means_from_morphlists(morph_lists)
+        means = get_means_from_morphlists(morph_lists)
         means = list(means.values())
-        covariances = self.get_cov_from_morph_lists(morph_lists)
+        covariances = get_cov_from_morph_lists(morph_lists)
         new_population = list()
         template_file = self.settings['child template']
         threshold = self.settings['morph threshold']
@@ -1276,30 +1247,6 @@ Do you want to continue that session?""")
         self.generate_children_frame.generate_children_button.update()
         return
 
-    @staticmethod
-    def get_means_from_morphlists(morph_lists):
-        """ returns a dictionary of morph means for each morph found in the morphlists """
-        means = defaultdict(lambda: 0.0)
-        for morph_list in morph_lists:
-            for morph in morph_list:
-                if 'value' in morph:
-                    means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
-                else:
-                    means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
-        return means
-
-    @staticmethod
-    def get_cov_from_morph_lists(morphlists):
-        """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
-        values = defaultdict(lambda: [])
-        for morph_list in morphlists:
-            for morph in morph_list:
-                values[morph['name']].append(np.nan_to_num(float(morph['value'])))
-        list_of_values = []
-        for key, value in values.items():
-            list_of_values.append(value)
-        covariances = np.array(list_of_values)
-        return np.cov(covariances)
 
     def save_population(self, population):
         """ save a population list of child appearances to files """

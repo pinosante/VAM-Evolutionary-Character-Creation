@@ -9,6 +9,11 @@ import random
 import shutil
 import time
 
+from collections import defaultdict
+
+
+import numpy as np
+
 from ..common.utility import *
 
 
@@ -393,6 +398,31 @@ def is_compatible_gender(gender1, gender2):
     if gender1 == FUTA and gender2 == FEMALE:
         return True
     return False
+
+
+def get_means_from_morphlists(morph_lists):
+    """ returns a dictionary of morph means for each morph found in the morphlists """
+    means = defaultdict(lambda: 0.0)
+    for morph_list in morph_lists:
+        for morph in morph_list:
+            if 'value' in morph:
+                means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
+            else:
+                means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
+    return means
+
+def get_cov_from_morph_lists(morphlists):
+    """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
+    values = defaultdict(lambda: [])
+    for morph_list in morphlists:
+        for morph in morph_list:
+            values[morph['name']].append(np.nan_to_num(float(morph['value'])))
+    list_of_values = []
+    for key, value in values.items():
+        list_of_values.append(value)
+    covariances = np.array(list_of_values)
+    return np.cov(covariances)
+
 
 
 if __name__ == '__main__':
