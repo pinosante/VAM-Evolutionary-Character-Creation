@@ -19,6 +19,7 @@ from .select_appearance import SelectAppearanceDialog
 from ..logic.tools import *
 from .app_window_frames.title_frame import TitleFrame
 from .app_window_frames.vam_dir_frame import VamDirFrame
+from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
 from .app_window_frames.method_frame import MethodFrame
 from .app_window_frames.options_frame import OptionsFrame
 from .app_window_frames.child_template_frame import ChildTemplateFrame
@@ -57,7 +58,8 @@ class AppWindow(tk.Frame):
         self.vam_dir_frame = VamDirFrame(settings, self.subtitle_font, self.select_vam_dir_callback)
         self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.init_appearance_dir_frame()
+        self.appearance_dir_frame = AppearanceDirFrame(self.subtitle_font, self.select_appearance_dir_callback)
+        self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
         self.child_template_frame.grid(row=3, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -127,22 +129,22 @@ class AppWindow(tk.Frame):
                                              command=lambda: self.choose_files())
         self.choose_files_button.grid(row=1, column=2, sticky=tk.W)
 
-    def init_appearance_dir_frame(self):
-        self.appearance_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
-        self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-        self.appearance_dir_title_label = tk.Label(self.appearance_dir_frame,
-                                                   text="Step 2: Select Appearance folder to use",
-                                                   font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
-        self.appearance_dir_title_label.grid(columnspan=50, row=0, column=0, sticky=tk.W)
-        self.appearance_dir_button = tk.Button(self.appearance_dir_frame, text="Select Folder",
-                                               bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
-                                               activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
-                                               command=lambda: self.select_appearance_dir())
-        self.appearance_dir_button.grid(row=1, column=0, sticky=tk.W)
-        self.appearance_dir_label = tk.Label(self.appearance_dir_frame, text=NO_FILE_SELECTED_TEXT,
-                                             font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
-                                             bg=BG_COLOR, fg=FG_COLOR)
-        self.appearance_dir_label.grid(row=1, column=1, sticky=tk.W)
+    # def init_appearance_dir_frame(self):
+    #     self.appearance_dir_frame = tk.Frame(self.master, bg=BG_COLOR)
+    #     self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+    #     self.appearance_dir_title_label = tk.Label(self.appearance_dir_frame,
+    #                                                text="Step 2: Select Appearance folder to use",
+    #                                                font=self.subtitle_font, bg=BG_COLOR, fg=FG_COLOR)
+    #     self.appearance_dir_title_label.grid(columnspan=50, row=0, column=0, sticky=tk.W)
+    #     self.appearance_dir_button = tk.Button(self.appearance_dir_frame, text="Select Folder",
+    #                                            bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+    #                                            activebackground=BUTTON_ACTIVE_COLOR, relief=tk.RAISED,
+    #                                            command=lambda: self.select_appearance_dir())
+    #     self.appearance_dir_button.grid(row=1, column=0, sticky=tk.W)
+    #     self.appearance_dir_label = tk.Label(self.appearance_dir_frame, text=NO_FILE_SELECTED_TEXT,
+    #                                          font=FILENAME_FONT, anchor=tk.W, width=MAX_APPEARANCEDIR_STRING_LENGTH,
+    #                                          bg=BG_COLOR, fg=FG_COLOR)
+    #     self.appearance_dir_label.grid(row=1, column=1, sticky=tk.W)
 
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
@@ -228,11 +230,11 @@ Do you want to continue that session?""")
             else:
                 appearance_dir = strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                                 MAX_APPEARANCEDIR_STRING_LENGTH)
-                self.appearance_dir_button.configure(relief=tk.SUNKEN)
+                self.appearance_dir_frame.appearance_dir_button.configure(relief=tk.SUNKEN)
         else:
             appearance_dir = NO_FILE_SELECTED_TEXT
             self.settings['appearance dir'] = ""
-        self.appearance_dir_label.configure(text=appearance_dir)
+        self.appearance_dir_frame.appearance_dir_label.configure(text=appearance_dir)
 
     def use_recursive_directory_search(self, choice):
         """ Called by the use recursive directory button in the app. Depending on the choice, sinks the GUI button
@@ -445,7 +447,7 @@ Do you want to continue that session?""")
         self.update_initialize_population_button()
         self.update_found_labels()
 
-    def select_appearance_dir(self):
+    def select_appearance_dir_callback(self):
         """ Shows filedialog to select the appearance directory, GUI updated and settings saved. """
         # try to open the file dialog in the last known location
         appearance_dir = ''
@@ -457,15 +459,15 @@ Do you want to continue that session?""")
                                                  title="Please select the appearance folder you would like to use.")
         if folder_path == "":
             self.settings['appearance dir'] = ""
-            self.appearance_dir_label.configure(text=NO_FILE_SELECTED_TEXT)
-            self.appearance_dir_button.configure(relief=tk.RAISED)
+            self.appearance_dir_frame.appearance_dir_label.configure(text=NO_FILE_SELECTED_TEXT)
+            self.appearance_dir_frame.appearance_dir_button.configure(relief=tk.RAISED)
             self.generator.clear_data_with_all_appearances()
         else:
             self.settings['appearance dir'] = str(pathlib.Path(folder_path))
-            self.appearance_dir_label.configure(
+            self.appearance_dir_frame.appearance_dir_label.configure(
                 text=strip_dir_string_to_max_length(self.settings['appearance dir'],
                                                     MAX_APPEARANCEDIR_STRING_LENGTH))
-            self.appearance_dir_button.configure(relief=tk.SUNKEN)
+            self.appearance_dir_frame.appearance_dir_button.configure(relief=tk.SUNKEN)
             self.track_min_morph_change("", "", "")  # update
             self.generator.clear_data_with_all_appearances()
             self.generator.fill_data_with_all_appearances()

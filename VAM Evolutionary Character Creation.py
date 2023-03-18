@@ -32,7 +32,7 @@ def main():
     main_window.iconbitmap(os.path.join(ecc.common.utility.DATA_PATH, ICON_FILENAME))
     main_window.title(APP_TITLE)
     main_window.resizable(False, False)
-    
+
     app = AppWindow(settings, generator)
     app.initialize()
     main_window.mainloop()
