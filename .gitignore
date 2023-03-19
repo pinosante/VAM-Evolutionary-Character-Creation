@@ -1,1 +1,8 @@
 /__pycache__/*.pyc
+/ecc/__pycache__/*.pyc
+/ecc/common/__pycache__/*.pyc
+/ecc/gui/__pycache__/*.pyc
+/ecc/logic/__pycache__/*.pyc
+/ecc/gui/app_window_frames/__pycache__/*.pyc
+/.idea/.idea.VAM-Evolutionary-Character-Creation.dir/.idea
+/data/settings.json

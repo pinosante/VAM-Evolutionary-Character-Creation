@@ -5,90 +5,17 @@ Please credit me if you change, use or adapt this file.
 """
 
 import copy
-import glob
-import pathlib
 import random
 import shutil
+import os
 import time
-from PIL import ImageTk, Image, UnidentifiedImageError
-from ecc_utility import *
+import json
 
+from collections import defaultdict
 
-THUMBNAIL_SIZE = 184, 184
-NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
-CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
+import numpy as np
 
-class Generator:
-    def __init__(self, settings):
-        self.settings = settings
-        self.gen_counter = 0
-        self.appearances = dict()
-        self.gender = dict()
-        self.thumbnails = dict()
-        self.last_five_commands = list()
-        self.connected_to_VAM = False
-
-    def clear_data_with_all_appearances(self):
-        """ Clears the data stored in the data dictionaries. This is called when loading the VAM
-            directory fails, to delete old data. """
-        self.appearances.clear()
-        self.thumbnails.clear()
-        self.gender.clear()
-
-    def fill_data_with_all_appearances(self):
-        """ Loads all available presets found in the default VAM directory into dictionaries
-            to save loading-times when using the app """
-        path = self.settings['appearance dir']
-
-        if self.settings['recursive directory search']:
-            filenames = glob.glob(os.path.join(path, "**", "Preset_*.vap"), recursive=True)
-        else:
-            filenames = glob.glob(os.path.join(path, "Preset_*.vap"), recursive=False)
-
-        for f in filenames:
-            f = str(pathlib.Path(f))  # since we use path names as keys, we need to have a uniform formatting
-            appearance = load_appearance(f)
-            if get_morph_index_with_character_info_from_appearance(appearance) is None:
-                # just calling this function since it looks for morphs
-                print(f"File {f} is not a valid Appearance file, skipping.")
-            else:
-                f_fav = f + '.fav'
-                appearance['is_fav'] = os.path.isfile(f_fav)
-                if appearance['is_fav']:
-                    print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
-                self.appearances[f] = appearance
-                # print(f"Loading file {f} into database.")
-                self.thumbnails[f] = self.get_thumbnail_for_filename(f)
-                self.gender[f] = get_appearance_gender(self.appearances[f])
-
-    # to do: does this belong into GUI?
-    @staticmethod
-    def get_thumbnail_for_filename(filename):
-        """ Returns the corresponding thumbnail as a tk.Image for a given Appearance file with
-            PATH_TO/NAME_OF_APPEARANCE.vap as format """
-        thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
-        if not os.path.exists(thumbnail_path):
-            thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
-
-        image = None
-        jpg_loaded = False
-        try:
-            image = Image.open(thumbnail_path)
-            jpg_loaded = True
-        except UnidentifiedImageError as e:
-            print(f'*** Warning! {e}')
-            print(f'*** The thumbnail file cannot be read, using dummy image instead.')
-
-        if not jpg_loaded:
-            try:
-                thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
-                image = Image.open(thumbnail_path)
-            except Exception as e:
-                print(f'*** Error! {e}')
-
-        image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
-        thumbnail = ImageTk.PhotoImage(image)
-        return thumbnail
+from ..common.utility import *
 
 
 def load_appearance(filename):
@@ -172,7 +99,6 @@ def intuitive_crossover(morph_list1, morph_list2):
         be selected
         reference: https://towardsdatascience.com/unit-3-genetic-algorithms-part-1-986e3b4666d7
         """
-    # for zip check this: https://www.programiz.com/python-programming/methods/built-in/zip
     zipped_morphs = zip(morph_list1, morph_list2)
     return [random.choice(morph_pair) for morph_pair in zipped_morphs]
 
@@ -219,23 +145,6 @@ def get_morph_index_with_character_info_from_appearance(appearance):
     for index, dictionary in enumerate(appearance[STORABLES]):
         if "morphs" in dictionary and dictionary['id'] == "geometry":
             return index
-    return None
-
-
-def value_from_id_in_dict_list(dict_list, id_string, needed_key):
-    for dictionary in dict_list:
-        if id_string in dictionary.values():
-            if needed_key in dictionary:
-                return dictionary[needed_key]
-    return None
-
-
-def replace_value_from_id_in_dict_list(dict_list, id_string, needed_key, replacement_string):
-    for dictionary in dict_list:
-        if id_string in dictionary.values():
-            if needed_key in dictionary:
-                dictionary[needed_key] = replacement_string
-                return dict_list
     return None
 
 
@@ -358,11 +267,19 @@ def save_morph_to_appearance(morph_list, appearance):
 def dedupe_morphs(morph_lists):
     """ removes duplicate morphs from each morph_list in morph_lists """
 
-    # suggestion from ChatGPT -- do not understand yet. :) todo: test
+    # suggestion from GPT-3.5 -- do not understand yet. :) todo: test
     # return [
     #     [morph for i, morph in enumerate(morph_list) if morph['name'] not in morph_list[:i]]
     #     for morph_list in morph_lists
     # ]
+
+    # another suggestion by GPT-4
+    # new_morph_lists = []
+    # for morph_list in morph_lists:
+    #     found_morphs = {morph['name']: morph for morph in morph_list if morph['name'] not in found_morphs}
+    #     new_morph = list(found_morphs.values())
+    #     new_morph_lists.append(new_morph)
+    # return new_morph_lists
 
     new_morph_lists = list()
     for morph_list in morph_lists:
@@ -392,10 +309,6 @@ def count_morph_values_below_threshold(morph_list, threshold):
 def filter_morphs_below_threshold(morph_list, threshold):
     """ goes through each morph in each morph_list in the list of morph_lists and only keeps morphs with values above
         threshold """
-
-    # suggestion ChatGPT: todo test
-    # return [morph for morph in morph_list if "value" in morph and abs(float(morph['value'])) >= threshold]
-
     new_morph_list = []
     for morph in morph_list:
         if 'value' in morph and abs(float(morph['value'])) >= threshold:
@@ -469,6 +382,45 @@ def is_compatible_gender(gender1, gender2):
     if gender1 == FUTA and gender2 == FEMALE:
         return True
     return False
+
+
+def get_means_from_morphlists(morph_lists):
+    """ returns a dictionary of morph means for each morph found in the morphlists """
+    means = defaultdict(lambda: 0.0)
+    for morph_list in morph_lists:
+        for morph in morph_list:
+            if 'value' in morph:
+                means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
+            else:
+                means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
+    return means
+
+
+def get_cov_from_morph_lists(morphlists):
+    """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
+    values = defaultdict(lambda: [])
+    for morph_list in morphlists:
+        for morph in morph_list:
+            values[morph['name']].append(np.nan_to_num(float(morph['value'])))
+    list_of_values = []
+    for key, value in values.items():
+        list_of_values.append(value)
+    covariances = np.array(list_of_values)
+    return np.cov(covariances)
+
+
+def last_given_commands_to_string(list_of_commands):
+    """ Converts a list of commands (5) (where each command is dictionary with 'time' and 'command' as keys
+        to a string with \n for line separation
+        to do: simplify this"""
+    # todo: to logic
+    string = ''
+    for command_dict in list_of_commands:
+        line = command_dict['time'] + ': ' + command_dict['command'] + "\n"
+        string = string + line
+    string = string[:-1]  # remove the extra \n at the end
+    return string
+
 
 
 if __name__ == '__main__':

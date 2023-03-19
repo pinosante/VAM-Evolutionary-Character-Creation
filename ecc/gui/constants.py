@@ -1,5 +1,12 @@
-import ecc_utility
-
+"""
+Business logic for VAM Evolutionary Character Creation
+By Pino Sante
+Please credit me if you change, use or adapt this file.
+"""
+# selection of appearances method texts
+CHOOSE_ALL_FAVORITES_TEXT = "Choose All Favorites"
+CHOOSE_ALL_TEXT = "Choose All Appearances"
+CHOOSE_FILES_TEXT = "Choose Files"
 
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 APP_TITLE = "VAM Evolutionary Character Creation by Pino Sante"
@@ -29,6 +36,10 @@ RATING_ACTIVE_FG_COLOR = BUTTON_FG_COLOR
 MIN_RATING = 1
 MAX_RATING = 5
 RATING_FONT_SIZE = 13
+
+FOREGROUND = 'foreground'
+BACKGROUND = 'background'
+
 
 if __name__ == '__main__':
     print(f'I am just a module, please launch the main script "{ecc_utility.MAIN_SCRIPT_NAME}".')
