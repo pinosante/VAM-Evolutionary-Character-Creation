@@ -875,12 +875,15 @@ Do you want to continue that session?""")
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
         appearances = [self.generator.appearances[f] for f in filenames]
+        print(f'we have {len(appearances)} appearances')
         logger.info(f"Source files: {source_files} ({len(appearances)} Files)")
         morph_lists = [get_morph_list_from_appearance(appearance) for appearance in appearances]
-        print("get_all_morph_names_in_morph_lists")
+        print(f'we have {len(morph_lists)} morph_lists')
         morph_names = get_all_morph_names_in_morph_lists(morph_lists)
+        print(f'we have {len(morph_names)} morph_names')
         print("pad_morph_names_to_morph_lists")
         morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
+        print(f'we have {len(morph_lists)} morph_lists')
         print("dedupe_morphs")
         morph_lists = dedupe_morphs(morph_lists)
         print("get_means_from_morphlists")
@@ -894,26 +897,30 @@ Do you want to continue that session?""")
         threshold = self.settings['morph threshold']
 
         for i in range(1, POP_SIZE + 1):
-            text = f'Generating Population\nPlease be patient!\n({i}/{POP_SIZE})'
-            self.generate_children_frame.display_progress(text)
-            self.vam_comm.broadcast_message_to_vam_rating_blocker(text)
-
-            sample = np.random.default_rng().multivariate_normal(means, covariances)
-            sample = [str(x) for x in sample]
-            new_morph_list = copy.deepcopy(morph_lists[0])
-            for j, morph in enumerate(new_morph_list):
-                morph['value'] = sample[j]
-            new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
-            child_appearance = load_appearance(template_file)
-            logger.info(f'Using as appearance template: {template_file}')
-            child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
-            new_population.append(child_appearance)
+            print(f'generating child {i}')
+            self.generate_child_appearance(covariances, i, means, morph_lists, new_population, template_file, threshold)
 
         self.save_population(new_population)
         self.generator.gen_counter += 1
         self.update_population(new_population)
         self.generate_children_frame.display_ready_for_new_generation()
         return
+
+    @timeit
+    def generate_child_appearance(self, covariances, i, means, morph_lists, new_population, template_file, threshold):
+        text = f'Generating Population\nPlease be patient!\n({i}/{POP_SIZE})'
+        self.generate_children_frame.display_progress(text)
+        self.vam_comm.broadcast_message_to_vam_rating_blocker(text)
+        sample = np.random.default_rng().multivariate_normal(means, covariances)
+        sample = [str(x) for x in sample]
+        new_morph_list = copy.deepcopy(morph_lists[0])
+        for j, morph in enumerate(new_morph_list):
+            morph['value'] = sample[j]
+        new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
+        child_appearance = load_appearance(template_file)
+        logger.info(f'Using as appearance template: {template_file}')
+        child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
+        new_population.append(child_appearance)
 
     def save_population(self, population):
         """ save a population list of child appearances to files """

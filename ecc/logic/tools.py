@@ -318,7 +318,6 @@ def filter_morphs_below_threshold(morph_list, threshold):
     return new_morph_list
 
 
-@timeit
 def get_all_morph_names_in_morph_lists(morph_lists):
     """ returns a list of alle morph_names found in the morph_lists """
 
