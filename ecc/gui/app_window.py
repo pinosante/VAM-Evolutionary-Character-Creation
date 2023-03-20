@@ -12,6 +12,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 from .constants import *
+from ..common.ecc_log import ecc_logger as logger
 
 from .app_window_frames.alternative_appearance_frame import AlternativeAppearanceFrame
 from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
@@ -36,6 +37,7 @@ from ..logic.vam_comm import VamComm
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
+        logger.info('Creating main frame')
 
         self.population = Population(POP_SIZE, settings)
         self.settings = settings
@@ -505,6 +507,7 @@ Do you want to continue that session?""")
             showing the user the last five commands received, from the VAM companion save. """
         self.vam_comm.broadcast_generation_number_to_vam(self.generator.gen_counter)
         print("VAM is ready, let's go.")
+        logger.info("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
             widget.grid_forget()
@@ -531,7 +534,7 @@ Do you want to continue that session?""")
     def variate_population_with_templates(self):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
-        print('variate_population_with_templates')
+        logger.info('variate_population_with_templates')
         self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         filenames = list(self.generator.appearances.keys())
@@ -633,7 +636,7 @@ Do you want to continue that session?""")
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
             Generation counter is reset to 1. """
         # todo: split into GUI and BL
-        print(f'Restarting, with {method}')
+        logger.info(f'Restarting, with {method}')
         self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
@@ -662,7 +665,7 @@ Do you want to continue that session?""")
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         # todo: split to put stuff ino logic
-        print(method)
+        logger.info(method)
         if self.generator.gen_counter == 0:
             self.settings.save()  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == 'Gaussian Samples':
@@ -867,9 +870,9 @@ Do you want to continue that session?""")
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
             Updates population info and the GUI. """
-        print('Using random pairwise chromosome crossover for sample initialization.')
+        logger.info('Using random pairwise chromosome crossover for sample initialization.')
         parent_filenames = self.select_appearances_strategies[source_files]()
-        print(f'Source files: {source_files} ({len(parent_filenames)} Files)')
+        logger.info(f'Source files: {source_files} ({len(parent_filenames)} Files)')
         new_population = list()
         for i in range(1, POP_SIZE + 1):
             random_parents = random.sample(parent_filenames, 2)
@@ -884,13 +887,13 @@ Do you want to continue that session?""")
         # todo: split the UI and the BL parts
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
-        print('Using random samples from multivariate gaussian distribution for initialization.')
+        logger.info('Using random samples from multivariate gaussian distribution for initialization.')
         self.generate_children_frame.display_progress('Generating Population\n Please be patient!\n')
 
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
         appearances = [self.generator.appearances[f] for f in filenames]
-        print(f"Source files: {source_files} ({len(appearances)} Files)")
+        logger.info(f"Source files: {source_files} ({len(appearances)} Files)")
         morph_lists = [get_morph_list_from_appearance(appearance) for appearance in appearances]
         morph_names = get_all_morph_names_in_morph_lists(morph_lists)
         morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
@@ -914,7 +917,7 @@ Do you want to continue that session?""")
                 morph['value'] = sample[j]
             new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
             child_appearance = load_appearance(template_file)
-            print('Using as appearance template:', template_file)
+            logger.info('Using as appearance template:', template_file)
             child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
             new_population.append(child_appearance)
 
@@ -978,7 +981,7 @@ Do you want to continue that session?""")
                                             'Are you sure?')
             if answer == "no":
                 return False
-        print('We are restarting')
+        logger.info('We are restarting')
         self.restart_population(self.settings['method'])
         return True
 
