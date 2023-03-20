@@ -96,6 +96,24 @@ class Generator:
                     filtered.append(f)
         return filtered
 
+    def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
+        """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
+            Returns an empty list if neither of these settings are available. """
+
+        if 'morph threshold' not in self.settings:
+            return list()
+
+        if 'min morph threshold' not in self.settings:
+            return list()
+
+        filtered = list()
+        for f in filenames:
+            appearance = self.appearances[f]
+            morph_list = get_morph_list_from_appearance(appearance)
+            morph_list = filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
+            if len(morph_list) > self.settings['min morph threshold']:
+                filtered.append(f)
+        return filtered
 
 if __name__ == '__main__':
     print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

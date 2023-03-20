@@ -37,7 +37,7 @@ def save_appearance(appearance, filename):
     for x in range(3):
         try:
             with open(filename, 'w', encoding="utf-8") as json_file:
-                logger.info("Writing appearance to:", filename)
+                logger.info(f'Writing appearance to: {filename}')
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
             thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
@@ -45,9 +45,9 @@ def save_appearance(appearance, filename):
             return True
         except Exception as exception:
             logger.error(f'{exception=}')
-            logger.error(f"Error while trying to save {filename}, trying again in 2 seconds.")
+            logger.error(f'Error while trying to save {filename}, trying again in 2 seconds.')
             time.sleep(2)
-    raise Exception(f"Can't save appearance {filename}")
+    raise Exception(f'Can\'t save appearance {filename}')
 
 
 def get_morph_names(morph_list):
@@ -75,6 +75,7 @@ def get_uid_from_morph_name(morph_name, morph_lists, filenames=None):
     return False
 
 
+@timeit
 def pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames=None):
     """ adds uid keys to each morph_list in morph_lists and sets the values to 0 if uid key doesn't exist """
     morph_lists = copy.deepcopy(morph_lists)
@@ -264,6 +265,7 @@ def save_morph_to_appearance(morph_list, appearance):
     return appearance
 
 
+@timeit
 def dedupe_morphs(morph_lists):
     """ removes duplicate morphs from each morph_list in morph_lists """
 
@@ -316,6 +318,7 @@ def filter_morphs_below_threshold(morph_list, threshold):
     return new_morph_list
 
 
+@timeit
 def get_all_morph_names_in_morph_lists(morph_lists):
     """ returns a list of alle morph_names found in the morph_lists """
 
@@ -384,6 +387,7 @@ def is_compatible_gender(gender1, gender2):
     return False
 
 
+@timeit
 def get_means_from_morphlists(morph_lists):
     """ returns a dictionary of morph means for each morph found in the morphlists """
     means = defaultdict(lambda: 0.0)
@@ -396,6 +400,7 @@ def get_means_from_morphlists(morph_lists):
     return means
 
 
+@timeit
 def get_cov_from_morph_lists(morphlists):
     """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
     values = defaultdict(lambda: [])

@@ -566,25 +566,6 @@ Do you want to continue that session?""")
             updated_appearance = save_morph_to_appearance(morph_list, template_appearance)
             save_appearance(updated_appearance, c.filename)
 
-    def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
-        """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
-            Returns an empty list if neither of these settings are available. """
-        # todo: to logic
-
-        if 'morph threshold' not in self.settings:
-            return list()
-
-        if 'min morph threshold' not in self.settings:
-            return list()
-
-        filtered = list()
-        for f in filenames:
-            appearance = self.generator.appearances[f]
-            morph_list = get_morph_list_from_appearance(appearance)
-            morph_list = filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
-            if len(morph_list) > self.settings['min morph threshold']:
-                filtered.append(f)
-        return filtered
 
     def update_morph_info(self, number):
         """ Updates morph info in the GUI for Parent file 'number'. """
@@ -849,7 +830,7 @@ Do you want to continue that session?""")
                                                                        matching_genders(
                                                                            self.child_template_frame.child_template[
                                                                                'gender']))
-            filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+            filtered = self.generator.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
         return filtered
@@ -888,6 +869,7 @@ Do you want to continue that session?""")
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
         logger.info('Using random samples from multivariate gaussian distribution for initialization.')
+        print("generate_children_frame.display_progress")
         self.generate_children_frame.display_progress('Generating Population\n Please be patient!\n')
 
         # select source files
@@ -895,11 +877,17 @@ Do you want to continue that session?""")
         appearances = [self.generator.appearances[f] for f in filenames]
         logger.info(f"Source files: {source_files} ({len(appearances)} Files)")
         morph_lists = [get_morph_list_from_appearance(appearance) for appearance in appearances]
+        print("get_all_morph_names_in_morph_lists")
         morph_names = get_all_morph_names_in_morph_lists(morph_lists)
+        print("pad_morph_names_to_morph_lists")
         morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
+        print("dedupe_morphs")
         morph_lists = dedupe_morphs(morph_lists)
+        print("get_means_from_morphlists")
         means = get_means_from_morphlists(morph_lists)
+        print("list(means.values())")
         means = list(means.values())
+        print("get_cov_from_morph_lists")
         covariances = get_cov_from_morph_lists(morph_lists)
         new_population = list()
         template_file = self.settings['child template']
@@ -917,7 +905,7 @@ Do you want to continue that session?""")
                 morph['value'] = sample[j]
             new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
             child_appearance = load_appearance(template_file)
-            logger.info('Using as appearance template:', template_file)
+            logger.info(f'Using as appearance template: {template_file}')
             child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
             new_population.append(child_appearance)
 

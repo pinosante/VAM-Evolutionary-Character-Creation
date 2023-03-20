@@ -8,6 +8,7 @@ import pathlib
 import os
 
 import tkinter as tk
+from fnmatch import fnmatch
 from tkinter import ttk
 
 from .constants import *
@@ -17,6 +18,13 @@ from ..common.utility import *
 class SelectAppearanceDialog(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
+        self.appearance_label = None
+        self.appearance_button = None
+        self.all_appearance_widgets = None
+        self.file_filter = None
+        self.appearances_frame = None
+        self.my_canvas = None
+        self.thumbnails_per_row = None
         self.file_selection_popup = None
         self._file_selection = None
         self.settings = settings
@@ -40,7 +48,7 @@ class SelectAppearanceDialog(tk.Frame):
 
         filenames = list(self.generator.appearances.keys())
         if filteronmorphcount:
-            filenames = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+            filenames = self.generator.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         filenames = self.generator.filter_filename_list_on_genders(filenames, genderlist)
 
         # create popup window
@@ -55,14 +63,11 @@ class SelectAppearanceDialog(tk.Frame):
         self.file_selection_popup.iconbitmap(os.path.join(DATA_PATH, ICON_FILENAME))
         self.file_selection_popup.grab_set()
 
-        #
-        # Start of scrollbar hack in Tkinter
-        #
-        canvasholdingframe = tk.Frame(self.file_selection_popup, bg=BG_COLOR)
-        canvasholdingframe.pack(fill=tk.BOTH, expand=1)
-        self.my_canvas = tk.Canvas(canvasholdingframe, bg=BG_COLOR)
+        canvas_holding_frame = tk.Frame(self.file_selection_popup, bg=BG_COLOR)
+        canvas_holding_frame.pack(fill=tk.BOTH, expand=1)
+        self.my_canvas = tk.Canvas(canvas_holding_frame, bg=BG_COLOR)
         self.my_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-        my_scrollbar = ttk.Scrollbar(canvasholdingframe, orient=tk.VERTICAL, command=self.my_canvas.yview)
+        my_scrollbar = ttk.Scrollbar(canvas_holding_frame, orient=tk.VERTICAL, command=self.my_canvas.yview)
         my_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.my_canvas.configure(yscrollcommand=my_scrollbar.set)
         self.my_canvas.bind('<Configure>', lambda e: self.my_canvas.configure(scrollregion=self.my_canvas.bbox("all")))
@@ -70,32 +75,26 @@ class SelectAppearanceDialog(tk.Frame):
         self.my_canvas.bind_all('<Escape>', lambda e: self.file_selection_popup.destroy())
 
         # we basically have a canvas for the scrollbar, and put this frame in it
-        self.appearancesframe = tk.Frame(self.my_canvas, bg=BG_COLOR)
-        self.my_canvas.create_window((0, 0), window=self.appearancesframe, anchor="nw")
-        #
-        # End of scrollbar hack in Tkinter
-        #
+        self.appearances_frame = tk.Frame(self.my_canvas, bg=BG_COLOR)
+        self.my_canvas.create_window((0, 0), window=self.appearances_frame, anchor="nw")
 
-        self.show_all_appearance_buttons(self.appearancesframe, filenames, self.thumbnails_per_row)
+        self.show_all_appearance_buttons(self.appearances_frame, filenames, self.thumbnails_per_row)
 
-        #
-        # Bottomframe of the popup
-        #
-        bottomframe = tk.Frame(self.file_selection_popup, bg=BG_COLOR)
-        bottomframe.pack(fill="both")
-        button = tk.Button(bottomframe, text="➖", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+        bottom_frame = tk.Frame(self.file_selection_popup, bg=BG_COLOR)
+        bottom_frame.pack(fill="both")
+        button = tk.Button(bottom_frame, text="➖", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                            activebackground=BUTTON_ACTIVE_COLOR, command=lambda: self.change_popup_width(-1, filenames))
         button.pack(side=tk.LEFT)
-        button = tk.Button(bottomframe, text="➕", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+        button = tk.Button(bottom_frame, text="➕", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                            activebackground=BUTTON_ACTIVE_COLOR, command=lambda: self.change_popup_width(+1, filenames))
         button.pack(side=tk.LEFT)
-        self.filefilter = tk.Entry(bottomframe, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=20)
-        self.filefilter.pack(side=tk.LEFT)
-        self.filefilter.bind('<Return>', lambda event, arg=filenames: self.apply_file_filter(arg))
-        button = tk.Button(bottomframe, text="Filter", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+        self.file_filter = tk.Entry(bottom_frame, fg=BUTTON_FG_COLOR, bg=BUTTON_BG_COLOR, width=20)
+        self.file_filter.pack(side=tk.LEFT)
+        self.file_filter.bind('<Return>', lambda event, arg=filenames: self.apply_file_filter(arg))
+        button = tk.Button(bottom_frame, text="Filter", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                            activebackground=BUTTON_ACTIVE_COLOR, command=lambda: self.apply_file_filter(filenames))
         button.pack(side=tk.LEFT)
-        button = tk.Button(bottomframe, text="Cancel", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
+        button = tk.Button(bottom_frame, text="Cancel", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,
                            activebackground=BUTTON_ACTIVE_COLOR, command=self.end_file_selection_with_thumbnails)
         button.pack(side=tk.LEFT)
         self.file_selection_popup.wait_window()
@@ -118,15 +117,15 @@ class SelectAppearanceDialog(tk.Frame):
         height = self.file_selection_popup.winfo_height()
         geometry = str(int(190 * self.thumbnails_per_row + 23)) + "x" + str(height)
         self.file_selection_popup.geometry(geometry)
-        self.show_all_appearance_buttons(self.appearancesframe, filenames, self.thumbnails_per_row)
+        self.show_all_appearance_buttons(self.appearances_frame, filenames, self.thumbnails_per_row)
 
     def show_all_appearance_buttons(self, window, filenames, thumbnails_per_row):
         """ Show all appearance files as image buttons, in the given window. """
         self.all_appearance_widgets = list()
         max_vertical = int(len(filenames) / thumbnails_per_row) + 1
         file_index = 0
-        self.appearancebutton = dict()
-        self.appearancelabel = dict()
+        self.appearance_button = dict()
+        self.appearance_label = dict()
         for row in range(max_vertical):
             for column in range(thumbnails_per_row):
                 if file_index >= len(filenames):
@@ -137,9 +136,9 @@ class SelectAppearanceDialog(tk.Frame):
 
     def make_appearance_button(self, window, file_name, row, column, index):
         """ Make individual appearance button in file selection window. Called by show_all_appearance_buttons. """
-        self.appearancebutton[index] = self.make_appearance_button_sub(window, file_name, row, column, index)
-        self.appearancelabel[index] = self.make_appearance_button_label(window, file_name, row, column)
-        return self.appearancebutton[index], self.appearancelabel[index]
+        self.appearance_button[index] = self.make_appearance_button_sub(window, file_name, row, column, index)
+        self.appearance_label[index] = self.make_appearance_button_label(window, file_name, row, column)
+        return self.appearance_button[index], self.appearance_label[index]
 
     def make_appearance_button_sub(self, window, file_name, row, column, file_index):
         """ todo """
@@ -164,15 +163,15 @@ class SelectAppearanceDialog(tk.Frame):
 
     def on_enter_appearance_button(self, index, event=None):
         """ Show hover effect when entering mouse over an image file. """
-        self.appearancebutton[index][BACKGROUND] = HOVER_COLOR
-        self.appearancelabel[index][BACKGROUND] = BG_COLOR
-        self.appearancelabel[index][FOREGROUND] = HOVER_COLOR
+        self.appearance_button[index][BACKGROUND] = HOVER_COLOR
+        self.appearance_label[index][BACKGROUND] = BG_COLOR
+        self.appearance_label[index][FOREGROUND] = HOVER_COLOR
 
     def on_leave_appearance_button(self, index, event=None):
         """ Show hover effect when exiting mouse over an image file. """
-        self.appearancebutton[index][BACKGROUND] = BG_COLOR
-        self.appearancelabel[index][BACKGROUND] = BG_COLOR
-        self.appearancelabel[index][FOREGROUND] = FG_COLOR
+        self.appearance_button[index][BACKGROUND] = BG_COLOR
+        self.appearance_label[index][BACKGROUND] = BG_COLOR
+        self.appearance_label[index][FOREGROUND] = FG_COLOR
 
     def remove_all_appearance_widgets(self):
         """ Used by file_selection_with_thumbnails function to clear the popup window if the amount of thumbnails per
@@ -183,11 +182,11 @@ class SelectAppearanceDialog(tk.Frame):
     def apply_file_filter(self, filenames):
         """ Applies file filter to file selection window. """
         self.my_canvas.yview_moveto('0.0')  # scroll to top
-        filter_txt = self.filefilter.get()
+        filter_txt = self.file_filter.get()
         glob_filter = "*preset_*" + filter_txt + "*.vap"
         filtered = [file for file in filenames if fnmatch(file.lower(), glob_filter)]
         self.remove_all_appearance_widgets()
-        self.show_all_appearance_buttons(self.appearancesframe, filtered, self.thumbnails_per_row)
+        self.show_all_appearance_buttons(self.appearances_frame, filtered, self.thumbnails_per_row)
 
 
 if __name__ == '__main__':

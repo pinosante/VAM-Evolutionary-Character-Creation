@@ -6,6 +6,7 @@ Please credit me if you change, use or adapt this file.
 
 import tkinter as tk
 
+from ...common.utility import *
 from ..constants import *
 
 
