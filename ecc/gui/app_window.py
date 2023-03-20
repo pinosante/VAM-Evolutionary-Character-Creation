@@ -32,6 +32,7 @@ from .population import Population
 
 from ..logic.vam_comm import VamComm
 
+
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
         super().__init__()
@@ -60,7 +61,7 @@ class AppWindow(tk.Frame):
         self.vam_dir_frame = VamDirFrame(settings, self.subtitle_font, self.select_vam_dir_callback)
         self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.appearance_dir_frame = AppearanceDirFrame(self.subtitle_font, self.select_appearance_dir_callback)
+        self.appearance_dir_frame = AppearanceDirFrame(settings, self.subtitle_font, self.select_appearance_dir_callback)
         self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
@@ -97,7 +98,7 @@ class AppWindow(tk.Frame):
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
             not found """
-        self.investigate_appearance_directory()
+        self.appearance_dir_frame.investigate_appearance_directory()
 
         if 'recursive directory search' in self.settings:
             self.use_recursive_directory_search(self.settings['recursive directory search'])
@@ -171,18 +172,6 @@ Do you want to continue that session?""")
 
         self.update_initialize_population_button()
 
-    def investigate_appearance_directory(self):
-        if 'appearance dir' in self.settings:
-            if len(self.settings['appearance dir']) < 1:
-                appearance_dir = NO_FILE_SELECTED_TEXT
-            else:
-                appearance_dir = strip_dir_string_to_max_length(self.settings['appearance dir'],
-                                                                MAX_APPEARANCEDIR_STRING_LENGTH)
-                self.appearance_dir_frame.appearance_dir_button.configure(relief=tk.SUNKEN)
-        else:
-            appearance_dir = NO_FILE_SELECTED_TEXT
-            self.settings['appearance dir'] = ""
-        self.appearance_dir_frame.appearance_dir_label.configure(text=appearance_dir)
 
     def use_recursive_directory_search(self, choice):
         """ Called by the use recursive directory button in the app. Depending on the choice, sinks the GUI button
@@ -422,30 +411,13 @@ Do you want to continue that session?""")
         self.update_initialize_population_button()
         self.update_found_labels()
 
-
     def update_initialize_population_button(self):
         """ Updates the Initialize Population button, by checking if all necessary files and settings are correct. If
             not, shows in the button what items are missing and makes the button do nothing. If criteria are met, button
             color is changed to green and button functionality is restored. """
         can_generate, messages = self.can_generate_new_population()
-        if not can_generate:
-            messages = '\n'.join(messages)
-            txt = f'Cannot Initialize Population:\n{messages}'
-            self.generate_children_frame.generate_children_button.configure(relief=tk.RAISED, bg="#D0D0D0",
-                                                                            font=(DEFAULT_FONT, 12, "bold"),
-                                                                            width=52, height=6,
-                                                                            activebackground="#D0D0D0",
-                                                                            text=txt,
-                                                                            state='disabled')
-        else:
-            self.generate_children_frame.generate_children_button.configure(relief="raised",
-                                                                            bg="lightgreen",
-                                                                            font=(DEFAULT_FONT, 12, "bold"),
-                                                                            text="Initialize Population",
-                                                                            width=52, height=6,
-                                                                            state='normal',
-                                                                            command=lambda: self.generate_next_population(
-                                                                                self.settings['method']))
+        self.generate_children_frame.update_initialize_population_button(
+            can_generate, messages, self.generate_next_population)
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
