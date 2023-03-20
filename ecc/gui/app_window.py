@@ -845,7 +845,7 @@ Do you want to continue that session?""")
 
     def get_selected_appearance_filenames(self):
         filenames = [c.filename for c in self.population.chromosomes if c.can_load]
-        self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+        self.generator.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
 
     def crossover_initialize_population(self, source_files):
