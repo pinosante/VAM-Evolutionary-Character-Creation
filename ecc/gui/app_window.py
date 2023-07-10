@@ -442,6 +442,7 @@ Do you want to continue that session?""")
             as an item. Updates GUI and settings after (un)succesful template selection. """
 
         dialog = SelectAppearanceDialog(self.settings, self.generator)
+        dialog.attributes('-topmost', 1)
         filename = dialog.file_selection_with_thumbnails(gender_list, title, filteronmorphcount=False)
         dialog.destroy()
 
