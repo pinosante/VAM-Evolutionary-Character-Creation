@@ -12,6 +12,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 from .constants import *
+from ..common.ecc_log import ecc_logger as logger
 
 from .app_window_frames.alternative_appearance_frame import AlternativeAppearanceFrame
 from .app_window_frames.appearance_dir_frame import AppearanceDirFrame
@@ -32,9 +33,11 @@ from .population import Population
 
 from ..logic.vam_comm import VamComm
 
+
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
+        logger.info('Creating main frame')
 
         self.population = Population(POP_SIZE, settings)
         self.settings = settings
@@ -60,7 +63,7 @@ class AppWindow(tk.Frame):
         self.vam_dir_frame = VamDirFrame(settings, self.subtitle_font, self.select_vam_dir_callback)
         self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.appearance_dir_frame = AppearanceDirFrame(self.subtitle_font, self.select_appearance_dir_callback)
+        self.appearance_dir_frame = AppearanceDirFrame(settings, self.subtitle_font, self.select_appearance_dir_callback)
         self.appearance_dir_frame.grid(row=2, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.child_template_frame = ChildTemplateFrame(self.subtitle_font, self.select_template_file)
@@ -97,7 +100,7 @@ class AppWindow(tk.Frame):
     def initialize(self):
         """ Runs at the start of the app to load all previously saved settings and sets defaults when settings are
             not found """
-        self.investigate_appearance_directory()
+        self.appearance_dir_frame.investigate_appearance_directory()
 
         if 'recursive directory search' in self.settings:
             self.use_recursive_directory_search(self.settings['recursive directory search'])
@@ -171,18 +174,6 @@ Do you want to continue that session?""")
 
         self.update_initialize_population_button()
 
-    def investigate_appearance_directory(self):
-        if 'appearance dir' in self.settings:
-            if len(self.settings['appearance dir']) < 1:
-                appearance_dir = NO_FILE_SELECTED_TEXT
-            else:
-                appearance_dir = strip_dir_string_to_max_length(self.settings['appearance dir'],
-                                                                MAX_APPEARANCEDIR_STRING_LENGTH)
-                self.appearance_dir_frame.appearance_dir_button.configure(relief=tk.SUNKEN)
-        else:
-            appearance_dir = NO_FILE_SELECTED_TEXT
-            self.settings['appearance dir'] = ""
-        self.appearance_dir_frame.appearance_dir_label.configure(text=appearance_dir)
 
     def use_recursive_directory_search(self, choice):
         """ Called by the use recursive directory button in the app. Depending on the choice, sinks the GUI button
@@ -422,30 +413,13 @@ Do you want to continue that session?""")
         self.update_initialize_population_button()
         self.update_found_labels()
 
-
     def update_initialize_population_button(self):
         """ Updates the Initialize Population button, by checking if all necessary files and settings are correct. If
             not, shows in the button what items are missing and makes the button do nothing. If criteria are met, button
             color is changed to green and button functionality is restored. """
         can_generate, messages = self.can_generate_new_population()
-        if not can_generate:
-            messages = '\n'.join(messages)
-            txt = f'Cannot Initialize Population:\n{messages}'
-            self.generate_children_frame.generate_children_button.configure(relief=tk.RAISED, bg="#D0D0D0",
-                                                                            font=(DEFAULT_FONT, 12, "bold"),
-                                                                            width=52, height=6,
-                                                                            activebackground="#D0D0D0",
-                                                                            text=txt,
-                                                                            state='disabled')
-        else:
-            self.generate_children_frame.generate_children_button.configure(relief="raised",
-                                                                            bg="lightgreen",
-                                                                            font=(DEFAULT_FONT, 12, "bold"),
-                                                                            text="Initialize Population",
-                                                                            width=52, height=6,
-                                                                            state='normal',
-                                                                            command=lambda: self.generate_next_population(
-                                                                                self.settings['method']))
+        self.generate_children_frame.update_initialize_population_button(
+            can_generate, messages, self.generate_next_population)
 
     def can_generate_new_population(self):
         """ Function which checks all necessary files and settings for generating a new population. Returns a
@@ -533,6 +507,7 @@ Do you want to continue that session?""")
             showing the user the last five commands received, from the VAM companion save. """
         self.vam_comm.broadcast_generation_number_to_vam(self.generator.gen_counter)
         print("VAM is ready, let's go.")
+        logger.info("VAM is ready, let's go.")
         print("Switching view")
         for widget in self.master.winfo_children():
             widget.grid_forget()
@@ -559,7 +534,7 @@ Do you want to continue that session?""")
     def variate_population_with_templates(self):
         """ Replaces all the chromosomes in the population with a randomly chosen templates from all the available
             templates """
-        print('variate_population_with_templates')
+        logger.info('variate_population_with_templates')
         self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         filenames = list(self.generator.appearances.keys())
@@ -591,25 +566,6 @@ Do you want to continue that session?""")
             updated_appearance = save_morph_to_appearance(morph_list, template_appearance)
             save_appearance(updated_appearance, c.filename)
 
-    def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
-        """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
-            Returns an empty list if neither of these settings are available. """
-        # todo: to logic
-
-        if 'morph threshold' not in self.settings:
-            return list()
-
-        if 'min morph threshold' not in self.settings:
-            return list()
-
-        filtered = list()
-        for f in filenames:
-            appearance = self.generator.appearances[f]
-            morph_list = get_morph_list_from_appearance(appearance)
-            morph_list = filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
-            if len(morph_list) > self.settings['min morph threshold']:
-                filtered.append(f)
-        return filtered
 
     def update_morph_info(self, number):
         """ Updates morph info in the GUI for Parent file 'number'. """
@@ -661,7 +617,7 @@ Do you want to continue that session?""")
         """ Reinitializes the population. Can be called whenver the app is in the rating mode.
             Generation counter is reset to 1. """
         # todo: split into GUI and BL
-        print(f'Restarting, with {method}')
+        logger.info(f'Restarting, with {method}')
         self.vam_comm.broadcast_message_to_vam_rating_blocker('Updating...\nPlease Wait')
 
         # If the user used CHOOSE_FILES_TEXT as the source, we have to reload them into the chromosomes
@@ -690,7 +646,7 @@ Do you want to continue that session?""")
         """ Generates the next population. Switches GUI layout to the Ratings layout when called for the first time
             (self.generator.gencounter == 0). Updates the population in the GUI through self.update_population(). """
         # todo: split to put stuff ino logic
-        print(method)
+        logger.info(method)
         if self.generator.gen_counter == 0:
             self.settings.save()  # in case of a bug we want to have the settings saved before we start the algorithm
             if method == 'Gaussian Samples':
@@ -874,7 +830,7 @@ Do you want to continue that session?""")
                                                                        matching_genders(
                                                                            self.child_template_frame.child_template[
                                                                                'gender']))
-            filtered = self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+            filtered = self.generator.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         else:
             filtered = []
         return filtered
@@ -889,15 +845,15 @@ Do you want to continue that session?""")
 
     def get_selected_appearance_filenames(self):
         filenames = [c.filename for c in self.population.chromosomes if c.can_load]
-        self.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
+        self.generator.filter_filename_list_on_morph_threshold_and_min_morphs(filenames)
         return filenames
 
     def crossover_initialize_population(self, source_files):
         """ Initializes the population using random crossover between all Parent files. Only used for initialization.
             Updates population info and the GUI. """
-        print('Using random pairwise chromosome crossover for sample initialization.')
+        logger.info('Using random pairwise chromosome crossover for sample initialization.')
         parent_filenames = self.select_appearances_strategies[source_files]()
-        print(f'Source files: {source_files} ({len(parent_filenames)} Files)')
+        logger.info(f'Source files: {source_files} ({len(parent_filenames)} Files)')
         new_population = list()
         for i in range(1, POP_SIZE + 1):
             random_parents = random.sample(parent_filenames, 2)
@@ -912,45 +868,59 @@ Do you want to continue that session?""")
         # todo: split the UI and the BL parts
         """ Initializes the population using Gaussian Samples based on all Parent files. Only used for initialization.
             Updates population info and the GUI. """
-        print('Using random samples from multivariate gaussian distribution for initialization.')
+        logger.info('Using random samples from multivariate gaussian distribution for initialization.')
+        print("generate_children_frame.display_progress")
         self.generate_children_frame.display_progress('Generating Population\n Please be patient!\n')
 
         # select source files
         filenames = self.select_appearances_strategies[source_files]()
         appearances = [self.generator.appearances[f] for f in filenames]
-        print(f"Source files: {source_files} ({len(appearances)} Files)")
+        print(f'we have {len(appearances)} appearances')
+        logger.info(f"Source files: {source_files} ({len(appearances)} Files)")
         morph_lists = [get_morph_list_from_appearance(appearance) for appearance in appearances]
+        print(f'we have {len(morph_lists)} morph_lists')
         morph_names = get_all_morph_names_in_morph_lists(morph_lists)
+        print(f'we have {len(morph_names)} morph_names')
+        print("pad_morph_names_to_morph_lists")
         morph_lists = pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames)
+        print(f'we have {len(morph_lists)} morph_lists')
+        print("dedupe_morphs")
         morph_lists = dedupe_morphs(morph_lists)
+        print("get_means_from_morphlists")
         means = get_means_from_morphlists(morph_lists)
+        print("list(means.values())")
         means = list(means.values())
+        print("get_cov_from_morph_lists")
         covariances = get_cov_from_morph_lists(morph_lists)
         new_population = list()
         template_file = self.settings['child template']
         threshold = self.settings['morph threshold']
 
         for i in range(1, POP_SIZE + 1):
-            text = f'Generating Population\nPlease be patient!\n({i}/{POP_SIZE})'
-            self.generate_children_frame.display_progress(text)
-            self.vam_comm.broadcast_message_to_vam_rating_blocker(text)
-
-            sample = np.random.default_rng().multivariate_normal(means, covariances)
-            sample = [str(x) for x in sample]
-            new_morph_list = copy.deepcopy(morph_lists[0])
-            for j, morph in enumerate(new_morph_list):
-                morph['value'] = sample[j]
-            new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
-            child_appearance = load_appearance(template_file)
-            print('Using as appearance template:', template_file)
-            child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
-            new_population.append(child_appearance)
+            print(f'generating child {i}')
+            self.generate_child_appearance(covariances, i, means, morph_lists, new_population, template_file, threshold)
 
         self.save_population(new_population)
         self.generator.gen_counter += 1
         self.update_population(new_population)
         self.generate_children_frame.display_ready_for_new_generation()
         return
+
+    @timeit
+    def generate_child_appearance(self, covariances, i, means, morph_lists, new_population, template_file, threshold):
+        text = f'Generating Population\nPlease be patient!\n({i}/{POP_SIZE})'
+        self.generate_children_frame.display_progress(text)
+        self.vam_comm.broadcast_message_to_vam_rating_blocker(text)
+        sample = np.random.default_rng().multivariate_normal(means, covariances)
+        sample = [str(x) for x in sample]
+        new_morph_list = copy.deepcopy(morph_lists[0])
+        for j, morph in enumerate(new_morph_list):
+            morph['value'] = sample[j]
+        new_morph_list = filter_morphs_below_threshold(new_morph_list, threshold)
+        child_appearance = load_appearance(template_file)
+        logger.info(f'Using as appearance template: {template_file}')
+        child_appearance = save_morph_to_appearance(new_morph_list, child_appearance)
+        new_population.append(child_appearance)
 
     def save_population(self, population):
         """ save a population list of child appearances to files """
@@ -1006,7 +976,7 @@ Do you want to continue that session?""")
                                             'Are you sure?')
             if answer == "no":
                 return False
-        print('We are restarting')
+        logger.info('We are restarting')
         self.restart_population(self.settings['method'])
         return True
 

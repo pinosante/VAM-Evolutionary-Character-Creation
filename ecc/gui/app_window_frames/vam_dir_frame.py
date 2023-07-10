@@ -12,7 +12,7 @@ from ...common.utility import *
 
 class VamDirFrame(tk.Frame):
     def __init__(self, settings, font, select_vam_dir_callback):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.settings = settings
         self.vam_dir_title_label = tk.Label(self,
                                             text="Step 1: Select VAM Base Folder (with VaM.exe)",

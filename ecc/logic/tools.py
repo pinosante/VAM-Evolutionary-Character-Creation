@@ -16,13 +16,14 @@ from collections import defaultdict
 import numpy as np
 
 from ..common.utility import *
+from ..common.ecc_log import ecc_logger as logger
 
 
 def load_appearance(filename):
     """ Loads appearance from filename and returns it, or returns False if the appearance couldn't be loaded """
     if os.path.isfile(filename):
         with open(filename, encoding="utf-8") as f:
-            print(f'load_appearance: loading file {filename}')
+            logger.info(f'load_appearance: loading file {filename}')
             return json.load(f)
     return False
 
@@ -36,17 +37,17 @@ def save_appearance(appearance, filename):
     for x in range(3):
         try:
             with open(filename, 'w', encoding="utf-8") as json_file:
-                print("Writing appearance to:", filename)
+                logger.info(f'Writing appearance to: {filename}')
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
             thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
             shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
             return True
         except Exception as exception:
-            print(f'{exception=}')
-            print(f"Error while trying to save {filename}, trying again in 2 seconds.")
+            logger.error(f'{exception=}')
+            logger.error(f'Error while trying to save {filename}, trying again in 2 seconds.')
             time.sleep(2)
-    raise Exception(f"Can't save appearance {filename}")
+    raise Exception(f'Can\'t save appearance {filename}')
 
 
 def get_morph_names(morph_list):
@@ -74,6 +75,7 @@ def get_uid_from_morph_name(morph_name, morph_lists, filenames=None):
     return False
 
 
+@timeit
 def pad_morph_names_to_morph_lists(morph_lists, morph_names, filenames=None):
     """ adds uid keys to each morph_list in morph_lists and sets the values to 0 if uid key doesn't exist """
     morph_lists = copy.deepcopy(morph_lists)
@@ -116,7 +118,6 @@ def calculate_single_mutation(value, b=0.5):
     """ Create random mutation based on a value and b """
     r1 = random.random()
     r2 = random.random()
-
     if r1 >= 0.5:
         return (1.0 - float(value)) * r2 * b
     else:
@@ -264,6 +265,7 @@ def save_morph_to_appearance(morph_list, appearance):
     return appearance
 
 
+@timeit
 def dedupe_morphs(morph_lists):
     """ removes duplicate morphs from each morph_list in morph_lists """
 
@@ -332,7 +334,7 @@ def get_all_morph_names_in_morph_lists(morph_lists):
 def select_child_template(child_morph_list, settings):
     template_file = settings['child template']
     child_appearance = load_appearance(template_file)
-    print('Using as appearance template:', template_file)
+    logger.info('Using as appearance template:', template_file)
     child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
     return child_appearance
 
@@ -384,6 +386,7 @@ def is_compatible_gender(gender1, gender2):
     return False
 
 
+@timeit
 def get_means_from_morphlists(morph_lists):
     """ returns a dictionary of morph means for each morph found in the morphlists """
     means = defaultdict(lambda: 0.0)
@@ -396,6 +399,7 @@ def get_means_from_morphlists(morph_lists):
     return means
 
 
+@timeit
 def get_cov_from_morph_lists(morphlists):
     """ Returns covariances of all morphlist. Used by the Random Gaussian sample method. """
     values = defaultdict(lambda: [])
@@ -420,7 +424,6 @@ def last_given_commands_to_string(list_of_commands):
         string = string + line
     string = string[:-1]  # remove the extra \n at the end
     return string
-
 
 
 if __name__ == '__main__':

@@ -4,6 +4,8 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
 
+import time
+
 DATA_PATH = 'data'
 SETTINGS_FILENAME = '..\\..\\..\\data\\settings.json'
 POP_SIZE = 20
@@ -17,7 +19,6 @@ STORABLES = 'storables'
 THUMBNAIL_SIZE = 184, 184
 NO_THUMBNAIL_FILENAME = "no_thumbnail.jpg"
 CHILD_THUMBNAIL_FILENAME = "child_thumbnail.jpg"
-
 
 
 def strip_dir_string_to_max_length(dir_string, length):
@@ -56,6 +57,17 @@ def generate_list_element(lst):
     while True:
         for element in lst:
             yield element
+
+
+def timeit(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"Elapsed time: {end_time - start_time:.2f} seconds")
+        return result
+
+    return wrapper
 
 
 if __name__ == '__main__':

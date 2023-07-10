@@ -4,22 +4,14 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
 
-import copy
-import random
-import shutil
-import os
-import time
 import json
-
-from collections import defaultdict
-
-import numpy as np
 
 from ..common.utility import *
 
 
 class VamComm:
     def __init__(self, settings, master, execute_vam_command_callback):
+        self.terminate = False
         self.master = master
         self.settings = settings
         self.execute_vam_command_callback = execute_vam_command_callback
@@ -94,8 +86,10 @@ class VamComm:
         """ Continously check if
             PATH_TO_VAM\\Custom\\Atom\\UIText\\VAM Evolutionary Character Creation\\Preset_VAM2PythonText.vap
             has a new command string. If so, try to execute that command by calling execute_VAM_command() """
-        # todo: candidate for logic
-        # try to open file
+
+        if (self.terminate):
+            return
+
         path = self.settings.get_vam_path(
                 r'Custom\Atom\UIText\VAM Evolutionary Character Creation\Preset_VAM2PythonText.vap')
         if not path:

@@ -15,7 +15,9 @@ from ecc.common.settings import Settings
 from ecc.logic.generator import Generator
 from ecc.gui.app_window import AppWindow
 
-BG_COLOR = "#F9F9F9"
+from ecc.common.ecc_log import ecc_logger as logger
+
+
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 
 
@@ -23,6 +25,9 @@ def main():
     """
     create the business logic and the main window and launch them
     """
+
+    logger.info("launching")
+
     settings = Settings()
     generator = Generator(settings)
 
@@ -38,6 +43,8 @@ def main():
     main_window.mainloop()
 
     settings.save()
+
+    logger.info("shutting down")
 
 
 if __name__ == '__main__':
