@@ -58,7 +58,7 @@ class AppWindow(tk.Frame):
         self.title_frame.grid(row=0, column=0, sticky=tk.W)
 
         self.generate_children_frame = GenerateChildrenFrame(settings, self.generate_next_population)
-        self.generate_children_frame.grid(row=8, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.generate_children_frame.grid(row=9, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.vam_dir_frame = VamDirFrame(settings, self.subtitle_font, self.select_vam_dir_callback)
         self.vam_dir_frame.grid(row=1, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
@@ -75,20 +75,20 @@ class AppWindow(tk.Frame):
                                                    self.choose_files)
         self.source_files_frame.grid(row=4, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
-        self.parent_selection_frame = ChromosomeListFrame(self.subtitle_font, self.population, self.select_file)
-        self.parent_selection_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
-
         self.favorites_frame = AlternativeAppearanceFrame()
         self.favorites_frame.grid(row=5, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
+        self.parent_selection_frame = ChromosomeListFrame(self.subtitle_font, self.population, self.select_file)
+        self.parent_selection_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+
         self.method_frame = MethodFrame(self.subtitle_font, settings, self.update_initialize_population_button)
-        self.method_frame.grid(row=6, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.method_frame.grid(row=7, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.options_frame = OptionsFrame(settings, self.subtitle_font,
                                           self.track_threshold_change,
                                           self.track_min_morph_change,
                                           self.use_recursive_directory_search)
-        self.options_frame.grid(row=7, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
+        self.options_frame.grid(row=8, column=1, padx=10, pady=self.subtitle_padding, sticky=tk.W)
 
         self.filler_bottom = tk.Label(self.generate_children_frame, text="", width=1, height=10, bg=BG_COLOR,
                                       fg=FG_COLOR)
@@ -271,13 +271,11 @@ Do you want to continue that session?""")
         filenames = self.get_all_appearance_filenames()
         self.favorites_frame.favorites_info.configure(text=f'{len(filenames)} appearances found')
         self.update_initialize_population_button()
-        self.favorites_frame.favorites_label.configure(text="Step 5: All Appearances Chosen")
-
+#
     def update_favorites_found_label(self):
         """ Counts the amount of favorite appearances available in the default VAM directory and updates the GUI """
         filenames = self.get_fav_appearance_filenames()
         self.favorites_frame.favorites_info.configure(text=f'{len(filenames)} favorite appearances found')
-        self.favorites_frame.favorites_label.configure(text="Step 5: All Favorite Appearances Chosen")
         self.update_initialize_population_button()
 
     def choose_all_appearances(self):

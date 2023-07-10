@@ -18,7 +18,7 @@ class OptionsFrame(tk.Frame):
         super().__init__()
         self.settings = settings
         option_row_number = 1
-        options_label = tk.Label(self, text="Step 7: Options", font=font, bg=BG_COLOR,
+        options_label = tk.Label(self, text="Step 6: Options", font=font, bg=BG_COLOR,
                                  fg=FG_COLOR)
         options_label.grid(columnspan=9, row=option_row_number, sticky=tk.W, pady=(0, 0))
         option_row_number += 1  # go to next row of the options menu
