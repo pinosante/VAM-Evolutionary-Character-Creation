@@ -15,7 +15,7 @@ class OptionsFrame(tk.Frame):
                  track_threshold_change_strategy,
                  track_min_morph_change_strategy,
                  use_recursive_directory_search_strategy):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.settings = settings
         option_row_number = 1
         options_label = tk.Label(self, text="Step 7: Options", font=font, bg=BG_COLOR,

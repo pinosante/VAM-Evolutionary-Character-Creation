@@ -18,7 +18,6 @@ from ecc.gui.app_window import AppWindow
 from ecc.common.ecc_log import ecc_logger as logger
 
 
-BG_COLOR = "#F9F9F9"
 ICON_FILENAME = "VAM Evolutionary Character Creation.ico"
 
 

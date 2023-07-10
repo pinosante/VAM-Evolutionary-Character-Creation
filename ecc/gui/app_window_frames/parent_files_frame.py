@@ -11,7 +11,7 @@ from ..constants import *
 
 class ParentsFileFrame(tk.Frame):
     def __init__(self, font, choose_all_appearances_strategy, choose_all_favorites_strategy, choose_files_strategy):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.source_files_label = tk.Label(self, text="Step 4: Select Parent File Source",
                                            font=font, bg=BG_COLOR, fg=FG_COLOR)
         self.source_files_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))

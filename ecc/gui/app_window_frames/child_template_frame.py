@@ -12,7 +12,7 @@ from ...common.utility import *
 
 class ChildTemplateFrame(tk.Frame):
     def __init__(self, font, select_template_strategy):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.select_template_strategy = select_template_strategy
         self.child_template_label = tk.Label(self,
                                              text="Step 3: Select Child Template Appearance", font=font,

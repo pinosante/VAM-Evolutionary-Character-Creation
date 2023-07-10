@@ -12,7 +12,7 @@ from ..constants import *
 
 class GenerateChildrenFrame(tk.Frame):
     def __init__(self, settings, command):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.settings = settings
         self.generate_children_button = tk.Button(
             self, text="Initialize Population", bg=BUTTON_BG_COLOR, fg=BUTTON_FG_COLOR,

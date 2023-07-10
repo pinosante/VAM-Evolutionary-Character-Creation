@@ -36,7 +36,7 @@ from ..logic.vam_comm import VamComm
 
 class AppWindow(tk.Frame):
     def __init__(self, settings, generator):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         logger.info('Creating main frame')
 
         self.population = Population(POP_SIZE, settings)

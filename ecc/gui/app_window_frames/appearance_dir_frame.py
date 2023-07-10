@@ -12,7 +12,7 @@ from ...common.utility import *
 
 class AppearanceDirFrame(tk.Frame):
     def __init__(self, settings, font, select_appearance_dir_callback):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.settings = settings
         self.appearance_dir_title_label = tk.Label(self,
                                                    text="Step 2: Select Appearance folder to use",
