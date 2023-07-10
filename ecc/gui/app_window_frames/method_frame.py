@@ -15,7 +15,7 @@ class MethodFrame(tk.Frame):
         super().__init__()
         self.settings = settings
         self.callback_for_update = callback_for_update
-        self.method_label = tk.Label(self, text="Step 6: Initialization Method", font=font,
+        self.method_label = tk.Label(self, text="Step 5: Initialization Method", font=font,
                                      bg=BG_COLOR, fg=FG_COLOR)
         self.method_label.grid(columnspan=2, row=0, column=0, sticky=tk.W, pady=(0, 0))
         self.gaussian_button = tk.Button(self, text="Gaussian Samples", bg=BUTTON_BG_COLOR,

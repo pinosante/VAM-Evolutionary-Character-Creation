@@ -11,6 +11,7 @@ import pathlib
 from PIL import ImageTk, Image, UnidentifiedImageError
 
 from .tools import *
+from ..common.ecc_log import ecc_logger as logger
 
 
 class Generator:
@@ -45,12 +46,12 @@ class Generator:
             appearance = load_appearance(f)
             if get_morph_index_with_character_info_from_appearance(appearance) is None:
                 # just calling this function since it looks for morphs
-                print(f"File {f} is not a valid Appearance file, skipping.")
+                logger.info(f"File {f} is not a valid Appearance file, skipping.")
             else:
                 f_fav = f + '.fav'
                 appearance['is_fav'] = os.path.isfile(f_fav)
                 if appearance['is_fav']:
-                    print(f"###### is_fav = {appearance['is_fav']} {f_fav}")
+                    logger.info(f"###### is_fav = {appearance['is_fav']} {f_fav}")
                 self.appearances[f] = appearance
                 # print(f"Loading file {f} into database.")
                 self.thumbnails[f] = self.get_thumbnail_for_filename(f)
@@ -71,15 +72,15 @@ class Generator:
             image = Image.open(thumbnail_path)
             jpg_loaded = True
         except UnidentifiedImageError as e:
-            print(f'*** Warning! {e}')
-            print(f'*** The thumbnail file cannot be read, using dummy image instead.')
+            logger.error(f'*** Warning! {e}')
+            logger.error(f'*** The thumbnail file cannot be read, using dummy image instead.')
 
         if not jpg_loaded:
             try:
                 thumbnail_path = os.path.join(DATA_PATH, NO_THUMBNAIL_FILENAME)
                 image = Image.open(thumbnail_path)
             except Exception as e:
-                print(f'*** Error! {e}')
+                logger.error(f'*** Error! {e}')
 
         image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
         thumbnail = ImageTk.PhotoImage(image)
@@ -95,6 +96,24 @@ class Generator:
                     filtered.append(f)
         return filtered
 
+    def filter_filename_list_on_morph_threshold_and_min_morphs(self, filenames):
+        """ For a given list of filenames returns a list of filenames which meet the morph and min morph thresholds.
+            Returns an empty list if neither of these settings are available. """
+
+        if 'morph threshold' not in self.settings:
+            return list()
+
+        if 'min morph threshold' not in self.settings:
+            return list()
+
+        filtered = list()
+        for f in filenames:
+            appearance = self.appearances[f]
+            morph_list = get_morph_list_from_appearance(appearance)
+            morph_list = filter_morphs_below_threshold(morph_list, self.settings['morph threshold'])
+            if len(morph_list) > self.settings['min morph threshold']:
+                filtered.append(f)
+        return filtered
 
 if __name__ == '__main__':
     print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

@@ -10,6 +10,8 @@ import json
 
 from .utility import *
 
+from .ecc_log import ecc_logger as logger
+
 
 class Settings(dict):
     def __init__(self):
@@ -23,9 +25,9 @@ class Settings(dict):
             dir_path = os.path.dirname(sys.executable)
         elif __file__:
             dir_path = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
+        filename = os.path.normpath(os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME))
         with open(filename, 'w') as json_file:
-            print("Writing settings to:", filename)
+            logger.info(f'Writing settings to: {filename}')
             json.dump(self, json_file, indent=3)
 
     def load(self):
@@ -36,10 +38,10 @@ class Settings(dict):
             dir_path = os.path.dirname(sys.executable)
         elif __file__:
             dir_path = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME)
+        filename = os.path.normpath(os.path.join(dir_path, DATA_PATH, SETTINGS_FILENAME))
         if os.path.isfile(filename):
             with open(filename) as json_file:
-                print("Reading settings from:", filename)
+                logger.info(f'Reading settings from: {filename}')
                 data = json.load(json_file)
                 self.update(data)
 
