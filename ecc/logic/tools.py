@@ -4,6 +4,8 @@ By Pino Sante
 Please credit me if you change, use or adapt this file.
 """
 
+from colorama import Fore
+from time import sleep
 import copy
 import random
 import shutil
@@ -18,13 +20,98 @@ import numpy as np
 from ..common.utility import *
 
 
-def load_appearance(filename):
-    """ Loads appearance from filename and returns it, or returns False if the appearance couldn't be loaded """
-    if os.path.isfile(filename):
-        with open(filename, encoding="utf-8") as f:
-            print(f'load_appearance: loading file {filename}')
-            return json.load(f)
+def get_file_bytes(file_path: str) -> bytes | bool:
+    """ Read the content of a file and return the data in bytes."""
+    try:
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            with open(file_path, 'rb') as file:
+                data = file.read()
+                return data
+    except Exception as e:
+        print(f'Exception: {e}')
     return False
+
+
+def save_file_bytes(data: bytes, file_path: str) -> bool:
+    """ Write data to a file"""
+    try:
+        with open(file_path, 'wb') as file:
+            file.write(data)
+            return True
+    except Exception as e:
+        print(f'Exception: {e}')
+    return False
+
+
+def copy_file_to_destination(source_file_path: str, destination_file_path: str) -> bool:
+    """ Copy a source file to a destination, treating the data as bytes"""
+    if data := get_file_bytes(source_file_path):
+        if save_file_bytes(data, destination_file_path):
+            return True
+    return False
+
+
+def create_corrupted_files_dir(corrupted_dir: str = 'corrupted_files') -> str:
+    """ Create a directory to store corrupted files if it doesn't exist"""
+    if not os.path.exists(corrupted_dir):
+        os.makedirs(corrupted_dir)
+    return corrupted_dir
+
+
+def transfer_corrupted_appearence(file_path: str) -> None:
+    """ Move corrupted files to a designated directory and remove the originals"""
+    # prepare and retrieve the corrupted files dir name
+    destination_dir: str = create_corrupted_files_dir()
+
+    # full path of image preset
+    img_file_path: str = file_path.split('.')[0] + '.jpg'
+
+    # get only preset name files
+    preset_file_name: str = file_path.split('\\')[-1]
+    preset_img_file_name: str = img_file_path.split('\\')[-1]
+
+    # copy preset files to the destination corrupted dir
+    for file_name in [preset_file_name, preset_img_file_name]:
+        # build files full path
+        source_file_path: str = "\\".join(
+            file_path.split('\\')[:-1]) + f'\\{file_name}'
+        destination_file_path: str = os.path.join(destination_dir, file_name)
+
+        # if preset does not have a related image file then skip
+        if source_file_path.endswith(('.jpg')):
+            if not os.path.exists(source_file_path):
+                continue
+
+        # copying files to the destination folder
+        if not copy_file_to_destination(source_file_path, destination_file_path):
+            print(Fore.LIGHTRED_EX +
+                  f'An error occurred when trying to copy {source_file_path} to {destination_file_path}' + Fore.RESET)
+            continue
+
+        # check if files in destination were created
+        if os.path.exists(destination_file_path) and os.path.isfile(destination_file_path):
+            os.remove(source_file_path)
+            print(
+                Fore.LIGHTGREEN_EX + f'Corrupted file: {source_file_path} was moved with success to {destination_file_path}.' + Fore.RESET)
+            sleep(3)
+
+
+def load_appearance(file_path, max_tries=2):
+    """ Load appearance data from a JSON file. If the file is corrupted, attempt to move it to the corrupted files directory """
+    for _ in range(max_tries):
+        if os.path.isfile(file_path):
+            try:
+                with open(file_path, encoding="utf-8") as f:
+                    print(f'load_appearance: loading file {file_path}')
+                    return json.load(f)
+            except json.decoder.JSONDecodeError as e:
+                print(Fore.LIGHTRED_EX +
+                      f'Json Decode Error: {e}' + Fore.RESET)
+                print(Fore.LIGHTRED_EX +
+                      f'File: {file_path} is corrupted!' + Fore.RESET)
+                print(Fore.LIGHTYELLOW_EX + 'Trying again...' + Fore.RESET)
+                transfer_corrupted_appearence(file_path)
+        return False
 
 
 def save_appearance(appearance, filename):
@@ -40,11 +127,13 @@ def save_appearance(appearance, filename):
                 json.dump(appearance, json_file, indent=3)
             # copy a vam character fusion thumbnail as well
             thumbnail_path = os.path.splitext(filename)[0] + '.jpg'
-            shutil.copyfile(os.path.join(DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
+            shutil.copyfile(os.path.join(
+                DATA_PATH, CHILD_THUMBNAIL_FILENAME), thumbnail_path)
             return True
         except Exception as exception:
             print(f'{exception=}')
-            print(f"Error while trying to save {filename}, trying again in 2 seconds.")
+            print(
+                f"Error while trying to save {filename}, trying again in 2 seconds.")
             time.sleep(2)
     raise Exception(f"Can't save appearance {filename}")
 
@@ -70,7 +159,8 @@ def get_uid_from_morph_name(morph_name, morph_lists, filenames=None):
                     if filenames is None:  # this is the case when called from fuse_characters()
                         raise KeyError("Could not find a morph with key 'uid'")
                     else:
-                        raise KeyError(f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
+                        raise KeyError(
+                            f"Could not find a morph with key 'uid' in file: {filenames[idx]}")
     return False
 
 
@@ -130,12 +220,16 @@ def get_morph_list_from_appearance(appearance):
         target_morphs = "morphsOtherGender"
     else:
         target_morphs = "morphs"
-    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(
+        appearance)
     return appearance[STORABLES][char_index][target_morphs]
 
 
 def get_morph_index_with_character_info_from_appearance(appearance):
     """ Looks through all storables in the appearance, and returns the index which contains the morphs values """
+    if not appearance:
+        return
+
     character_key_found = False
     for dictionary in appearance[STORABLES]:
         if "character" in dictionary:
@@ -149,7 +243,8 @@ def get_morph_index_with_character_info_from_appearance(appearance):
 
 
 def uses_female_morphs_on_male(appearance):
-    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(
+        appearance)
     return appearance[STORABLES][char_index]['useFemaleMorphsOnMale'] == "true"
 
 
@@ -174,18 +269,21 @@ def is_alt_male_anatomy(appearance):
 
 
 def has_female_text(appearance):
-    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(
+        appearance)
     return FEMALE in appearance[STORABLES][char_index]['character']
 
 
 def has_male_text(appearance):
-    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(
+        appearance)
     return MALE in appearance[STORABLES][char_index]['character']
 
 
 def is_futa(appearance):
     """ determine futa """
-    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(
+        appearance)
     morph_list = appearance[STORABLES][char_index]["morphs"]
     morph_names = {morph['name'] for morph in morph_list}
     return "MVR_G2Female" in morph_names and uses_female_morphs_on_male(appearance)
@@ -241,7 +339,8 @@ def remove_clothing_from_appearance(appearance):
             dictionary['clothing'] = list()
     if len(clothing) == 0:
         return appearance
-    ids_to_delete = [item['internalId'] for item in clothing if 'internalId' in item]
+    ids_to_delete = [item['internalId']
+                     for item in clothing if 'internalId' in item]
 
     indexes_to_delete = []
     for idx, dictionary in enumerate(appearance[STORABLES]):
@@ -259,7 +358,8 @@ def save_morph_to_appearance(morph_list, appearance):
     appearance = copy.deepcopy(appearance)
     gender = get_appearance_gender(appearance)
     target_morphs = "morphsOtherGender" if gender == FUTA else "morphs"
-    char_index = get_morph_index_with_character_info_from_appearance(appearance)
+    char_index = get_morph_index_with_character_info_from_appearance(
+        appearance)
     appearance[STORABLES][char_index][target_morphs] = morph_list
     return appearance
 
@@ -326,14 +426,16 @@ def get_all_morph_names_in_morph_lists(morph_lists):
     morph_names = list()
     for morph_list in morph_lists:
         morph_names.extend(get_morph_names(morph_list))
-    return list(dict.fromkeys(morph_names))  # remove duplicates but keep the same order
+    # remove duplicates but keep the same order
+    return list(dict.fromkeys(morph_names))
 
 
 def select_child_template(child_morph_list, settings):
     template_file = settings['child template']
     child_appearance = load_appearance(template_file)
     print('Using as appearance template:', template_file)
-    child_appearance = save_morph_to_appearance(child_morph_list, child_appearance)
+    child_appearance = save_morph_to_appearance(
+        child_morph_list, child_appearance)
     return child_appearance
 
 
@@ -358,7 +460,8 @@ def fuse_characters(filename1, filename2, settings):
     for morph_list in morph_lists:
         sorted_morph_lists.append(sorted(morph_list, key=lambda d: d['name']))
 
-    child_morph_list = intuitive_crossover(sorted_morph_lists[0], sorted_morph_lists[1])
+    child_morph_list = intuitive_crossover(
+        sorted_morph_lists[0], sorted_morph_lists[1])
     child_morph_list = non_uniform_mutation(child_morph_list)
 
     return select_child_template(child_morph_list, settings)
@@ -390,9 +493,11 @@ def get_means_from_morphlists(morph_lists):
     for morph_list in morph_lists:
         for morph in morph_list:
             if 'value' in morph:
-                means[morph['name']] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
+                means[morph['name']
+                      ] += np.nan_to_num(float(morph['value'])) * 1 / len(morph_lists)
             else:
-                means[morph['name']] += 0 / len(morph_lists)  # just assume missing values to be 0
+                # just assume missing values to be 0
+                means[morph['name']] += 0 / len(morph_lists)
     return means
 
 
@@ -422,6 +527,6 @@ def last_given_commands_to_string(list_of_commands):
     return string
 
 
-
 if __name__ == '__main__':
-    print(f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')
+    print(
+        f'I am just a module, please launch the main script "{MAIN_SCRIPT_NAME}".')

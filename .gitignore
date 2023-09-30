@@ -6,3 +6,4 @@
 /ecc/gui/app_window_frames/__pycache__/*.pyc
 /.idea/.idea.VAM-Evolutionary-Character-Creation.dir/.idea
 /data/settings.json
+.vscode/
