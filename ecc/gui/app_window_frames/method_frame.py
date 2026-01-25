@@ -12,7 +12,7 @@ from ..constants import *
 
 class MethodFrame(tk.Frame):
     def __init__(self, font, settings, callback_for_update):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.settings = settings
         self.callback_for_update = callback_for_update
         self.method_label = tk.Label(self, text="Step 6: Initialization Method", font=font,

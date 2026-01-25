@@ -10,7 +10,7 @@ from ..constants import *
 
 class LastCommandsFrame(tk.Frame):
     def __init__(self):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.last_commands_label = tk.Label(self, text="Last five commands:",
                                             font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg=FG_COLOR)
         self.last_commands_label.grid(row=0, column=0, padx=10, pady=0, sticky="w")

@@ -11,7 +11,7 @@ from ..constants import *
 
 class OverviewFrame(tk.Frame):
     def __init__(self, gen_counter, label_text):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.warning_label = tk.Label(self, text="Important: do NOT close this window!",
                                       font=(DEFAULT_FONT, 14, "bold"), bg=BG_COLOR, fg="red")
         self.warning_label.grid(row=0, columnspan=2, column=0, padx=(10, 10), pady=(10, 0), sticky="w")

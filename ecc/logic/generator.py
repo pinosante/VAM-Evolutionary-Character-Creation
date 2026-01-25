@@ -81,7 +81,7 @@ class Generator:
             except Exception as e:
                 print(f'*** Error! {e}')
 
-        image = image.resize(THUMBNAIL_SIZE, Image.ANTIALIAS)
+        image = image.resize(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
         thumbnail = ImageTk.PhotoImage(image)
         return thumbnail
 

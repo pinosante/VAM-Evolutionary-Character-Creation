@@ -13,7 +13,7 @@ from ..population import Population
 
 class ChromosomeListFrame(tk.Frame):
     def __init__(self, font, population, select_file_strategy):
-        super().__init__()
+        super().__init__(bg=BG_COLOR)
         self.population = population
         self.chromosome_label = tk.Label(self, text="Step 5: Select Parent Files",
                                          font=font, bg=BG_COLOR, fg=FG_COLOR)
